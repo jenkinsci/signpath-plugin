@@ -12,6 +12,8 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
 import java.io.*;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -26,7 +28,9 @@ public class SignStepExecution extends SynchronousStepExecution {
     protected String run() throws Exception {
         TaskListener listener = getContext().get(TaskListener.class);
         PrintStream logger = listener.getLogger();
-        logger.println("Running Sign Step for jenkins server");
+
+        String hostname = resolveHostname();
+        logger.println("Running Sign Step for jenkins server: " + hostname);
 
         EnvVars vars = getContext().get(hudson.EnvVars.class);
         String jenkinsHome = vars.get("JENKINS_HOME");
@@ -51,5 +55,21 @@ public class SignStepExecution extends SynchronousStepExecution {
         logger.println(content);
 
         return "something";
+    }
+
+    private String resolveHostname(){
+        String hostname="unresolved host";
+        try
+        {
+            InetAddress addr;
+            addr = InetAddress.getLocalHost();
+            hostname = addr.getHostName();
+        }
+        catch (UnknownHostException ex)
+        {
+            hostname = ex.toString();
+        }
+
+        return hostname;
     }
 }
