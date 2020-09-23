@@ -14,8 +14,6 @@
     <properties>
         <revision>1.0</revision>
         <changelist>-SNAPSHOT</changelist>
-
-        <!-- Baseline Jenkins version you use to build the plugin. Users must have this version or newer to run. -->
         <jenkins.version>2.254</jenkins.version>
         <java.level>8</java.level>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -24,20 +22,6 @@
         <port>8080</port>
     </properties>
     <name>SignPath Code-Signing Plugin</name>
-    
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <!-- Pick up common dependencies for the selected LTS line: https://github.com/jenkinsci/bom#usage -->
-                <groupId>io.jenkins.tools.bom</groupId>
-                <artifactId>bom-2.235.x</artifactId>
-                <version>11</version>
-                <scope>import</scope>
-                <type>pom</type>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
     <dependencies>
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -51,64 +35,32 @@
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>script-security</artifactId>
         </dependency>
-
-        <!-- test dependencies -->
         <dependency>
-            <groupId>org.jenkins-ci.plugins.workflow</groupId>
-            <artifactId>workflow-support</artifactId>
-            <classifier>tests</classifier>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jenkins-ci.plugins.workflow</groupId>
-            <artifactId>workflow-basic-steps</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jenkins-ci.plugins.workflow</groupId>
-            <artifactId>workflow-cps</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jenkins-ci.plugins.workflow</groupId>
-            <artifactId>workflow-job</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jenkins-ci.plugins.workflow</groupId>
-            <artifactId>workflow-durable-task-step</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jenkins-ci.plugins.workflow</groupId>
-            <artifactId>workflow-api</artifactId>
-            <scope>test</scope>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>credentials</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
-            <artifactId>structs</artifactId>
-            <scope>test</scope>
+            <artifactId>plain-credentials</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.jenkinsci.plugins</groupId>
-            <artifactId>pipeline-model-api</artifactId>
-            <version>1.7.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jenkinsci.plugins</groupId>
-            <artifactId>pipeline-model-definition</artifactId>
-            <version>1.7.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jenkinsci.plugins</groupId>
-            <artifactId>pipeline-model-extensions</artifactId>
-            <version>1.7.1</version>
-            <scope>test</scope>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>git</artifactId>
         </dependency>
     </dependencies>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <!-- Pick up common dependencies for the selected LTS line: https://github.com/jenkinsci/bom#usage -->
+                <groupId>io.jenkins.tools.bom</groupId>
+                <artifactId>bom-2.235.x</artifactId>
+                <version>11</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     
     <!-- If you want this to appear on the plugin site page:
     <developers>
