@@ -39,7 +39,7 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution 
         Run run = getContext().get(Run.class);
         PrintStream logger = listener.getLogger();
 
-        logger.println("signArtifact organizationId:" + signStep.getOrganizationId() + " waitForCompletion: "+ signStep.getWaitForCompletion());
+        logger.println("signArtifact organizationId:" + signStep.getOrganizationId() + " waitForCompletion: " + signStep.getWaitForCompletion());
 
         List<StringCredentials> credentials =
                 CredentialsProvider.lookupCredentials(StringCredentials.class, Jenkins.getInstanceOrNull(), ACL.SYSTEM, Collections.emptyList());
@@ -51,22 +51,22 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution 
         String remoteUrls = buildData.getRemoteUrls().stream().collect(Collectors.joining());
         String branches = buildData.getBuildsByBranchName().keySet().stream().collect(Collectors.joining());
         String sha1Hashes = buildData.getBuildsByBranchName().entrySet().stream().map(stringBuildEntry -> stringBuildEntry.getValue().getSHA1().toString()).collect(Collectors.joining());
-        logger.println("remote urls:" + remoteUrls + " branch:"+branches+" sha1: "+sha1Hashes);
+        logger.println("remote urls:" + remoteUrls + " branch:" + branches + " sha1: " + sha1Hashes);
 
         ArtifactManager artifactManager = run.getArtifactManager();
         VirtualFile unsignedArtifact = artifactManager.root().child("Calculator\\bin\\Release\\netcoreapp3.1\\publish\\Calculator.deps.json");
-        if(!unsignedArtifact.exists()) {
+        if (!unsignedArtifact.exists()) {
             throw new IllegalArgumentException("artifact file does not exist");
         }
 
-        try(InputStream s = unsignedArtifact.open();){
+        try (InputStream s = unsignedArtifact.open()) {
             String content = IOUtils.toString(s, StandardCharsets.UTF_8);
             logger.println(content);
         }
 
-        try(PowerShell powerShell = PowerShell.openSession("pwsh.exe"))        {
-            PowerShellResponse response =  powerShell.executeSingleCommand("Get-Process");
-            logger.println("Get-Process Result:" +response.getCommandOutput());
+        try (PowerShell powerShell = PowerShell.openSession("pwsh.exe")) {
+            PowerShellResponse response = powerShell.executeSingleCommand("Get-Process");
+            logger.println("Get-Process Result:" + response.getCommandOutput());
         }
 
         return "something";
