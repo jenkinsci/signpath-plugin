@@ -47,6 +47,11 @@
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>git</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.profesorfalken</groupId>
+            <artifactId>jPowerShell</artifactId>
+            <version>3.1.1</version>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>
@@ -70,13 +75,14 @@
         <email>bhacker@nowhere.net</email>
       </developer>
     </developers> -->
-
-    
-
     <repositories>
         <repository>
             <id>repo.jenkins-ci.org</id>
             <url>https://repo.jenkins-ci.org/public/</url>
+        </repository>
+        <repository>
+            <id>repo1.maven.org</id>
+            <url>https://repo1.maven.org/maven2</url>
         </repository>
     </repositories>
     <pluginRepositories>

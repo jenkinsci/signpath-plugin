@@ -7,16 +7,23 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import org.jenkinsci.plugins.workflow.steps.*;
+import org.jenkinsci.plugins.workflow.steps.Step;
+import org.jenkinsci.plugins.workflow.steps.StepContext;
+import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
+import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import java.util.Set;
 
-public class SignStep extends Step {
+public class SubmitSigningRequestStep extends Step {
 
     private String organizationId;
     private Boolean waitForCompletion = false;
+
+    @DataBoundConstructor
+    public SubmitSigningRequestStep(){
+    }
 
     public String getOrganizationId(){
         return organizationId;
@@ -36,12 +43,9 @@ public class SignStep extends Step {
         this.waitForCompletion = waitForCompletion;
     }
 
-    @DataBoundConstructor
-    public SignStep() {}
-
     @Override
-    public StepExecution start(StepContext context) throws Exception {
-        return new SignStepExecution(this, context);
+    public StepExecution start(StepContext context) {
+        return new SubmitSigningRequestStepExecution(this, context);
     }
 
     @Override
@@ -59,12 +63,12 @@ public class SignStep extends Step {
 
         @Override
         public String getFunctionName() {
-            return "signWithSignPath";
+            return "submitSigningRequest";
         }
 
         @Override
         public String getDisplayName() {
-            return "Signs a given artifact with SignPath";
+            return "Submit SignPath SigningRequest";
         }
     }
 }

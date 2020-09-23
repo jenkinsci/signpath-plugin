@@ -3,6 +3,8 @@ package io.jenkins.plugins.SignPath;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.profesorfalken.jpowershell.PowerShell;
+import com.profesorfalken.jpowershell.PowerShellResponse;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.util.BuildData;
@@ -22,11 +24,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class SignStepExecution extends SynchronousStepExecution {
+public class SubmitSigningRequestStepExecution extends SynchronousStepExecution {
 
-    private SignStep signStep;
+    private SubmitSigningRequestStep signStep;
 
-    protected SignStepExecution(SignStep signStep, StepContext context) {
+    protected SubmitSigningRequestStepExecution(SubmitSigningRequestStep signStep, StepContext context) {
         super(context);
         this.signStep = signStep;
     }
@@ -60,6 +62,11 @@ public class SignStepExecution extends SynchronousStepExecution {
         try(InputStream s = unsignedArtifact.open();){
             String content = IOUtils.toString(s, StandardCharsets.UTF_8);
             logger.println(content);
+        }
+
+        try(PowerShell powerShell = PowerShell.openSession("pwsh.exe"))        {
+            PowerShellResponse response =  powerShell.executeSingleCommand("Get-Process");
+            logger.println("Get-Process Result:" +response.getCommandOutput());
         }
 
         return "something";
