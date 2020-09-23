@@ -1,25 +1,49 @@
 package io.jenkins.plugins.sample;
 
+import com.google.common.collect.ImmutableSet;
+import com.sun.org.apache.xpath.internal.operations.Bool;
+import hudson.EnvVars;
 import hudson.Extension;
-import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
-import org.jenkinsci.plugins.workflow.steps.Step;
-import org.jenkinsci.plugins.workflow.steps.StepContext;
-import org.jenkinsci.plugins.workflow.steps.StepExecution;
+import hudson.FilePath;
+import hudson.Launcher;
+import hudson.model.Run;
+import hudson.model.TaskListener;
+import org.jenkinsci.plugins.workflow.steps.*;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
+
+import java.util.Collections;
+import java.util.Set;
 
 public class SignStep extends Step {
 
+    private String organizationId;
+    private Boolean waitForCompletion = false;
 
-    String token;
+    public String getOrganizationId(){
+        return organizationId;
+    }
+
+    public Boolean getWaitForCompletion() {
+        return waitForCompletion;
+    }
+
+    @DataBoundSetter
+    public void setOrganizationId(String organizationId){
+        this.organizationId = organizationId;
+    }
+
+    @DataBoundSetter
+    public void setWaitForCompletion(Boolean waitForCompletion){
+        this.waitForCompletion = waitForCompletion;
+    }
 
     @DataBoundConstructor
-    public SignStep() {
-        this.token = null;
-    }
+    public SignStep() {}
 
     @Override
     public StepExecution start(StepContext context) throws Exception {
-        return new SignStepExecution(context);
+        return new SignStepExecution(this, context);
     }
 
     @Override
@@ -28,10 +52,11 @@ public class SignStep extends Step {
     }
 
     @Extension
-    public static class DescriptorImpl extends AbstractStepDescriptorImpl {
+    public static class DescriptorImpl extends StepDescriptor {
 
-        public DescriptorImpl() {
-            super(SignStepExecution.class);
+        @Override
+        public Set<? extends Class<?>> getRequiredContext() {
+            return ImmutableSet.of(FilePath.class, Run.class, Launcher.class, TaskListener.class, EnvVars.class);
         }
 
         @Override
