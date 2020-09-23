@@ -1,7 +1,6 @@
-package io.jenkins.plugins.sample;
+package io.jenkins.plugins.SignPath;
 
 import com.google.common.collect.ImmutableSet;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
@@ -12,7 +11,6 @@ import org.jenkinsci.plugins.workflow.steps.*;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import java.util.Collections;
 import java.util.Set;
 
 public class SignStep extends Step {
