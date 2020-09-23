@@ -22,10 +22,10 @@ public class SubmitSigningRequestStep extends Step {
     private Boolean waitForCompletion = false;
 
     @DataBoundConstructor
-    public SubmitSigningRequestStep(){
+    public SubmitSigningRequestStep() {
     }
 
-    public String getOrganizationId(){
+    public String getOrganizationId() {
         return organizationId;
     }
 
@@ -34,12 +34,12 @@ public class SubmitSigningRequestStep extends Step {
     }
 
     @DataBoundSetter
-    public void setOrganizationId(String organizationId){
+    public void setOrganizationId(String organizationId) {
         this.organizationId = organizationId;
     }
 
     @DataBoundSetter
-    public void setWaitForCompletion(Boolean waitForCompletion){
+    public void setWaitForCompletion(Boolean waitForCompletion) {
         this.waitForCompletion = waitForCompletion;
     }
 
