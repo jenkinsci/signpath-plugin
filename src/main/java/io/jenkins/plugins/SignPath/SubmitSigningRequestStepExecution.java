@@ -4,7 +4,8 @@ import com.profesorfalken.jpowershell.PowerShell;
 import com.profesorfalken.jpowershell.PowerShellResponse;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.plugins.git.util.BuildData;
+import io.jenkins.plugins.SignPath.OriginRetrieval.OriginRetriever;
+import io.jenkins.plugins.SignPath.OriginRetrieval.SigningRequestOriginSubmitModel;
 import io.jenkins.plugins.SignPath.SecretRetrieval.CredentialBasedSecretRetriever;
 import jenkins.model.ArtifactManager;
 import jenkins.model.Jenkins;
@@ -16,7 +17,6 @@ import org.jenkinsci.plugins.workflow.steps.SynchronousStepExecution;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
-import java.util.stream.Collectors;
 
 public class SubmitSigningRequestStepExecution extends SynchronousStepExecution {
 
@@ -32,19 +32,17 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution 
         TaskListener listener = getContext().get(TaskListener.class);
         Run run = getContext().get(Run.class);
         PrintStream logger = listener.getLogger();
+        Jenkins jenkins = Jenkins.get();
+        String jenkinsRootUrl = jenkins.getConfiguredRootUrl();
+
         logger.println("signArtifact organizationId:" + signStep.getOrganizationId() + " waitForCompletion: " + signStep.getWaitForCompletion());
 
         // TODO SIGN-3326: Add to dependency-injection
-        CredentialBasedSecretRetriever credentialSecretRetriever = new CredentialBasedSecretRetriever(Jenkins.getInstanceOrNull());
+        CredentialBasedSecretRetriever credentialSecretRetriever = new CredentialBasedSecretRetriever(jenkins);
+        OriginRetriever originRetriever = new OriginRetriever();
 
         String trustedBuildSystemToken = credentialSecretRetriever.retrieveSecret("TrustedBuildSystemToken");
-        logger.println("TrustedBuildSystemToken=" + trustedBuildSystemToken);
-
-        BuildData buildData = run.getAction(BuildData.class);
-        String remoteUrls = buildData.getRemoteUrls().stream().collect(Collectors.joining());
-        String branches = buildData.getBuildsByBranchName().keySet().stream().collect(Collectors.joining());
-        String sha1Hashes = buildData.getBuildsByBranchName().entrySet().stream().map(stringBuildEntry -> stringBuildEntry.getValue().getSHA1().toString()).collect(Collectors.joining());
-        logger.println("remote urls:" + remoteUrls + " branch:" + branches + " sha1: " + sha1Hashes);
+        SigningRequestOriginSubmitModel originSubmitModel = originRetriever.retrieveForBuild(jenkinsRootUrl, run);
 
         ArtifactManager artifactManager = run.getArtifactManager();
         VirtualFile unsignedArtifact = artifactManager.root().child("Calculator\\bin\\Release\\netcoreapp3.1\\publish\\Calculator.deps.json");

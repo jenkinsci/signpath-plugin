@@ -39,4 +39,15 @@ public class Some {
 
         return String.format("%040x", new BigInteger(1, digest.digest()));
     }
+
+    public static String url(){
+        String fragmentEnd = RANDOM.nextBoolean() ? "/" : "";
+        return "https://"+stringNonEmpty()+"/"+stringNonEmpty()+fragmentEnd;
+    }
+
+    public static String urlFragment() {
+        String fragmentStart = RANDOM.nextBoolean() ? "/" : "";
+        String fragmentEnd = RANDOM.nextBoolean() ? "/" : "";
+        return fragmentStart + stringNonEmpty() + "/" + stringNonEmpty() + fragmentEnd;
+    }
 }
