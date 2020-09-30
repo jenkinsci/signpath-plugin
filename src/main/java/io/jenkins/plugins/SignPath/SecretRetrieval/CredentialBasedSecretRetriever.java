@@ -13,7 +13,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class CredentialBasedSecretRetriever {
-    private Jenkins jenkins;
+    private final Jenkins jenkins;
 
     public CredentialBasedSecretRetriever(Jenkins jenkins){
         this.jenkins = jenkins;
@@ -30,9 +30,11 @@ public class CredentialBasedSecretRetriever {
         }
 
         if(credential.getScope() != CredentialsScope.SYSTEM) {
+            CredentialsScope scope = credential.getScope();
+            String scopeName = scope == null ? "null" : scope.getDisplayName();
             throw new SecretNotFoundException(
                     String.format("The secret '%s' was configured with scope '%s' but needs to be in '%s' scope.",
-                            id, credential.getScope().getDisplayName(), CredentialsScope.SYSTEM.getDisplayName()));
+                            id, scopeName, CredentialsScope.SYSTEM.getDisplayName()));
         }
 
         return credential.getSecret().getPlainText();

@@ -76,7 +76,8 @@ public class CredentialBasedSecretRetrieverTest {
         ThrowingRunnable act = () -> sut.retrieveSecret(nonExistingId);
 
         // ASSERT
-        assertThrows(SecretNotFoundException.class, act);
+        Throwable ex = assertThrows(SecretNotFoundException.class, act);
+        assertEquals(ex.getMessage(), String.format("The secret '%s' could not be found in the credential store.", nonExistingId));
     }
 
     @Test
@@ -89,7 +90,22 @@ public class CredentialBasedSecretRetrieverTest {
         ThrowingRunnable act = () -> sut.retrieveSecret(id);
 
         // ASSERT
-        assertThrows(SecretNotFoundException.class, act);
+        Throwable ex = assertThrows(SecretNotFoundException.class, act);
+        assertEquals(ex.getMessage(), String.format("The secret '%s' was configured with scope 'Global (Jenkins, nodes, items, all child items, etc)' but needs to be in 'System (Jenkins and nodes only)' scope.", id));
+    }
+
+    @Test
+    public void retrieveSecret_NullScope_Throws() throws IOException {
+        String id = Some.stringNonEmpty();
+        String secret = Some.stringNonEmpty();
+        addCredentials(credentialStore, null, id, secret);
+
+        // ACT
+        ThrowingRunnable act = () -> sut.retrieveSecret(id);
+
+        // ASSERT
+        Throwable ex = assertThrows(SecretNotFoundException.class, act);
+        assertEquals(ex.getMessage(), String.format("The secret '%s' was configured with scope 'null' but needs to be in 'System (Jenkins and nodes only)' scope.", id));
     }
 
     @Test
@@ -103,7 +119,8 @@ public class CredentialBasedSecretRetrieverTest {
         ThrowingRunnable act = () -> sut.retrieveSecret(id);
 
         // ASSERT
-        assertThrows(SecretNotFoundException.class, act);
+        Throwable ex = assertThrows(SecretNotFoundException.class, act);
+        assertEquals(ex.getMessage(), String.format("The secret '%s' could not be found in the credential store.", id));
     }
 
     private void addCredentials(CredentialsStore credentialsStore, CredentialsScope scope, String id, String secret) throws IOException {
