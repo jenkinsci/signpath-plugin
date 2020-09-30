@@ -50,4 +50,10 @@ public class Some {
         String fragmentEnd = RANDOM.nextBoolean() ? "/" : "";
         return fragmentStart + stringNonEmpty() + "/" + stringNonEmpty() + fragmentEnd;
     }
+
+    public static byte[] bytes() {
+        byte[] randomBytes = new byte[1+RANDOM.nextInt(100)];
+        RANDOM.nextBytes(randomBytes);
+        return randomBytes;
+    }
 }
