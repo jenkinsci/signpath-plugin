@@ -32,6 +32,7 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution 
     protected String run() throws Exception {
         TaskListener listener = getContext().get(TaskListener.class);
         Run run = getContext().get(Run.class);
+        Launcher launcher = getContext().get(Launcher.class);
         PrintStream logger = listener.getLogger();
         Jenkins jenkins = Jenkins.get();
         String jenkinsRootUrl = jenkins.getConfiguredRootUrl();
@@ -40,7 +41,8 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution 
 
         // TODO SIGN-3326: Add to dependency-injection
         CredentialBasedSecretRetriever credentialSecretRetriever = new CredentialBasedSecretRetriever(jenkins);
-        OriginRetriever originRetriever = new OriginRetriever(new DefaultConfigFileProvider());
+        OriginRetriever originRetriever = new OriginRetriever(new DefaultConfigFileProvider(run), run, jenkinsRootUrl);
+        ArtifactFileManager artifactFileManager = new ArtifactFileManager(run, launcher, listener);
 
         String trustedBuildSystemToken = credentialSecretRetriever.retrieveSecret("TrustedBuildSystemToken");
         SigningRequestOriginModel originSubmitModel = originRetriever.retrieveForBuild(jenkinsRootUrl, run);

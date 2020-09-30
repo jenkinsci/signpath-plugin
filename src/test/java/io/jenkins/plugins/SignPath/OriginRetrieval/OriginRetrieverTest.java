@@ -39,7 +39,6 @@ public class OriginRetrieverTest {
     @Rule
     public MockitoRule mockitoRule = MockitoJUnit.rule();
 
-    private String jenkinsRootUrl;
     private BuildData buildData;
     private int buildNumber;
     private String buildUrl;
@@ -47,9 +46,7 @@ public class OriginRetrieverTest {
 
     @Before
     public void setup(){
-        sut = new OriginRetriever(configFileProvider);
-
-        jenkinsRootUrl = Some.url();
+        String jenkinsRootUrl = Some.url();
         String jobUrl = Some.urlFragment();
         buildUrl = StringUtils.strip(jenkinsRootUrl,"/") + "/" + StringUtils.strip(jobUrl, "/");
         repositoryUrl = Some.stringNonEmpty();
@@ -62,10 +59,11 @@ public class OriginRetrieverTest {
         when(run.getUrl()).thenReturn(jobUrl);
         when(run.getNumber()).thenReturn(buildNumber);
         when(run.getAction(BuildData.class)).thenReturn(buildData);
+        sut = new OriginRetriever(configFileProvider, run, jenkinsRootUrl);
     }
 
     @Test
-    public void retrieveForBuild() throws IOException, OriginNotRetrievableException {
+    public void retrieveOrigin() throws IOException, OriginNotRetrievableException {
         String commitId = Some.sha1Hash();
         String branchId = Some.sha1Hash();
         String branchName = Some.stringNonEmpty();
@@ -76,10 +74,10 @@ public class OriginRetrieverTest {
         buildData.saveBuild(CreateRandomBuild(102));
 
         TemporaryFile jobConfigTemporaryFile = TemporaryFileUtil.create(jobConfigXmlContent);
-        when(configFileProvider.retrieveBuildConfigFile(run)).thenReturn(jobConfigTemporaryFile.getFile());
+        when(configFileProvider.retrieveBuildConfigFile()).thenReturn(jobConfigTemporaryFile.getFile());
 
         // ACT
-        SigningRequestOriginModel result = sut.retrieveForBuild(jenkinsRootUrl, run);
+        SigningRequestOriginModel result = sut.retrieveOrigin();
         jobConfigTemporaryFile.close();
 
         // ASSERT
@@ -98,53 +96,53 @@ public class OriginRetrieverTest {
     }
 
     @Test
-    public void retrieveForBuild_NoMatchingBuildNumber_Throws() {
+    public void retrieveOrigin_NoMatchingBuildNumber_Throws() {
         buildData.saveBuild(CreateRandomBuild(buildNumber + 1));
 
-        ThrowingRunnable act = () -> sut.retrieveForBuild(jenkinsRootUrl, run);
+        ThrowingRunnable act = () -> sut.retrieveOrigin();
 
         Throwable ex = assertThrows(OriginNotRetrievableException.class, act);
         assertEquals(ex.getMessage(), String.format("No builds with build number '%d' found.", buildNumber));
     }
 
     @Test
-    public void retrieveForBuild_MultipleMatchingBuildNumber_Throws() {
+    public void retrieveOrigin_MultipleMatchingBuildNumber_Throws() {
         buildData.saveBuild(CreateRandomBuild(buildNumber));
         buildData.saveBuild(CreateRandomBuild(buildNumber));
 
-        ThrowingRunnable act = () -> sut.retrieveForBuild(jenkinsRootUrl, run);
+        ThrowingRunnable act = () -> sut.retrieveOrigin();
 
         Throwable ex = assertThrows(OriginNotRetrievableException.class, act);
         assertEquals(ex.getMessage(), String.format("2 builds with build number '%d' found. This is not supported.", buildNumber));
     }
 
     @Test
-    public void retrieveForBuild_MultipleBranches_Throws() {
+    public void retrieveOrigin_MultipleBranches_Throws() {
         buildData.saveBuild(CreateBuild(buildNumber, Some.sha1Hash(), CreateRandomBranch(), CreateRandomBranch()));
 
-        ThrowingRunnable act = () -> sut.retrieveForBuild(jenkinsRootUrl, run);
+        ThrowingRunnable act = () -> sut.retrieveOrigin();
 
         Throwable ex = assertThrows(OriginNotRetrievableException.class, act);
         assertEquals(ex.getMessage(), String.format("2 builds with build number '%d' found. This is not supported.", buildNumber));
     }
 
     @Test
-    public void retrieveForBuild_NoRemoteUrls_Throws() {
+    public void retrieveOrigin_NoRemoteUrls_Throws() {
         buildData.saveBuild(CreateRandomBuild(buildNumber));
         buildData.remoteUrls.clear();
 
-        ThrowingRunnable act = () -> sut.retrieveForBuild(jenkinsRootUrl, run);
+        ThrowingRunnable act = () -> sut.retrieveOrigin();
 
         Throwable ex = assertThrows(OriginNotRetrievableException.class, act);
         assertEquals(ex.getMessage(), String.format("No remote urls for build with build number '%d' found.", buildNumber));
     }
 
     @Test
-    public void retrieveForBuild_MultipleRemoteUrls_Throws() {
+    public void retrieveOrigin_MultipleRemoteUrls_Throws() {
         buildData.saveBuild(CreateRandomBuild(buildNumber));
         buildData.addRemoteUrl(Some.stringNonEmpty());
 
-        ThrowingRunnable act = () -> sut.retrieveForBuild(jenkinsRootUrl, run);
+        ThrowingRunnable act = () -> sut.retrieveOrigin();
 
         Throwable ex = assertThrows(OriginNotRetrievableException.class, act);
         assertEquals(ex.getMessage(), String.format("2 remote urls for build with build number '%d' found. This is not supported.", buildNumber));

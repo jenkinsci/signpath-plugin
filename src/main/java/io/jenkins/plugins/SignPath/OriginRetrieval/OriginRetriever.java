@@ -21,15 +21,17 @@ public class OriginRetriever {
     private static final String sourceControlManagementType = "git";
 
     private final IConfigFileProvider configFileProvider;
+    private final Run<?, ?> run;
+    private final String rootUrl;
 
-    public OriginRetriever(IConfigFileProvider configFileProvider){
-
+    public OriginRetriever(IConfigFileProvider configFileProvider, Run<?, ?> run, String rootUrl){
         this.configFileProvider = configFileProvider;
+        this.run = run;
+        this.rootUrl = rootUrl;
     }
 
-    public SigningRequestOriginModel retrieveForBuild(String rootUrl, Run<?, ?> run) throws IOException, OriginNotRetrievableException {
+    public SigningRequestOriginModel retrieveOrigin() throws IOException, OriginNotRetrievableException {
         BuildData buildData = run.getAction(BuildData.class);
-
         int buildNumber = run.getNumber();
         Map.Entry<String, Build> matchingBuild = findMatchingBuild(buildData, buildNumber);
         String repositoryUrl = getSingleRemoteUrl(buildData, buildNumber);
@@ -39,12 +41,12 @@ public class OriginRetriever {
 
         String jobUrl = run.getUrl();
         String buildUrl = StringUtils.strip(rootUrl,"/") + "/" + StringUtils.strip(jobUrl, "/");
-        TemporaryFile buildSettingsFile = getBuildSettingsFile(run);
+        TemporaryFile buildSettingsFile = getBuildSettingsFile();
         return new SigningRequestOriginModel(repositoryMetadata, buildUrl, buildSettingsFile);
     }
 
-    private TemporaryFile getBuildSettingsFile(Run<?, ?> run) throws IOException {
-        File buildConfigFile = configFileProvider.retrieveBuildConfigFile(run);
+    private TemporaryFile getBuildSettingsFile() throws IOException {
+        File buildConfigFile = configFileProvider.retrieveBuildConfigFile();
         TemporaryFile buildSettingsFile = new TemporaryFile();
         try(InputStream in = new FileInputStream(buildConfigFile)) {
             buildSettingsFile.copyFrom(in);
