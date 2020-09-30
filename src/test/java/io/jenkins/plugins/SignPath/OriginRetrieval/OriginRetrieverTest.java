@@ -72,7 +72,7 @@ public class OriginRetrieverTest {
         when(configFileProvider.retrieveBuildConfigFile(run)).thenReturn(jobConfigTemporaryFile.getFile());
 
         // ACT
-        SigningRequestOriginSubmitModel result = sut.retrieveForBuild(jenkinsRootUrl, run);
+        SigningRequestOriginModel result = sut.retrieveForBuild(jenkinsRootUrl, run);
         jobConfigTemporaryFile.close();
 
         // ASSERT

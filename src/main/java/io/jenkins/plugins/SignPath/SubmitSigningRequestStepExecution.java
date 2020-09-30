@@ -6,7 +6,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import io.jenkins.plugins.SignPath.OriginRetrieval.DefaultConfigFileProvider;
 import io.jenkins.plugins.SignPath.OriginRetrieval.OriginRetriever;
-import io.jenkins.plugins.SignPath.OriginRetrieval.SigningRequestOriginSubmitModel;
+import io.jenkins.plugins.SignPath.OriginRetrieval.SigningRequestOriginModel;
 import io.jenkins.plugins.SignPath.SecretRetrieval.CredentialBasedSecretRetriever;
 import jenkins.model.ArtifactManager;
 import jenkins.model.Jenkins;
@@ -43,7 +43,7 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution 
         OriginRetriever originRetriever = new OriginRetriever(new DefaultConfigFileProvider());
 
         String trustedBuildSystemToken = credentialSecretRetriever.retrieveSecret("TrustedBuildSystemToken");
-        SigningRequestOriginSubmitModel originSubmitModel = originRetriever.retrieveForBuild(jenkinsRootUrl, run);
+        SigningRequestOriginModel originSubmitModel = originRetriever.retrieveForBuild(jenkinsRootUrl, run);
 
         ArtifactManager artifactManager = run.getArtifactManager();
         VirtualFile unsignedArtifact = artifactManager.root().child("Calculator\\bin\\Release\\netcoreapp3.1\\publish\\Calculator.deps.json");

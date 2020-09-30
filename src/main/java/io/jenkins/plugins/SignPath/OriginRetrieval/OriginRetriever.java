@@ -20,7 +20,7 @@ public class OriginRetriever {
         this.configFileProvider = configFileProvider;
     }
 
-    public SigningRequestOriginSubmitModel retrieveForBuild(String rootUrl, Run run) throws IOException {
+    public SigningRequestOriginModel retrieveForBuild(String rootUrl, Run run) throws IOException {
         BuildData buildData = run.getAction(BuildData.class);
         int buildNumber = run.getNumber();
         String sourceControlManagementType = buildData.scmName;
@@ -43,6 +43,6 @@ public class OriginRetriever {
             buildSettingsFile.copyFrom(in);
         }
 
-        return new SigningRequestOriginSubmitModel(repositoryMetadata, buildUrl, buildSettingsFile);
+        return new SigningRequestOriginModel(repositoryMetadata, buildUrl, buildSettingsFile);
     }
 }
