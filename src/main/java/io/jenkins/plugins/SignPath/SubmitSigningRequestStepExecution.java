@@ -2,22 +2,20 @@ package io.jenkins.plugins.SignPath;
 
 import com.profesorfalken.jpowershell.PowerShell;
 import com.profesorfalken.jpowershell.PowerShellResponse;
+import hudson.Launcher;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import io.jenkins.plugins.SignPath.Artifacts.ArtifactFileManager;
+import io.jenkins.plugins.SignPath.Common.TemporaryFile;
 import io.jenkins.plugins.SignPath.OriginRetrieval.DefaultConfigFileProvider;
 import io.jenkins.plugins.SignPath.OriginRetrieval.OriginRetriever;
 import io.jenkins.plugins.SignPath.OriginRetrieval.SigningRequestOriginModel;
 import io.jenkins.plugins.SignPath.SecretRetrieval.CredentialBasedSecretRetriever;
-import jenkins.model.ArtifactManager;
 import jenkins.model.Jenkins;
-import jenkins.util.VirtualFile;
-import org.apache.commons.io.IOUtils;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.SynchronousStepExecution;
 
-import java.io.InputStream;
 import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 
 public class SubmitSigningRequestStepExecution extends SynchronousStepExecution {
 
@@ -45,18 +43,8 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution 
         ArtifactFileManager artifactFileManager = new ArtifactFileManager(run, launcher, listener);
 
         String trustedBuildSystemToken = credentialSecretRetriever.retrieveSecret("TrustedBuildSystemToken");
-        SigningRequestOriginModel originSubmitModel = originRetriever.retrieveForBuild(jenkinsRootUrl, run);
-
-        ArtifactManager artifactManager = run.getArtifactManager();
-        VirtualFile unsignedArtifact = artifactManager.root().child("Calculator\\bin\\Release\\netcoreapp3.1\\publish\\Calculator.deps.json");
-        if (!unsignedArtifact.exists()) {
-            throw new IllegalArgumentException("artifact file does not exist");
-        }
-
-        try (InputStream s = unsignedArtifact.open()) {
-            String content = IOUtils.toString(s, StandardCharsets.UTF_8);
-            logger.println(content);
-        }
+        SigningRequestOriginModel originModel = originRetriever.retrieveOrigin();
+        TemporaryFile unsignedArtifact = artifactFileManager.retrieveArtifact("Calculator\\bin\\Release\\netcoreapp3.1\\publish\\Calculator.deps.json");
 
         try (PowerShell powerShell = PowerShell.openSession("pwsh.exe")) {
             PowerShellResponse response = powerShell.executeSingleCommand("Get-Process");
