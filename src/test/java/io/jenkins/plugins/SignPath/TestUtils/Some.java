@@ -15,6 +15,10 @@ public class Some {
         return RANDOM.nextInt();
     }
 
+    public static Integer integer(int minValue, int maxValue) {
+        return minValue + RANDOM.nextInt(maxValue - minValue);
+    }
+
     public static String stringNonEmpty(){
         return RandomStringUtils.random(1 + RANDOM.nextInt(100), true, true);
     }
