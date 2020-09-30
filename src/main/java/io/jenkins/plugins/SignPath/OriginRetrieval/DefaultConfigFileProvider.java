@@ -7,7 +7,7 @@ import java.io.File;
 public class DefaultConfigFileProvider implements IConfigFileProvider {
 
     @Override
-    public File retrieveBuildConfigFile(Run run) {
+    public File retrieveBuildConfigFile(Run<?, ?> run) {
         return run.getParent().getConfigFile().getFile();
     }
 }

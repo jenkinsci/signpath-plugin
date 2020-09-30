@@ -3,9 +3,9 @@ package io.jenkins.plugins.SignPath.OriginRetrieval;
 import io.jenkins.plugins.SignPath.Common.TemporaryFile;
 
 public class SigningRequestOriginModel {
-    private RepositoryMetadataModel repositoryMetadata;
-    private String buildUrl;
-    private TemporaryFile buildSettingsFile;
+    private final RepositoryMetadataModel repositoryMetadata;
+    private final String buildUrl;
+    private final TemporaryFile buildSettingsFile;
 
     public SigningRequestOriginModel(RepositoryMetadataModel repositoryMetadata, String buildUrl, TemporaryFile buildSettingsFile) {
         this.repositoryMetadata = repositoryMetadata;

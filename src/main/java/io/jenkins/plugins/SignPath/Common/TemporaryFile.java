@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class TemporaryFile implements Closeable {
-    private File temporaryFile;
+    private final File temporaryFile;
 
     public TemporaryFile() throws IOException {
         temporaryFile = File.createTempFile("SignPathTemp", null);
@@ -30,7 +30,8 @@ public class TemporaryFile implements Closeable {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
+        //noinspection ResultOfMethodCallIgnored
         temporaryFile.delete();
     }
 }

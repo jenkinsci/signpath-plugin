@@ -1,10 +1,10 @@
 package io.jenkins.plugins.SignPath.OriginRetrieval;
 
 public class RepositoryMetadataModel {
-    private String sourceControlManagementType;
-    private String repositoryUrl;
-    private String branchName;
-    private String commitId;
+    private final String sourceControlManagementType;
+    private final String repositoryUrl;
+    private final String branchName;
+    private final String commitId;
 
     public RepositoryMetadataModel(String sourceControlManagementType, String repositoryUrl, String branchName, String commitId) {
         this.sourceControlManagementType = sourceControlManagementType;

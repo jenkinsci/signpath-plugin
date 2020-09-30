@@ -5,6 +5,6 @@ import hudson.model.Run;
 import java.io.File;
 
 public interface IConfigFileProvider {
-    File retrieveBuildConfigFile(Run run);
+    File retrieveBuildConfigFile(Run<?, ?> run);
 }
 

@@ -1,19 +1,16 @@
 package io.jenkins.plugins.SignPath.TestUtils;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.junit.Assert;
 
-import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 
 public class Some {
     private static final Random RANDOM = new Random();
-
-    public static Integer integer() {
-        return RANDOM.nextInt();
-    }
 
     public static Integer integer(int minValue, int maxValue) {
         return minValue + RANDOM.nextInt(maxValue - minValue);
@@ -25,23 +22,22 @@ public class Some {
 
     public static String sha1Hash(){
         String message = stringNonEmpty();
-        MessageDigest digest = null;
 
-        try {
-            digest = MessageDigest.getInstance("SHA-1");
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-
+        MessageDigest digest = GetSha1Digest();
+        assert digest != null;
         digest.reset();
-
-        try {
-            digest.update(message.getBytes("utf8"));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        digest.update(message.getBytes(StandardCharsets.UTF_8));
 
         return String.format("%040x", new BigInteger(1, digest.digest()));
+    }
+
+    private static MessageDigest GetSha1Digest() {
+        try {
+            return MessageDigest.getInstance("SHA-1");
+        } catch (NoSuchAlgorithmException ex) {
+            Assert.fail();
+            return null;
+        }
     }
 
     public static String url(){
