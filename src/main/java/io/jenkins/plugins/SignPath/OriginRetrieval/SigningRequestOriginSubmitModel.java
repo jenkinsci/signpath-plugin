@@ -1,14 +1,16 @@
 package io.jenkins.plugins.SignPath.OriginRetrieval;
 
+import io.jenkins.plugins.SignPath.Common.TemporaryFile;
+
 public class SigningRequestOriginSubmitModel {
     private RepositoryMetadataModel repositoryMetadata;
     private String buildUrl;
+    private TemporaryFile buildSettingsFile;
 
-    // TODO SIGN-3326: Add BuildSettingsFile? What should it be in Jenkins
-
-    public SigningRequestOriginSubmitModel(RepositoryMetadataModel repositoryMetadata, String buildUrl) {
+    public SigningRequestOriginSubmitModel(RepositoryMetadataModel repositoryMetadata, String buildUrl, TemporaryFile buildSettingsFile) {
         this.repositoryMetadata = repositoryMetadata;
         this.buildUrl = buildUrl;
+        this.buildSettingsFile = buildSettingsFile;
     }
 
     public RepositoryMetadataModel getRepositoryMetadata() {
@@ -18,4 +20,6 @@ public class SigningRequestOriginSubmitModel {
     public String getBuildUrl() {
         return buildUrl;
     }
+
+    public TemporaryFile getBuildSettingsFile() { return buildSettingsFile; }
 }

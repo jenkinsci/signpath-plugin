@@ -7,25 +7,30 @@ import hudson.plugins.git.Branch;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.BuildData;
+import io.jenkins.plugins.SignPath.Common.TemporaryFile;
 import io.jenkins.plugins.SignPath.TestUtils.Some;
-import jenkins.model.Jenkins;
+import io.jenkins.plugins.SignPath.TestUtils.TemporaryFileUtil;
 import org.eclipse.jgit.lib.ObjectId;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+import java.io.IOException;
 import java.util.Arrays;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
 public class OriginRetrieverTest {
 
     private OriginRetriever sut;
+
+    @Mock
+    IConfigFileProvider configFileProvider;
 
     @Mock
     Run run;
@@ -35,11 +40,11 @@ public class OriginRetrieverTest {
 
     @Before
     public void setup(){
-        sut = new OriginRetriever();
+        sut = new OriginRetriever(configFileProvider);
     }
 
     @Test
-    public void retrieveForBuild() {
+    public void retrieveForBuild() throws IOException {
         String repositoryUrl = Some.stringNonEmpty();
         String sourceControlManagementType = Some.stringNonEmpty();
         String commitId = Some.sha1Hash();
@@ -48,6 +53,7 @@ public class OriginRetrieverTest {
         String jenkinsRootUrl = Some.url();
         String jobUrl = Some.urlFragment();
         String buildUrl = CharMatcher.is('/').trimFrom(jenkinsRootUrl) + "/" + CharMatcher.is('/').trimFrom(jobUrl);
+        byte[] jobConfigXmlContent = Some.bytes();
 
         // hard-coded to avoid conflicts with other build numbers
         Integer buildNumber = 99;
@@ -62,8 +68,12 @@ public class OriginRetrieverTest {
         when(run.getNumber()).thenReturn(buildNumber);
         when(run.getAction(BuildData.class)).thenReturn(buildData);
 
+        TemporaryFile jobConfigTemporaryFile = TemporaryFileUtil.create(jobConfigXmlContent);
+        when(configFileProvider.retrieveBuildConfigFile(run)).thenReturn(jobConfigTemporaryFile.getFile());
+
         // ACT
         SigningRequestOriginSubmitModel result = sut.retrieveForBuild(jenkinsRootUrl, run);
+        jobConfigTemporaryFile.close();
 
         // ASSERT
         assertEquals(repositoryUrl, result.getRepositoryMetadata().getRepositoryUrl());
@@ -72,6 +82,10 @@ public class OriginRetrieverTest {
         assertEquals(commitId, result.getRepositoryMetadata().getCommitId());
 
         assertEquals(buildUrl, result.getBuildUrl());
+
+        try (TemporaryFile buildSettingsFile = result.getBuildSettingsFile()) {
+            assertArrayEquals(jobConfigXmlContent, TemporaryFileUtil.getContent(buildSettingsFile));
+        }
     }
 
     private Build CreateRandomBuild(int buildNumber){

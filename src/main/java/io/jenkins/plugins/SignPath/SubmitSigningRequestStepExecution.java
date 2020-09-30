@@ -4,6 +4,7 @@ import com.profesorfalken.jpowershell.PowerShell;
 import com.profesorfalken.jpowershell.PowerShellResponse;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import io.jenkins.plugins.SignPath.OriginRetrieval.DefaultConfigFileProvider;
 import io.jenkins.plugins.SignPath.OriginRetrieval.OriginRetriever;
 import io.jenkins.plugins.SignPath.OriginRetrieval.SigningRequestOriginSubmitModel;
 import io.jenkins.plugins.SignPath.SecretRetrieval.CredentialBasedSecretRetriever;
@@ -39,7 +40,7 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution 
 
         // TODO SIGN-3326: Add to dependency-injection
         CredentialBasedSecretRetriever credentialSecretRetriever = new CredentialBasedSecretRetriever(jenkins);
-        OriginRetriever originRetriever = new OriginRetriever();
+        OriginRetriever originRetriever = new OriginRetriever(new DefaultConfigFileProvider());
 
         String trustedBuildSystemToken = credentialSecretRetriever.retrieveSecret("TrustedBuildSystemToken");
         SigningRequestOriginSubmitModel originSubmitModel = originRetriever.retrieveForBuild(jenkinsRootUrl, run);

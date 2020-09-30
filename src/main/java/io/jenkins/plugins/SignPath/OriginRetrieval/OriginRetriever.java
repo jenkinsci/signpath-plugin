@@ -4,13 +4,23 @@ import com.google.common.base.CharMatcher;
 import hudson.model.Run;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.BuildData;
+import io.jenkins.plugins.SignPath.Common.TemporaryFile;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 
 public class OriginRetriever {
-    public SigningRequestOriginSubmitModel retrieveForBuild(String rootUrl, Run run) {
-        String jobUrl = run.getUrl();
-        String buildUrl = CharMatcher.is('/').trimFrom(rootUrl) + "/" + CharMatcher.is('/').trimFrom(jobUrl);
+    private IConfigFileProvider configFileProvider;
+
+    public OriginRetriever(IConfigFileProvider configFileProvider){
+
+        this.configFileProvider = configFileProvider;
+    }
+
+    public SigningRequestOriginSubmitModel retrieveForBuild(String rootUrl, Run run) throws IOException {
         BuildData buildData = run.getAction(BuildData.class);
         int buildNumber = run.getNumber();
         String sourceControlManagementType = buildData.scmName;
@@ -22,7 +32,17 @@ public class OriginRetriever {
 
         String branchName = build.getKey();
         String commitId = build.getValue().getRevision().getSha1String();
+        RepositoryMetadataModel repositoryMetadata = new RepositoryMetadataModel(sourceControlManagementType, repositoryUrl, branchName, commitId);
 
-        return new SigningRequestOriginSubmitModel(new RepositoryMetadataModel(sourceControlManagementType, repositoryUrl, branchName, commitId), buildUrl);
+        String jobUrl = run.getUrl();
+        String buildUrl = CharMatcher.is('/').trimFrom(rootUrl) + "/" + CharMatcher.is('/').trimFrom(jobUrl);
+
+        File buildConfigFile = configFileProvider.retrieveBuildConfigFile(run);
+        TemporaryFile buildSettingsFile = new TemporaryFile();
+        try(InputStream in = new FileInputStream(buildConfigFile)) {
+            buildSettingsFile.copyFrom(in);
+        }
+
+        return new SigningRequestOriginSubmitModel(repositoryMetadata, buildUrl, buildSettingsFile);
     }
 }
