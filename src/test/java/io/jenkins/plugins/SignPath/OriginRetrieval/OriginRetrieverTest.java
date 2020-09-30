@@ -1,6 +1,5 @@
 package io.jenkins.plugins.SignPath.OriginRetrieval;
 
-import com.google.common.base.CharMatcher;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.plugins.git.Branch;
@@ -11,6 +10,7 @@ import io.jenkins.plugins.SignPath.Common.TemporaryFile;
 import io.jenkins.plugins.SignPath.Exceptions.OriginNotRetrievableException;
 import io.jenkins.plugins.SignPath.TestUtils.Some;
 import io.jenkins.plugins.SignPath.TestUtils.TemporaryFileUtil;
+import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.ObjectId;
 import org.junit.Before;
 import org.junit.Rule;
@@ -34,7 +34,7 @@ public class OriginRetrieverTest {
     IConfigFileProvider configFileProvider;
 
     @Mock
-    Run run;
+    Run<?, ?> run;
 
     @Rule
     public MockitoRule mockitoRule = MockitoJUnit.rule();
@@ -42,7 +42,6 @@ public class OriginRetrieverTest {
     private String jenkinsRootUrl;
     private BuildData buildData;
     private int buildNumber;
-    private String jobUrl;
     private String buildUrl;
     private String repositoryUrl;
 
@@ -51,8 +50,8 @@ public class OriginRetrieverTest {
         sut = new OriginRetriever(configFileProvider);
 
         jenkinsRootUrl = Some.url();
-        jobUrl = Some.urlFragment();
-        buildUrl = CharMatcher.is('/').trimFrom(jenkinsRootUrl) + "/" + CharMatcher.is('/').trimFrom(jobUrl);
+        String jobUrl = Some.urlFragment();
+        buildUrl = StringUtils.strip(jenkinsRootUrl,"/") + "/" + StringUtils.strip(jobUrl, "/");
         repositoryUrl = Some.stringNonEmpty();
 
         // hard-coded to avoid conflicts with other build numbers
@@ -151,10 +150,11 @@ public class OriginRetrieverTest {
         assertEquals(ex.getMessage(), String.format("2 remote urls for build with build number '%d' found. This is not supported.", buildNumber));
     }
 
-    private Build CreateRandomBuild(int buildNumber){
+    private Build CreateRandomBuild(int buildNumber) {
         String commitId = Some.sha1Hash();
-        Branch[] branches = new Branch[Some.integer(1, 2)];
-        for (int i=0;i< branches.length;i++) {
+        int branchCount = Some.integer(1, 2);
+        Branch[] branches = new Branch[branchCount];
+        for (int i = 0; i < branchCount; i++) {
             branches[i] = CreateRandomBranch();
         }
 

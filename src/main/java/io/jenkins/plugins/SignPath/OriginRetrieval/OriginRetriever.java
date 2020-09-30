@@ -1,11 +1,11 @@
 package io.jenkins.plugins.SignPath.OriginRetrieval;
 
-import com.google.common.base.CharMatcher;
 import hudson.model.Run;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.BuildData;
 import io.jenkins.plugins.SignPath.Common.TemporaryFile;
 import io.jenkins.plugins.SignPath.Exceptions.OriginNotRetrievableException;
+import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,7 +27,7 @@ public class OriginRetriever {
         this.configFileProvider = configFileProvider;
     }
 
-    public SigningRequestOriginModel retrieveForBuild(String rootUrl, Run run) throws IOException, OriginNotRetrievableException {
+    public SigningRequestOriginModel retrieveForBuild(String rootUrl, Run<?, ?> run) throws IOException, OriginNotRetrievableException {
         BuildData buildData = run.getAction(BuildData.class);
 
         int buildNumber = run.getNumber();
@@ -38,12 +38,12 @@ public class OriginRetriever {
         RepositoryMetadataModel repositoryMetadata = new RepositoryMetadataModel(sourceControlManagementType, repositoryUrl, branchName, commitId);
 
         String jobUrl = run.getUrl();
-        String buildUrl = CharMatcher.is('/').trimFrom(rootUrl) + "/" + CharMatcher.is('/').trimFrom(jobUrl);
+        String buildUrl = StringUtils.strip(rootUrl,"/") + "/" + StringUtils.strip(jobUrl, "/");
         TemporaryFile buildSettingsFile = getBuildSettingsFile(run);
         return new SigningRequestOriginModel(repositoryMetadata, buildUrl, buildSettingsFile);
     }
 
-    private TemporaryFile getBuildSettingsFile(Run run) throws IOException {
+    private TemporaryFile getBuildSettingsFile(Run<?, ?> run) throws IOException {
         File buildConfigFile = configFileProvider.retrieveBuildConfigFile(run);
         TemporaryFile buildSettingsFile = new TemporaryFile();
         try(InputStream in = new FileInputStream(buildConfigFile)) {
