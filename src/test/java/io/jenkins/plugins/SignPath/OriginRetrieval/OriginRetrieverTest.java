@@ -48,6 +48,8 @@ public class OriginRetrieverTest {
         String jenkinsRootUrl = Some.url();
         String jobUrl = Some.urlFragment();
         String buildUrl = CharMatcher.is('/').trimFrom(jenkinsRootUrl) + "/" + CharMatcher.is('/').trimFrom(jobUrl);
+
+        // hard-coded to avoid conflicts with other build numbers
         Integer buildNumber = 99;
 
         BuildData buildData = new BuildData(sourceControlManagementType);
