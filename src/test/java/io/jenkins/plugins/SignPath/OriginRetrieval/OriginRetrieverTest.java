@@ -6,6 +6,7 @@ import hudson.plugins.git.Branch;
 import hudson.plugins.git.Revision;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.BuildData;
+import io.jenkins.plugins.SignPath.ApiIntegration.Model.SigningRequestOriginModel;
 import io.jenkins.plugins.SignPath.Common.TemporaryFile;
 import io.jenkins.plugins.SignPath.Exceptions.OriginNotRetrievableException;
 import io.jenkins.plugins.SignPath.TestUtils.Some;

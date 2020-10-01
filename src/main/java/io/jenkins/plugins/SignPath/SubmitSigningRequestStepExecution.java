@@ -9,7 +9,7 @@ import io.jenkins.plugins.SignPath.Artifacts.ArtifactFileManager;
 import io.jenkins.plugins.SignPath.Common.TemporaryFile;
 import io.jenkins.plugins.SignPath.OriginRetrieval.DefaultConfigFileProvider;
 import io.jenkins.plugins.SignPath.OriginRetrieval.OriginRetriever;
-import io.jenkins.plugins.SignPath.OriginRetrieval.SigningRequestOriginModel;
+import io.jenkins.plugins.SignPath.ApiIntegration.Model.SigningRequestOriginModel;
 import io.jenkins.plugins.SignPath.SecretRetrieval.CredentialBasedSecretRetriever;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.workflow.steps.StepContext;

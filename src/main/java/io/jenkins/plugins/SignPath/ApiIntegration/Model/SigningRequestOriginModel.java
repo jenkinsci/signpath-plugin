@@ -1,4 +1,4 @@
-package io.jenkins.plugins.SignPath.OriginRetrieval;
+package io.jenkins.plugins.SignPath.ApiIntegration.Model;
 
 import io.jenkins.plugins.SignPath.Common.TemporaryFile;
 

@@ -1,4 +1,4 @@
-package io.jenkins.plugins.SignPath.OriginRetrieval;
+package io.jenkins.plugins.SignPath.ApiIntegration.Model;
 
 public class RepositoryMetadataModel {
     private final String sourceControlManagementType;

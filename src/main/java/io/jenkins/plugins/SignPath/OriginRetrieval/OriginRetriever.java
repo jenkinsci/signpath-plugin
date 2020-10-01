@@ -3,6 +3,8 @@ package io.jenkins.plugins.SignPath.OriginRetrieval;
 import hudson.model.Run;
 import hudson.plugins.git.util.Build;
 import hudson.plugins.git.util.BuildData;
+import io.jenkins.plugins.SignPath.ApiIntegration.Model.RepositoryMetadataModel;
+import io.jenkins.plugins.SignPath.ApiIntegration.Model.SigningRequestOriginModel;
 import io.jenkins.plugins.SignPath.Common.TemporaryFile;
 import io.jenkins.plugins.SignPath.Exceptions.OriginNotRetrievableException;
 import org.apache.commons.lang.StringUtils;
