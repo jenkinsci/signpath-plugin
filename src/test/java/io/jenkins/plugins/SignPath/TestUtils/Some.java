@@ -21,6 +21,10 @@ public class Some {
         return minValue + RANDOM.nextInt(maxValue - minValue);
     }
 
+    public static Boolean bool(){
+        return RANDOM.nextBoolean();
+    }
+
     public static String stringNonEmpty(){
         return RandomStringUtils.random(1 + RANDOM.nextInt(100), true, true);
     }

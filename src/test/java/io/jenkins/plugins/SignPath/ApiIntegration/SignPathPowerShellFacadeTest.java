@@ -7,6 +7,7 @@ import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.IPowerShellExecutor
 import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.PowerShellExecutionResult;
 import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.SignPathPowerShellFacade;
 import io.jenkins.plugins.SignPath.Common.TemporaryFile;
+import io.jenkins.plugins.SignPath.Exceptions.SignPathFacadeCallException;
 import io.jenkins.plugins.SignPath.TestUtils.Some;
 import io.jenkins.plugins.SignPath.TestUtils.TemporaryFileUtil;
 import org.junit.Before;
@@ -15,6 +16,7 @@ import org.junit.experimental.theories.DataPoints;
 import org.junit.experimental.theories.FromDataPoints;
 import org.junit.experimental.theories.Theories;
 import org.junit.experimental.theories.Theory;
+import org.junit.function.ThrowingRunnable;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
@@ -58,7 +60,7 @@ public class SignPathPowerShellFacadeTest {
     }
 
     @Theory
-    public void submitSigningRequest(@FromDataPoints("allBooleans") Boolean withOptionalFields) throws IOException {
+    public void submitSigningRequest(@FromDataPoints("allBooleans") Boolean withOptionalFields) throws IOException, SignPathFacadeCallException {
         SigningRequestModel signingRequestModel = randomSigningRequest(withOptionalFields);
 
         // ACT
@@ -76,13 +78,8 @@ public class SignPathPowerShellFacadeTest {
         assertContains(signedArtifactPath, capturedCommand);
     }
 
-    @DataPoints("allBooleans")
-    public static Boolean[] allBooleans(){
-        return new Boolean[]{true, false};
-    }
-
     @Theory
-    public void submitSigningRequestAsync(@FromDataPoints("allBooleans") Boolean withOptionalFields) throws IOException {
+    public void submitSigningRequestAsync(@FromDataPoints("allBooleans") Boolean withOptionalFields) throws IOException, SignPathFacadeCallException {
         SigningRequestModel signingRequestModel = randomSigningRequest(withOptionalFields);
 
         UUID organizationId = signingRequestModel.getOrganizationId();
@@ -106,7 +103,22 @@ public class SignPathPowerShellFacadeTest {
     }
 
     @Theory
-    public void getSignedArtifact() throws IOException {
+    public void submitSigningRequestAsync_WithUnexpectedOutput_Throws() throws IOException {
+        Boolean withOptionalFields = Some.bool();
+        SigningRequestModel signingRequestModel = randomSigningRequest(withOptionalFields);
+
+        powerShellExecutionResult = new PowerShellExecutionResult(false,"some unexpected string");
+
+        // ACT
+        ThrowingRunnable act = () ->  sut.submitSigningRequestAsync(signingRequestModel);
+
+        // ASSERT
+        Throwable ex = assertThrows(SignPathFacadeCallException.class, act);
+        assertEquals("Unexpected output from PowerShell, did not find a valid signingRequestId.", ex.getMessage());
+    }
+
+    @Theory
+    public void getSignedArtifact() throws IOException, SignPathFacadeCallException {
         UUID organizationId = Some.uuid();
         UUID signingRequestId = Some.uuid();
 
@@ -124,6 +136,42 @@ public class SignPathPowerShellFacadeTest {
         assertContains(organizationId.toString(), capturedCommand);
         assertContains(signingRequestId.toString(), capturedCommand);
         assertContains(signedArtifactPath, capturedCommand);
+    }
+
+    @Theory
+    public void submitSigningRequest_PowerShellError_Throws() {
+        powerShellExecutionResult = new PowerShellExecutionResult(true, Some.stringNonEmpty());
+
+        // ACT
+        ThrowingRunnable act = () ->  sut.submitSigningRequest(randomSigningRequest(Some.bool()));
+
+        // ASSERT
+        Throwable ex = assertThrows(SignPathFacadeCallException.class, act);
+        assertEquals(String.format("PowerShell script exited with error: '%s'", powerShellExecutionResult.getOutput()), ex.getMessage());
+    }
+
+    @Theory
+    public void submitSigningRequestAsync_PowerShellError_Throws() {
+        powerShellExecutionResult = new PowerShellExecutionResult(true, Some.stringNonEmpty());
+
+        // ACT
+        ThrowingRunnable act = () ->  sut.submitSigningRequestAsync(randomSigningRequest(Some.bool()));
+
+        // ASSERT
+        Throwable ex = assertThrows(SignPathFacadeCallException.class, act);
+        assertEquals(String.format("PowerShell script exited with error: '%s'", powerShellExecutionResult.getOutput()), ex.getMessage());
+    }
+
+    @Theory
+    public void getSignedArtifact_PowerShellError_Throws() {
+        powerShellExecutionResult = new PowerShellExecutionResult(true, Some.stringNonEmpty());
+
+        // ACT
+        ThrowingRunnable act = () ->  sut.getSignedArtifact(Some.uuid(), Some.uuid());
+
+        // ASSERT
+        Throwable ex = assertThrows(SignPathFacadeCallException.class, act);
+        assertEquals(String.format("PowerShell script exited with error: '%s'", powerShellExecutionResult.getOutput()), ex.getMessage());
     }
 
     private String getCapturedPowerShellCommand(){
@@ -194,5 +242,10 @@ public class SignPathPowerShellFacadeTest {
         if(withWaitTime) {
             assertContains(String.valueOf(apiConfiguration.getWaitForCompletionTimeoutInSeconds()), capturedCommand);
         }
+    }
+
+    @DataPoints("allBooleans")
+    public static Boolean[] allBooleans(){
+        return new Boolean[]{true, false};
     }
 }

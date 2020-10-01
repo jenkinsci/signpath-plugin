@@ -7,6 +7,7 @@ import io.jenkins.plugins.SignPath.ApiIntegration.Model.SigningRequestModel;
 import io.jenkins.plugins.SignPath.ApiIntegration.Model.SigningRequestOriginModel;
 import io.jenkins.plugins.SignPath.ApiIntegration.SignPathCredentials;
 import io.jenkins.plugins.SignPath.Common.TemporaryFile;
+import io.jenkins.plugins.SignPath.Exceptions.SignPathFacadeCallException;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -26,35 +27,45 @@ public class SignPathPowerShellFacade implements ISignPathFacade {
     }
 
     @Override
-    public TemporaryFile submitSigningRequest(SigningRequestModel submitModel) throws IOException {
+    public TemporaryFile submitSigningRequest(SigningRequestModel submitModel) throws IOException, SignPathFacadeCallException {
         TemporaryFile outputArtifact = new TemporaryFile();
         String submitSigningRequestCommand = createSubmitSigningRequestCommand(submitModel, outputArtifact);
-        powerShellExecutor.execute(submitSigningRequestCommand);
+        executePowerShellSafe(submitSigningRequestCommand);
         return outputArtifact;
     }
 
     @Override
-    public UUID submitSigningRequestAsync(SigningRequestModel submitModel) {
+    public UUID submitSigningRequestAsync(SigningRequestModel submitModel) throws SignPathFacadeCallException {
         String submitSigningRequestCommand = createSubmitSigningRequestCommand(submitModel, null);
-        PowerShellExecutionResult result = powerShellExecutor.execute(submitSigningRequestCommand);
-        return extractSigningRequestId(result.getOutput());
+        String result = executePowerShellSafe(submitSigningRequestCommand);
+        return extractSigningRequestId(result);
     }
 
-    private UUID extractSigningRequestId(String output){
+    @Override
+    public TemporaryFile getSignedArtifact(UUID organizationId, UUID signingRequestID) throws IOException, SignPathFacadeCallException {
+        TemporaryFile outputArtifact = new TemporaryFile();
+        String getSignedArtifactCommand = createGetSignedArtifactCommand(organizationId, signingRequestID,  outputArtifact);
+        executePowerShellSafe(getSignedArtifactCommand);
+        return outputArtifact;
+    }
+
+    private String executePowerShellSafe(String command) throws SignPathFacadeCallException {
+        PowerShellExecutionResult result = powerShellExecutor.execute(command);
+        if(result.getHasError())
+            throw new SignPathFacadeCallException(String.format("PowerShell script exited with error: '%s'", result.getOutput()));
+
+        return result.getOutput();
+    }
+
+    private UUID extractSigningRequestId(String output) throws SignPathFacadeCallException {
         // Last output line = return value => we want the PowerShell script to return a GUID
         final String guidRegex = "([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$";
         Matcher regexResult = Pattern.compile(guidRegex, Pattern.MULTILINE).matcher(output);
-        assert regexResult.find(); // TODO SIGN-3326: throw correct exception
+        if(!regexResult.find()){
+            throw new SignPathFacadeCallException("Unexpected output from PowerShell, did not find a valid signingRequestId.");
+        }
         String signingRequestId = regexResult.group(0);
         return UUID.fromString(signingRequestId);
-    }
-
-    @Override
-    public TemporaryFile getSignedArtifact(UUID organizationId, UUID signingRequestID) throws IOException {
-        TemporaryFile outputArtifact = new TemporaryFile();
-        String getSignedArtifactCommand = createGetSignedArtifactCommand(organizationId, signingRequestID,  outputArtifact);
-        powerShellExecutor.execute(getSignedArtifactCommand);
-        return outputArtifact;
     }
 
     private String createSubmitSigningRequestCommand(SigningRequestModel signingRequestModel, TemporaryFile outputArtifact){
