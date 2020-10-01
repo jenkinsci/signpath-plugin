@@ -63,22 +63,17 @@ public class SignPathPowerShellFacade implements ISignPathFacade {
         argumentsBuilder.append(String.format("-CIUserToken '%s' ", credentials.toString()));
         argumentsBuilder.append(String.format("-OrganizationId '%s' ", signingRequestModel.getOrganizationId()));
         argumentsBuilder.append(String.format("-InputArtifactPath '%s' ", signingRequestModel.getArtifact().getAbsolutePath()));
-
-        if (signingRequestModel.getProjectSlug() != null)
-            argumentsBuilder.append(String.format("-ProjectSlug '%s' ", signingRequestModel.getProjectSlug()));
+        argumentsBuilder.append(String.format("-ProjectSlug '%s' ", signingRequestModel.getProjectSlug()));
+        argumentsBuilder.append(String.format("-SigningPolicySlug '%s' ", signingRequestModel.getSigningPolicySlug()));
 
         if (signingRequestModel.getArtifactConfigurationSlug() != null)
             argumentsBuilder.append(String.format("-ArtifactConfigurationSlug '%s' ", signingRequestModel.getArtifactConfigurationSlug()));
 
-        if (signingRequestModel.getSigningPolicySlug() != null)
-            argumentsBuilder.append(String.format("-SigningPolicySlug '%s' ", signingRequestModel.getSigningPolicySlug()));
-
-        argumentsBuilder.append(String.format("-ServiceUnavailableTimeoutInSeconds '%s' ", apiConfiguration.getServiceUnavailableTimeoutInSeconds()));
-        argumentsBuilder.append(String.format("-UploadAndDownloadRequestTimeoutInSeconds '%s' ", apiConfiguration.getUploadAndDownloadRequestTimeoutInSeconds()));
-
         if (signingRequestModel.getDescription() != null)
             argumentsBuilder.append(String.format("-Description '%s' ", signingRequestModel.getDescription()));
 
+        argumentsBuilder.append(String.format("-ServiceUnavailableTimeoutInSeconds '%s' ", apiConfiguration.getServiceUnavailableTimeoutInSeconds()));
+        argumentsBuilder.append(String.format("-UploadAndDownloadRequestTimeoutInSeconds '%s' ", apiConfiguration.getUploadAndDownloadRequestTimeoutInSeconds()));
         SigningRequestOriginModel origin = signingRequestModel.getOrigin();
         RepositoryMetadataModel repositoryMetadata = origin.getRepositoryMetadata();
         argumentsBuilder.append("-Origin @{");

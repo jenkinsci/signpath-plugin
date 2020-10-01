@@ -65,4 +65,8 @@ public class Some {
     public static UUID uuid() {
         return UUID.randomUUID();
     }
+
+    public static String stringEmptyOrNull() {
+        return RANDOM.nextBoolean() ? "" : null;
+    }
 }
