@@ -9,10 +9,7 @@ import io.jenkins.plugins.SignPath.Common.TemporaryFile;
 import io.jenkins.plugins.SignPath.Exceptions.OriginNotRetrievableException;
 import org.apache.commons.lang.StringUtils;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,6 +22,7 @@ public class OriginRetriever implements IOriginRetriever {
     private final IConfigFileProvider configFileProvider;
     private final Run<?, ?> run;
     private final String rootUrl;
+    private PrintStream logger;
 
     public OriginRetriever(IConfigFileProvider configFileProvider, Run<?, ?> run, String rootUrl){
         this.configFileProvider = configFileProvider;

@@ -55,6 +55,7 @@ public class SubmitSigningRequestStep extends Step {
     public SubmitSigningRequestStep() {
     }
 
+    // TODO SIGN-3326: Check all input parameters for null! (Write mapper?)
     @Override
     public StepExecution start(StepContext context) throws IOException, InterruptedException {
         TaskListener listener = context.get(TaskListener.class);

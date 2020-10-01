@@ -28,6 +28,8 @@ public class ArtifactFileManager implements IArtifactFileManager {
     @Override
     public TemporaryFile retrieveArtifact(String artifactPath) throws IOException {
         ArtifactManager artifactManager = run.getArtifactManager();
+
+        // TODO SIGN-3326: Check if root == null + throw proper exception! maybe artifact path is null as well
         VirtualFile artifactFile = artifactManager.root().child(artifactPath);
         if (!artifactFile.exists()) {
             throw new IllegalArgumentException("artifact file does not exist");

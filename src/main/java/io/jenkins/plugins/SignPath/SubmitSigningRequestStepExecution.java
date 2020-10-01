@@ -15,7 +15,6 @@ import io.jenkins.plugins.SignPath.SecretRetrieval.ISecretRetriever;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.SynchronousStepExecution;
 
-import java.io.IOException;
 import java.io.PrintStream;
 import java.util.UUID;
 
@@ -44,9 +43,9 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution<
     }
 
     @Override
-    protected String run() throws IOException, InterruptedException {
+    protected String run() throws Exception {
 
-        logger.printf("SubmitSigningRequestStepExecution organizationId:%s waitForCompletion: %s", signStep.getOrganizationId(), signStep.getWaitForCompletion());
+        logger.printf("SubmitSigningRequestStepExecution organizationId:%s waitForCompletion: %s\n", signStep.getOrganizationId(), signStep.getWaitForCompletion());
 
         try {
             String trustedBuildSystemToken = secretRetriever.retrieveSecret(Constants.TrustedBuildSystemTokenCredentialId);
@@ -65,9 +64,11 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution<
                     unsignedArtifact));
 
             artifactFileManager.storeArtifact(signedArtifact, signStep.getOutputArtifactPath());
-            return "Signing step succeeded";
+            logger.printf("\nSigning step succeeded\n");
+            return "";
         } catch (SecretNotFoundException | OriginNotRetrievableException | SignPathFacadeCallException ex) {
-            return "Signing step failed: " + ex.getMessage();
+            logger.printf("\nSigning step failed: " + ex.getMessage()+"\n");
+            throw new Exception("Signing step failed: " + ex.getMessage(), ex);
         }
     }
 }

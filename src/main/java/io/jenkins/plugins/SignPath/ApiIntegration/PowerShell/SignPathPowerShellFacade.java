@@ -92,15 +92,15 @@ public class SignPathPowerShellFacade implements ISignPathFacade {
         argumentsBuilder.append(String.format("'BuildSettingsFile' = '%s';", origin.getBuildSettingsFile().getAbsolutePath()));
         argumentsBuilder.append(String.format("'RepositoryMetadata.BranchName' = '%s';", repositoryMetadata.getBranchName()));
         argumentsBuilder.append(String.format("'RepositoryMetadata.CommitId' = '%s';", repositoryMetadata.getCommitId()));
-        argumentsBuilder.append(String.format("'RepositoryMetadata.RepositoryUrl)' = '%s';", repositoryMetadata.getRepositoryUrl()));
-        argumentsBuilder.append(String.format("'RepositoryMetadata.SourceControlManagementType)' = '%s'", repositoryMetadata.getSourceControlManagementType()));
-        argumentsBuilder.append("}");
+        argumentsBuilder.append(String.format("'RepositoryMetadata.RepositoryUrl' = '%s';", repositoryMetadata.getRepositoryUrl()));
+        argumentsBuilder.append(String.format("'RepositoryMetadata.SourceControlManagementType' = '%s'", repositoryMetadata.getSourceControlManagementType()));
+        argumentsBuilder.append("} ");
 
         if (outputArtifact != null)
         {
             argumentsBuilder.append("-WaitForCompletion ");
             argumentsBuilder.append(String.format("-OutputArtifactPath '%s' ", outputArtifact.getAbsolutePath()));
-            argumentsBuilder.append(String.format( "-WaitForCompletionTimeoutInSeconds '%s'",apiConfiguration.getWaitForCompletionTimeoutInSeconds()));
+            argumentsBuilder.append(String.format( "-WaitForCompletionTimeoutInSeconds '%s' ",apiConfiguration.getWaitForCompletionTimeoutInSeconds()));
             argumentsBuilder.append("-Force ");
         }
 
@@ -115,7 +115,7 @@ public class SignPathPowerShellFacade implements ISignPathFacade {
                 String.format("-ServiceUnavailableTimeoutInSeconds '%s' ", apiConfiguration.getServiceUnavailableTimeoutInSeconds()) +
                 String.format("-UploadAndDownloadRequestTimeoutInSeconds '%s' ", apiConfiguration.getUploadAndDownloadRequestTimeoutInSeconds()) +
                 String.format("-OutputArtifactPath '%s' ", outputArtifact.getAbsolutePath()) +
-                String.format("-WaitForCompletionTimeoutInSeconds '%s'", apiConfiguration.getWaitForCompletionTimeoutInSeconds()) +
+                String.format("-WaitForCompletionTimeoutInSeconds '%s' ", apiConfiguration.getWaitForCompletionTimeoutInSeconds()) +
                 "-Force ";
     }
 }
