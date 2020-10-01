@@ -10,6 +10,8 @@ import io.jenkins.plugins.SignPath.Common.TemporaryFile;
 
 import java.io.IOException;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class SignPathPowerShellFacade implements ISignPathFacade {
 
@@ -32,9 +34,19 @@ public class SignPathPowerShellFacade implements ISignPathFacade {
     }
 
     @Override
-    public void submitSigningRequestAsync(SigningRequestModel submitModel) {
+    public UUID submitSigningRequestAsync(SigningRequestModel submitModel) {
         String submitSigningRequestCommand = createSubmitSigningRequestCommand(submitModel, null);
-        powerShellExecutor.execute(submitSigningRequestCommand);
+        PowerShellExecutionResult result = powerShellExecutor.execute(submitSigningRequestCommand);
+        return extractSigningRequestId(result.getOutput());
+    }
+
+    private UUID extractSigningRequestId(String output){
+        // Last output line = return value => we want the PowerShell script to return a GUID
+        final String guidRegex = "([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$";
+        Matcher regexResult = Pattern.compile(guidRegex, Pattern.MULTILINE).matcher(output);
+        assert regexResult.find(); // TODO SIGN-3326: throw correct exception
+        String signingRequestId = regexResult.group(0);
+        return UUID.fromString(signingRequestId);
     }
 
     @Override

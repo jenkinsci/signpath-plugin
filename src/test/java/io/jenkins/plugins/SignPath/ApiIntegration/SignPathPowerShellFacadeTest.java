@@ -22,6 +22,7 @@ import java.net.URL;
 import java.util.UUID;
 
 import static io.jenkins.plugins.SignPath.TestUtils.AssertionExtensions.assertContains;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -75,10 +76,18 @@ public class SignPathPowerShellFacadeTest {
     public void submitSigningRequestAsync() throws IOException {
         SigningRequestModel signingRequestModel = randomSigningRequest();
 
+        UUID organizationId = signingRequestModel.getOrganizationId();
+        UUID signingRequestId = Some.uuid();
+
+        powerShellExecutionResult = new PowerShellExecutionResult(false,"SHA256 hash: "+Some.sha1Hash()+"\n" +
+                "Submitted signing request at 'https://app.signpath.io/api/v1/"+organizationId+"/SigningRequests/"+signingRequestId+"'\n" +
+                signingRequestId);
+
         // ACT
-        sut.submitSigningRequestAsync(signingRequestModel);
+        UUID result = sut.submitSigningRequestAsync(signingRequestModel);
 
         // ASSERT
+        assertEquals(signingRequestId, result);
         String capturedCommand = getCapturedPowerShellCommand();
         assertNotNull(capturedCommand);
 

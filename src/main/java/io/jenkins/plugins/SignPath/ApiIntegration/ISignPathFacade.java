@@ -8,6 +8,6 @@ import java.util.UUID;
 
 public interface ISignPathFacade {
  TemporaryFile submitSigningRequest(SigningRequestModel submitModel) throws IOException;
- void submitSigningRequestAsync(SigningRequestModel submitModel);
+ UUID submitSigningRequestAsync(SigningRequestModel submitModel);
  TemporaryFile getSignedArtifact(UUID organizationId, UUID signingRequestID) throws IOException;
 }
