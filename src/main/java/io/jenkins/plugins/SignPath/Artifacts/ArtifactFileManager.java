@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 
+// TODO SIGN-3326: Probably add fingerprinting as well.
 public class ArtifactFileManager {
     private final Run<?, ?> run;
     private final Launcher launcher;
