@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class OriginRetriever {
+public class OriginRetriever implements IOriginRetriever {
     // we hard-code git, because we retrieve the data from hudson.plugins.git.util.BuildData (git only)
     private static final String sourceControlManagementType = "git";
 
@@ -32,6 +32,7 @@ public class OriginRetriever {
         this.rootUrl = rootUrl;
     }
 
+    @Override
     public SigningRequestOriginModel retrieveOrigin() throws IOException, OriginNotRetrievableException {
         BuildData buildData = run.getAction(BuildData.class);
         int buildNumber = run.getNumber();

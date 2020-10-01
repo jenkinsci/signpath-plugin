@@ -12,13 +12,14 @@ import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import java.util.Collections;
 import java.util.List;
 
-public class CredentialBasedSecretRetriever {
+public class CredentialBasedSecretRetriever implements ISecretRetriever {
     private final Jenkins jenkins;
 
     public CredentialBasedSecretRetriever(Jenkins jenkins){
         this.jenkins = jenkins;
     }
 
+    @Override
     public String retrieveSecret(String id) throws SecretNotFoundException {
         List<StringCredentials> credentials =
                 CredentialsProvider.lookupCredentials(StringCredentials.class, jenkins, ACL.SYSTEM, Collections.emptyList());

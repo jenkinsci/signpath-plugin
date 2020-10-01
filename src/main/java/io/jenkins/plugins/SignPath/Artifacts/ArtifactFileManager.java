@@ -14,7 +14,7 @@ import java.io.InputStream;
 import java.util.Collections;
 
 // TODO SIGN-3326: Probably add fingerprinting as well.
-public class ArtifactFileManager {
+public class ArtifactFileManager implements IArtifactFileManager {
     private final Run<?, ?> run;
     private final Launcher launcher;
     private final TaskListener listener;
@@ -25,6 +25,7 @@ public class ArtifactFileManager {
         this.listener = listener;
     }
 
+    @Override
     public TemporaryFile retrieveArtifact(String artifactPath) throws IOException {
         ArtifactManager artifactManager = run.getArtifactManager();
         VirtualFile artifactFile = artifactManager.root().child(artifactPath);
@@ -39,6 +40,7 @@ public class ArtifactFileManager {
         return temporaryArtifactFile;
     }
 
+    @Override
     public void storeArtifact(TemporaryFile artifact, String targetArtifactPath) throws IOException, InterruptedException {
         ArtifactManager artifactManager = run.getArtifactManager();
 
