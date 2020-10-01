@@ -139,8 +139,7 @@ public class SignPathPowerShellFacadeTest {
 
         RepositoryMetadataModel repositoryMetadata = new RepositoryMetadataModel(sourceControlManagementType, repositoryUrl, branchName, commidId);
         SigningRequestOriginModel origin = new SigningRequestOriginModel(repositoryMetadata, buildUrl, buildSettingsFile);
-        SigningRequestModel signingRequestModel = new SigningRequestModel(organizationId, projectSlug, artifactConfigurationSlug, signingPolicySlug, description, origin,unsignedArtifact);
-        return signingRequestModel;
+        return new SigningRequestModel(organizationId, projectSlug, artifactConfigurationSlug, signingPolicySlug, description, origin,unsignedArtifact);
     }
 
     private void assertContainsSigningRequestModel(SigningRequestModel signingRequestModel, String capturedCommand) {

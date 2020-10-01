@@ -15,9 +15,9 @@ import java.util.regex.Pattern;
 
 public class SignPathPowerShellFacade implements ISignPathFacade {
 
-    private ApiConfiguration apiConfiguration;
-    private IPowerShellExecutor powerShellExecutor;
-    private SignPathCredentials credentials;
+    private final ApiConfiguration apiConfiguration;
+    private final IPowerShellExecutor powerShellExecutor;
+    private final SignPathCredentials credentials;
 
     public SignPathPowerShellFacade(IPowerShellExecutor powerShellExecutor, SignPathCredentials credentials, ApiConfiguration apiConfiguration){
         this.powerShellExecutor = powerShellExecutor;
@@ -102,19 +102,14 @@ public class SignPathPowerShellFacade implements ISignPathFacade {
     }
 
     private String createGetSignedArtifactCommand(UUID organizationId, UUID signingRequestId, TemporaryFile outputArtifact){
-        StringBuilder argumentsBuilder = new StringBuilder("Submit-SigningRequest ");
-        argumentsBuilder.append(String.format("-ApiUrl '%s' ", apiConfiguration.getApiUrl()));
-        argumentsBuilder.append(String.format("-CIUserToken '%s' ", credentials.toString()));
-        argumentsBuilder.append(String.format("-OrganizationId '%s' ", organizationId));
-        argumentsBuilder.append(String.format("-SigningRequestId '%s' ", signingRequestId));
-
-        argumentsBuilder.append(String.format("-ServiceUnavailableTimeoutInSeconds '%s' ", apiConfiguration.getServiceUnavailableTimeoutInSeconds()));
-        argumentsBuilder.append(String.format("-UploadAndDownloadRequestTimeoutInSeconds '%s' ", apiConfiguration.getUploadAndDownloadRequestTimeoutInSeconds()));
-
-        argumentsBuilder.append(String.format("-OutputArtifactPath '%s' ", outputArtifact.getAbsolutePath()));
-        argumentsBuilder.append(String.format( "-WaitForCompletionTimeoutInSeconds '%s'",apiConfiguration.getWaitForCompletionTimeoutInSeconds()));;
-        argumentsBuilder.append("-Force ");
-
-        return argumentsBuilder.toString();
+        return "Submit-SigningRequest " + String.format("-ApiUrl '%s' ", apiConfiguration.getApiUrl()) +
+                String.format("-CIUserToken '%s' ", credentials.toString()) +
+                String.format("-OrganizationId '%s' ", organizationId) +
+                String.format("-SigningRequestId '%s' ", signingRequestId) +
+                String.format("-ServiceUnavailableTimeoutInSeconds '%s' ", apiConfiguration.getServiceUnavailableTimeoutInSeconds()) +
+                String.format("-UploadAndDownloadRequestTimeoutInSeconds '%s' ", apiConfiguration.getUploadAndDownloadRequestTimeoutInSeconds()) +
+                String.format("-OutputArtifactPath '%s' ", outputArtifact.getAbsolutePath()) +
+                String.format("-WaitForCompletionTimeoutInSeconds '%s'", apiConfiguration.getWaitForCompletionTimeoutInSeconds()) +
+                "-Force ";
     }
 }
