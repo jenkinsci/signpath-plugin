@@ -8,9 +8,14 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
+import java.util.UUID;
 
 public class Some {
     private static final Random RANDOM = new Random();
+
+    public static Integer integer() {
+        return RANDOM.nextInt();
+    }
 
     public static Integer integer(int minValue, int maxValue) {
         return minValue + RANDOM.nextInt(maxValue - minValue);
@@ -55,5 +60,9 @@ public class Some {
         byte[] randomBytes = new byte[1+RANDOM.nextInt(100)];
         RANDOM.nextBytes(randomBytes);
         return randomBytes;
+    }
+
+    public static UUID uuid() {
+        return UUID.randomUUID();
     }
 }

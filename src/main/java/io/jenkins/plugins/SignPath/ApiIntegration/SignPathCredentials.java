@@ -16,4 +16,9 @@ public class SignPathCredentials {
     public String getTrustedBuildSystemToken() {
         return trustedBuildSystemToken;
     }
+
+    @Override
+    public String toString() {
+        return String.format("%s:%s", ciUserToken, trustedBuildSystemToken);
+    }
 }

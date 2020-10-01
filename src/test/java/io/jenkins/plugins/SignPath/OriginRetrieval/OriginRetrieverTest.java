@@ -91,9 +91,8 @@ public class OriginRetrieverTest {
 
         assertEquals(buildUrl, result.getBuildUrl());
 
-        try (TemporaryFile buildSettingsFile = result.getBuildSettingsFile()) {
-            assertArrayEquals(jobConfigXmlContent, TemporaryFileUtil.getContent(buildSettingsFile));
-        }
+        TemporaryFile buildSettingsFile = result.getBuildSettingsFile();
+        assertArrayEquals(jobConfigXmlContent, TemporaryFileUtil.getContentAndDispose(buildSettingsFile));
     }
 
     @Test

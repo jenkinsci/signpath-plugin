@@ -41,10 +41,10 @@ public class ArtifactFileManagerTest {
     public void retrieveArtifact() throws IOException {
         // ACT
         TemporaryFile retrievedArtifact = sut.retrieveArtifact("hello.txt");
-        byte[] retrievedArtifactContent = TemporaryFileUtil.getContent(retrievedArtifact);
-        String retrievedArtifactString = new String(retrievedArtifactContent, StandardCharsets.UTF_8);
 
         // ASSERT
+        byte[] retrievedArtifactContent = TemporaryFileUtil.getContentAndDispose(retrievedArtifact);
+        String retrievedArtifactString = new String(retrievedArtifactContent, StandardCharsets.UTF_8);
         assertEquals("hello", retrievedArtifactString);
     }
 
@@ -56,7 +56,7 @@ public class ArtifactFileManagerTest {
 
         // ACT
         TemporaryFile retrievedArtifact = sut.retrieveArtifact("artifact");
-        byte[] retrievedArtifactContent = TemporaryFileUtil.getContent(retrievedArtifact);
+        byte[] retrievedArtifactContent = TemporaryFileUtil.getContentAndDispose(retrievedArtifact);
 
         // ASSERT
         assertArrayEquals(artifactContent, retrievedArtifactContent);
