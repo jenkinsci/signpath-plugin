@@ -75,7 +75,7 @@ public class SubmitSigningRequestStep extends Step {
         ISecretRetriever secretRetriever = new CredentialBasedSecretRetriever(jenkins);
         IOriginRetriever originRetriever = new OriginRetriever(new DefaultConfigFileProvider(run), run, jenkinsRootUrl);
         IArtifactFileManager artifactFileManager = new ArtifactFileManager(run, launcher, listener);
-        String setupEnvironmentCommand = "Import-Module C:\\Development\\signpath.application\\src\\Applications.Api\\wwwroot\\Tools\\SignPath.psm1";
+        String setupEnvironmentCommand = "Import-Module C:\\Temp\\SignPath.psm1";
         IPowerShellExecutor pwsh = new PowerShellExecutor("pwsh", setupEnvironmentCommand);
         ApiConfiguration apiConfiguration = new ApiConfiguration(new URL(getApiUrl()),
                 getServiceUnavailableTimeoutInSeconds(),
