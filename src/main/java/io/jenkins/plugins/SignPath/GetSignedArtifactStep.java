@@ -16,12 +16,9 @@ import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.SignPathPowerShellF
 import io.jenkins.plugins.SignPath.Artifacts.ArtifactFileManager;
 import io.jenkins.plugins.SignPath.Artifacts.IArtifactFileManager;
 import io.jenkins.plugins.SignPath.Exceptions.SignPathStepInvalidArgumentException;
-import io.jenkins.plugins.SignPath.OriginRetrieval.DefaultConfigFileProvider;
-import io.jenkins.plugins.SignPath.OriginRetrieval.IOriginRetriever;
-import io.jenkins.plugins.SignPath.OriginRetrieval.OriginRetriever;
 import io.jenkins.plugins.SignPath.SecretRetrieval.CredentialBasedSecretRetriever;
 import io.jenkins.plugins.SignPath.SecretRetrieval.ISecretRetriever;
-import io.jenkins.plugins.SignPath.StepInputParser.SubmitSigningRequestStepInput;
+import io.jenkins.plugins.SignPath.StepInputParser.GetSignedArtifactStepInput;
 import io.jenkins.plugins.SignPath.StepInputParser.SigningRequestStepInputParser;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.workflow.steps.Step;
@@ -36,32 +33,28 @@ import java.io.PrintStream;
 import java.net.URL;
 import java.util.Set;
 
-public class SubmitSigningRequestStep extends Step {
-    private final static String FunctionName = "submitSigningRequest";
-    private final static String DisplayName = "Submit SignPath SigningRequest";
+public class GetSignedArtifactStep extends Step {
+    private final static String FunctionName = "getSignedArtifact";
+    private final static String DisplayName = "Download SignPath Signed Artifact";
 
     private String apiUrl =  "https://app.signpath.io/api/";
-    private String ciUserToken;
-    private String organizationId;
-    private String projectSlug;
-    private String artifactConfigurationSlug;
-    private String signingPolicySlug;
-    private String inputArtifactPath;
-    private String description;
     private int serviceUnavailableTimeoutInSeconds = 600;
     private int uploadAndDownloadRequestTimeoutInSeconds = 300;
-    private Boolean waitForCompletion = false;
-    private String outputArtifactPath;
     private int waitForCompletionTimeoutInSeconds = 600;
+    private String ciUserToken;
+
+    private String organizationId;
+    private String signingRequestId;
+    private String outputArtifactPath;
 
     @DataBoundConstructor
-    public SubmitSigningRequestStep() {
+    public GetSignedArtifactStep() {
     }
 
     // TODO SIGN-3326: Check all input parameters for null! (Write mapper?)
     @Override
     public StepExecution start(StepContext context) throws IOException, InterruptedException, SignPathStepInvalidArgumentException {
-        SubmitSigningRequestStepInput input = SigningRequestStepInputParser.Parse(this);
+        GetSignedArtifactStepInput input = SigningRequestStepInputParser.Parse(this);
 
         TaskListener listener = context.get(TaskListener.class);
         assert listener != null;
@@ -69,11 +62,9 @@ public class SubmitSigningRequestStep extends Step {
         Launcher launcher = context.get(Launcher.class);
         PrintStream logger = listener.getLogger();
         Jenkins jenkins = Jenkins.get();
-        String jenkinsRootUrl = jenkins.getConfiguredRootUrl();
 
         // TODO SIGN-3326: Share between steps + validate configuration
         ISecretRetriever secretRetriever = new CredentialBasedSecretRetriever(jenkins);
-        IOriginRetriever originRetriever = new OriginRetriever(new DefaultConfigFileProvider(run), run, jenkinsRootUrl);
         IArtifactFileManager artifactFileManager = new ArtifactFileManager(run, launcher, listener);
         String setupEnvironmentCommand = "Import-Module C:\\Development\\signpath.application\\src\\Applications.Api\\wwwroot\\Tools\\SignPath.psm1";
         IPowerShellExecutor pwsh = new PowerShellExecutor("pwsh", setupEnvironmentCommand);
@@ -83,7 +74,7 @@ public class SubmitSigningRequestStep extends Step {
                 getWaitForCompletionTimeoutInSeconds());
         ISignPathFacadeFactory signPathFacadeFactory = new SignPathPowerShellFacadeFactory(pwsh, apiConfiguration);
 
-        return new SubmitSigningRequestStepExecution(input, context, logger, secretRetriever, originRetriever,artifactFileManager, signPathFacadeFactory);
+        return new GetSignedArtifactStepExecution(input, context, logger, secretRetriever, artifactFileManager, signPathFacadeFactory);
     }
 
     @Override
@@ -123,24 +114,8 @@ public class SubmitSigningRequestStep extends Step {
         return organizationId;
     }
 
-    public String getProjectSlug() {
-        return projectSlug;
-    }
-
-    public String getArtifactConfigurationSlug() {
-        return artifactConfigurationSlug;
-    }
-
-    public String getSigningPolicySlug() {
-        return signingPolicySlug;
-    }
-
-    public String getInputArtifactPath() {
-        return inputArtifactPath;
-    }
-
-    public String getDescription() {
-        return description;
+    public String getSigningRequestId() {
+        return signingRequestId;
     }
 
     public int getServiceUnavailableTimeoutInSeconds() {
@@ -149,10 +124,6 @@ public class SubmitSigningRequestStep extends Step {
 
     public int getUploadAndDownloadRequestTimeoutInSeconds() {
         return uploadAndDownloadRequestTimeoutInSeconds;
-    }
-
-    public Boolean getWaitForCompletion() {
-        return waitForCompletion;
     }
 
     public String getOutputArtifactPath() {
@@ -179,28 +150,8 @@ public class SubmitSigningRequestStep extends Step {
     }
 
     @DataBoundSetter
-    public void setProjectSlug(String projectSlug) {
-        this.projectSlug = projectSlug;
-    }
-
-    @DataBoundSetter
-    public void setArtifactConfigurationSlug(String artifactConfigurationSlug) {
-        this.artifactConfigurationSlug = artifactConfigurationSlug;
-    }
-
-    @DataBoundSetter
-    public void setSigningPolicySlug(String signingPolicySlug) {
-        this.signingPolicySlug = signingPolicySlug;
-    }
-
-    @DataBoundSetter
-    public void setInputArtifactPath(String inputArtifactPath) {
-        this.inputArtifactPath = inputArtifactPath;
-    }
-
-    @DataBoundSetter
-    public void setDescription(String description) {
-        this.description = description;
+    public void setSigningRequestId(String signingRequestId) {
+        this.signingRequestId = signingRequestId;
     }
 
     @DataBoundSetter
@@ -211,11 +162,6 @@ public class SubmitSigningRequestStep extends Step {
     @DataBoundSetter
     public void setUploadAndDownloadRequestTimeoutInSeconds(int uploadAndDownloadRequestTimeoutInSeconds) {
         this.uploadAndDownloadRequestTimeoutInSeconds = uploadAndDownloadRequestTimeoutInSeconds;
-    }
-
-    @DataBoundSetter
-    public void setWaitForCompletion(Boolean waitForCompletion) {
-        this.waitForCompletion = waitForCompletion;
     }
 
     @DataBoundSetter

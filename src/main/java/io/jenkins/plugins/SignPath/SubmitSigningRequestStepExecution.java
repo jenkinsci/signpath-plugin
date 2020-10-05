@@ -13,7 +13,7 @@ import io.jenkins.plugins.SignPath.Exceptions.SignPathFacadeCallException;
 import io.jenkins.plugins.SignPath.Exceptions.SignPathStepFailedException;
 import io.jenkins.plugins.SignPath.OriginRetrieval.IOriginRetriever;
 import io.jenkins.plugins.SignPath.SecretRetrieval.ISecretRetriever;
-import io.jenkins.plugins.SignPath.StepInputParser.SigningRequestStepInput;
+import io.jenkins.plugins.SignPath.StepInputParser.SubmitSigningRequestStepInput;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.SynchronousStepExecution;
 
@@ -27,9 +27,9 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution<
     private final IOriginRetriever originRetriever;
     private final IArtifactFileManager artifactFileManager;
     private final ISignPathFacadeFactory signPathFacadeFactory;
-    private SigningRequestStepInput input;
+    private final SubmitSigningRequestStepInput input;
 
-    protected SubmitSigningRequestStepExecution(SigningRequestStepInput input,
+    protected SubmitSigningRequestStepExecution(SubmitSigningRequestStepInput input,
                                                 StepContext context,
                                                 PrintStream logger,
                                                 ISecretRetriever secretRetriever,
@@ -57,20 +57,35 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution<
             SigningRequestOriginModel originModel = originRetriever.retrieveOrigin();
             TemporaryFile unsignedArtifact = artifactFileManager.retrieveArtifact(input.getInputArtifactPath());
 
-            TemporaryFile signedArtifact = signPathFacade.submitSigningRequest(new SigningRequestModel(
-                    input.getOrganizationId(),
-                    input.getProjectSlug(),
-                    input.getArtifactConfigurationSlug(),
-                    input.getSigningPolicySlug(),
-                    input.getDescription(),
-                    originModel,
-                    unsignedArtifact));
+            // TODO SIGN-3326: Add missing test for else branch (submit without wait)
+            if(input.getWaitForCompletion()) {
+                TemporaryFile signedArtifact = signPathFacade.submitSigningRequest(new SigningRequestModel(
+                        input.getOrganizationId(),
+                        input.getProjectSlug(),
+                        input.getArtifactConfigurationSlug(),
+                        input.getSigningPolicySlug(),
+                        input.getDescription(),
+                        originModel,
+                        unsignedArtifact));
 
-            artifactFileManager.storeArtifact(signedArtifact, input.getOutputArtifactPath());
-            logger.printf("\nSigning step succeeded\n");
-            return "";
+                artifactFileManager.storeArtifact(signedArtifact, input.getOutputArtifactPath());
+                logger.print("\nSigning step succeeded\n");
+                return "";
+            }else{
+                UUID signingRequestId = signPathFacade.submitSigningRequestAsync(new SigningRequestModel(
+                        input.getOrganizationId(),
+                        input.getProjectSlug(),
+                        input.getArtifactConfigurationSlug(),
+                        input.getSigningPolicySlug(),
+                        input.getDescription(),
+                        originModel,
+                        unsignedArtifact));
+
+                logger.print("\nSigning step succeeded\n");
+                return signingRequestId.toString();
+            }
         } catch (SecretNotFoundException | OriginNotRetrievableException | SignPathFacadeCallException | IOException | InterruptedException ex) {
-            logger.printf("\nSigning step failed: " + ex.getMessage() + "\n");
+            logger.print("\nSigning step failed: " + ex.getMessage() + "\n");
             throw new SignPathStepFailedException("Signing step failed: " + ex.getMessage(), ex);
         }
     }

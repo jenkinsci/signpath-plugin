@@ -2,7 +2,7 @@ package io.jenkins.plugins.SignPath.StepInputParser;
 
 import java.util.UUID;
 
-public class SigningRequestStepInput {
+public class SubmitSigningRequestStepInput {
     private UUID organizationId;
     private String ciUserToken;
     private String projectSlug;
@@ -13,15 +13,15 @@ public class SigningRequestStepInput {
     private String outputArtifactPath;
     private Boolean waitForCompletion;
 
-    public SigningRequestStepInput(UUID organizationId,
-                                   String ciUserToken,
-                                   String projectSlug,
-                                   String artifactConfigurationSlug,
-                                   String signingPolicySlug,
-                                   String inputArtifactPath,
-                                   String description,
-                                   String outputArtifactPath,
-                                   Boolean waitForCompletion) {
+    public SubmitSigningRequestStepInput(UUID organizationId,
+                                         String ciUserToken,
+                                         String projectSlug,
+                                         String artifactConfigurationSlug,
+                                         String signingPolicySlug,
+                                         String inputArtifactPath,
+                                         String description,
+                                         String outputArtifactPath,
+                                         Boolean waitForCompletion) {
         this.organizationId = organizationId;
         this.ciUserToken = ciUserToken;
         this.projectSlug = projectSlug;
