@@ -24,6 +24,7 @@ import io.jenkins.plugins.SignPath.SecretRetrieval.ISecretRetriever;
 import io.jenkins.plugins.SignPath.StepInputParser.SubmitSigningRequestStepInput;
 import io.jenkins.plugins.SignPath.StepInputParser.SigningRequestStepInputParser;
 import jenkins.model.Jenkins;
+import jenkins.model.JenkinsLocationConfiguration;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
@@ -69,7 +70,8 @@ public class SubmitSigningRequestStep extends Step {
         Launcher launcher = context.get(Launcher.class);
         PrintStream logger = listener.getLogger();
         Jenkins jenkins = Jenkins.get();
-        String jenkinsRootUrl = jenkins.getConfiguredRootUrl();
+        JenkinsLocationConfiguration config = JenkinsLocationConfiguration.get();
+        String jenkinsRootUrl = config.getUrl();
 
         // TODO SIGN-3326: Share between steps + validate configuration
         ISecretRetriever secretRetriever = new CredentialBasedSecretRetriever(jenkins);

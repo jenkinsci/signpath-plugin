@@ -13,10 +13,10 @@ public class SigningRequestStepInputParser {
                 ensureValidUUID(step.getOrganizationId(), "organizationId"),
                 ensureNotNull(step.getCiUserToken(), "ciUserToken"),
                 ensureNotNull(step.getProjectSlug(), "projectSlug"),
-                ensureNotNull(step.getArtifactConfigurationSlug(), "artifactConfigurationSlug"),
+                step.getArtifactConfigurationSlug(),
                 ensureNotNull(step.getSigningPolicySlug(), "signingPolicySlug"),
                 ensureNotNull(step.getInputArtifactPath(), "inputArtifactPath"),
-                ensureNotNull(step.getDescription(), "description"),
+                step.getDescription(),
                 ensureNotNull(step.getOutputArtifactPath(), "outputArtifactPath"),
                 step.getWaitForCompletion());
     }
