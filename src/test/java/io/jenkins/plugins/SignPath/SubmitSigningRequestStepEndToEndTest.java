@@ -4,7 +4,6 @@ import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.github.tomakehurst.wiremock.http.Request;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.github.tomakehurst.wiremock.matching.MultipartValuePattern;
 import hudson.Launcher;
 import hudson.model.Result;
 import hudson.model.TaskListener;
@@ -15,23 +14,24 @@ import io.jenkins.plugins.SignPath.Common.TemporaryFile;
 import io.jenkins.plugins.SignPath.Exceptions.SignPathFacadeCallException;
 import io.jenkins.plugins.SignPath.TestUtils.*;
 import jenkins.model.Jenkins;
-import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.theories.DataPoints;
+import org.junit.experimental.theories.FromDataPoints;
+import org.junit.experimental.theories.Theories;
+import org.junit.experimental.theories.Theory;
+import org.junit.runner.RunWith;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.Assert.*;
 
+@RunWith(Theories.class)
 public class SubmitSigningRequestStepEndToEndTest {
     private static final int MockServerPort = 51000;
 
@@ -41,8 +41,8 @@ public class SubmitSigningRequestStepEndToEndTest {
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(MockServerPort);
 
-    @Test
-    public void submitSigningRequest() throws Exception {
+    @Theory
+    public void submitSigningRequest(@FromDataPoints("allBooleans") Boolean withOptionalFields) throws Exception  {
         Launcher launcher = j.createLocalLauncher();
         TaskListener listener = j.createTaskListener();
         Jenkins jenkins = j.jenkins;
@@ -63,6 +63,9 @@ public class SubmitSigningRequestStepEndToEndTest {
         String signingPolicySlug = Some.stringNonEmpty();
         String organizationId = Some.uuid().toString();
 
+        String artifactConfigurationSlug = Some.stringNonEmpty();
+        String description = Some.stringNonEmpty();
+
         CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, Constants.TrustedBuildSystemTokenCredentialId, trustedBuildSystemToken);
 
         wireMockRule.stubFor(post(urlEqualTo("/v1/" + organizationId + "/SigningRequests"))
@@ -79,6 +82,12 @@ public class SubmitSigningRequestStepEndToEndTest {
                         .withStatus(200)
                         .withBody(signedArtifactBytes)));
 
+        String optionalFields ="";
+        if(withOptionalFields){
+            optionalFields = "artifactConfigurationSlug: '"+artifactConfigurationSlug+"'," +
+                    "description: '"+description+"',";
+        }
+
         WorkflowJob workflowJob = j.createWorkflow("SignPath",
                 "writeFile text: '"+unsignedArtifactString+"', file: 'unsigned.exe'; " +
                         "archiveArtifacts artifacts: 'unsigned.exe', fingerprint: true; " +
@@ -89,6 +98,7 @@ public class SubmitSigningRequestStepEndToEndTest {
                         "organizationId: '" + organizationId + "'," +
                         "projectSlug: '" + projectSlug + "'," +
                         "signingPolicySlug: '" + signingPolicySlug + "'," +
+                        optionalFields+
                         "waitForCompletion: 'true'," +
                         "serviceUnavailableTimeoutInSeconds: 10," +
                         "uploadAndDownloadRequestTimeoutInSeconds: 10," +
@@ -121,6 +131,13 @@ public class SubmitSigningRequestStepEndToEndTest {
                 .withRequestBodyPart(aMultipart().withBody(equalTo(signingPolicySlug)).build())
                 .withRequestBodyPart(aMultipart().withBody(equalTo(remoteUrl)).build()));
 
+        if(withOptionalFields)
+        {
+            wireMockRule.verify(postRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests"))
+                    .withRequestBodyPart(aMultipart().withBody(equalTo(description)).build())
+                    .withRequestBodyPart(aMultipart().withBody(equalTo(artifactConfigurationSlug)).build()));
+        }
+
         Request r=wireMockRule.findAll(postRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests"))).get(0);
 
         assertEquals(unsignedArtifactString, getMultipartFormDataFileContents(r, "Artifact"));
@@ -146,5 +163,10 @@ public class SubmitSigningRequestStepEndToEndTest {
 
     private String getMockUrl(String postfix){
         return String.format("http://localhost:%d/%s", MockServerPort, postfix);
+    }
+
+    @DataPoints("allBooleans")
+    public static Boolean[] allBooleans(){
+        return new Boolean[]{true, false};
     }
 }
