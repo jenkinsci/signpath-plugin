@@ -48,11 +48,6 @@
             <artifactId>git</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.profesorfalken</groupId>
-            <artifactId>jPowerShell</artifactId>
-            <version>3.1.1</version>
-        </dependency>
-        <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
             <version>1.10.19</version>
