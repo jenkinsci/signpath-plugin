@@ -22,6 +22,20 @@
         <port>8080</port>
     </properties>
     <name>SignPath Code-Signing Plugin</name>
+    <description>Use SignPath to sign your build artifacts</description>
+    <developers>
+        <developer>
+            <id>signpath</id>
+            <name>SignPath GmbH</name>
+            <email>office@signpath.io</email>
+        </developer>
+    </developers>
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+        </license>
+    </licenses>
     <dependencies>
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -95,15 +109,6 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-    
-    <!-- If you want this to appear on the plugin site page:
-    <developers>
-      <developer>
-        <id>bhacker</id>
-        <name>Bob Q. Hacker</name>
-        <email>bhacker@nowhere.net</email>
-      </developer>
-    </developers> -->
     <repositories>
         <repository>
             <id>repo.jenkins-ci.org</id>
