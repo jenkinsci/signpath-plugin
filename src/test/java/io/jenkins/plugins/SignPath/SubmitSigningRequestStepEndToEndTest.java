@@ -1,46 +1,45 @@
 package io.jenkins.plugins.SignPath;
 
-import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
-import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
-import com.cloudbees.plugins.credentials.domains.Domain;
+import com.github.tomakehurst.wiremock.http.Request;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.github.tomakehurst.wiremock.matching.StringValuePattern;
-import com.github.tomakehurst.wiremock.stubbing.StubMapping;
+import com.github.tomakehurst.wiremock.matching.MultipartValuePattern;
 import hudson.Launcher;
 import hudson.model.Result;
 import hudson.model.TaskListener;
-import hudson.plugins.git.Branch;
-import hudson.plugins.git.Revision;
-import hudson.plugins.git.util.Build;
+import hudson.model.queue.QueueTaskFuture;
 import hudson.plugins.git.util.BuildData;
-import hudson.util.Secret;
 import io.jenkins.plugins.SignPath.Artifacts.ArtifactFileManager;
 import io.jenkins.plugins.SignPath.Common.TemporaryFile;
-import io.jenkins.plugins.SignPath.TestUtils.SignPathJenkinsRule;
-import io.jenkins.plugins.SignPath.TestUtils.Some;
-import io.jenkins.plugins.SignPath.TestUtils.TemporaryFileUtil;
+import io.jenkins.plugins.SignPath.Exceptions.SignPathFacadeCallException;
+import io.jenkins.plugins.SignPath.TestUtils.*;
 import jenkins.model.Jenkins;
-import org.eclipse.jgit.lib.ObjectId;
-import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
+import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.Assert.*;
 
 public class SubmitSigningRequestStepEndToEndTest {
+    private static final int MockServerPort = 51000;
+
     @Rule
     public SignPathJenkinsRule j= new SignPathJenkinsRule();
 
     @Rule
-    public WireMockRule wireMockRule = new WireMockRule(51000);
+    public WireMockRule wireMockRule = new WireMockRule(MockServerPort);
 
     @Test
     public void submitSigningRequest() throws Exception {
@@ -48,102 +47,104 @@ public class SubmitSigningRequestStepEndToEndTest {
         TaskListener listener = j.createTaskListener();
         Jenkins jenkins = j.jenkins;
         byte[] signedArtifactBytes = Some.bytes();
-        CredentialsStore credentialStore = getCredentialStore(jenkins);
+        CredentialsStore credentialStore = CredentialStoreUtils.getCredentialStore(jenkins);
+        assert credentialStore != null;
+
+        String unsignedArtifactString = Some.stringNonEmpty();
+
+        String apiUrl = getMockUrl();
+        String getSigningRequestStatus = "getSigningRequestStatus";
+        String downloadSignedArtifact = "downloadSignedArtifact";
+
         String trustedBuildSystemToken = Some.stringNonEmpty();
         String ciUserToken = Some.stringNonEmpty();
 
-        addCredentials(credentialStore, CredentialsScope.SYSTEM, Constants.TrustedBuildSystemTokenCredentialId, trustedBuildSystemToken);
-
+        String projectSlug = Some.stringNonEmpty();
+        String signingPolicySlug = Some.stringNonEmpty();
         String organizationId = Some.uuid().toString();
-        wireMockRule.stubFor(post(urlEqualTo("/v1/"+organizationId+"/SigningRequests"))
-               .willReturn(aResponse()
-                               .withStatus(200)
-                               .withHeader("Location", "http://localhost:51000/getSigningRequestStatus")));
-        wireMockRule.stubFor(get(urlEqualTo("/getSigningRequestStatus"))
+
+        CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, Constants.TrustedBuildSystemTokenCredentialId, trustedBuildSystemToken);
+
+        wireMockRule.stubFor(post(urlEqualTo("/v1/" + organizationId + "/SigningRequests"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withBody("{status: 'Completed', signedArtifactLink: 'http://localhost:51000/downloadSignedArtifact'}")));
+                        .withHeader("Location", getMockUrl(getSigningRequestStatus))));
+        wireMockRule.stubFor(get(urlEqualTo("/" + getSigningRequestStatus))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withBody("{status: 'Completed', signedArtifactLink: '" + getMockUrl(downloadSignedArtifact) + "'}")));
 
-        wireMockRule.stubFor(get(urlEqualTo("/downloadSignedArtifact"))
+        wireMockRule.stubFor(get(urlEqualTo("/" + downloadSignedArtifact))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody(signedArtifactBytes)));
 
         WorkflowJob workflowJob = j.createWorkflow("SignPath",
-                "writeFile text: 'hello', file: 'unsigned.exe'; " +
-                        "archiveArtifacts artifacts: 'unsigned.exe', fingerprint: true; "+
-                        "submitSigningRequest( apiUrl: 'http://localhost:51000/', " +
-                        "inputArtifactPath: 'unsigned.exe', "+
+                "writeFile text: '"+unsignedArtifactString+"', file: 'unsigned.exe'; " +
+                        "archiveArtifacts artifacts: 'unsigned.exe', fingerprint: true; " +
+                        "submitSigningRequest( apiUrl: '" + apiUrl + "', " +
+                        "inputArtifactPath: 'unsigned.exe', " +
                         "outputArtifactPath: 'signed.exe', " +
-                        "ciUserToken: '"+ciUserToken+"',"+
-                        "organizationId: '"+organizationId+"'," +
-                        "projectSlug: 'Teamcity'," +
-                        "signingPolicySlug: 'TestSigning'," +
+                        "ciUserToken: '" + ciUserToken + "'," +
+                        "organizationId: '" + organizationId + "'," +
+                        "projectSlug: '" + projectSlug + "'," +
+                        "signingPolicySlug: '" + signingPolicySlug + "'," +
                         "waitForCompletion: 'true'," +
-                        "serviceUnavailableTimeoutInSeconds: 10,"+
-                        "uploadAndDownloadRequestTimeoutInSeconds: 10,"+
+                        "serviceUnavailableTimeoutInSeconds: 10," +
+                        "uploadAndDownloadRequestTimeoutInSeconds: 10," +
                         "waitForCompletionTimeoutInSeconds: 10);");
 
+        String remoteUrl = Some.url();
         BuildData buildData = new BuildData(Some.stringNonEmpty());
-        buildData.saveBuild(CreateRandomBuild(1));
-        buildData.addRemoteUrl(Some.url());
+        buildData.saveBuild(BuildDataDomainObjectMother.CreateRandomBuild(1));
+        buildData.addRemoteUrl(remoteUrl);
 
         // ACT
-        WorkflowRun run = workflowJob.scheduleBuild2(0, buildData).get();
-        if(run.getResult() != Result.SUCCESS){
+        QueueTaskFuture<WorkflowRun> runFuture = workflowJob.scheduleBuild2(0, buildData);
+        assert runFuture != null;
+        WorkflowRun run = runFuture.get();
+
+        // ASSERT
+        if (run.getResult() != Result.SUCCESS) {
             assertEquals("", run.getLog() + run.getResult());
             fail();
         }
 
-        wireMockRule.verify(postRequestedFor(urlEqualTo("/v1/"+organizationId+"/SigningRequests"))
-                .withHeader("Authorization", equalTo("Bearer"+ciUserToken+":"+trustedBuildSystemToken)));
-
-        ArtifactFileManager artifactFileManager = new ArtifactFileManager(run,launcher, listener);
-
-        // ASSERT
+        ArtifactFileManager artifactFileManager = new ArtifactFileManager(run, launcher, listener);
         TemporaryFile signedArtifact = artifactFileManager.retrieveArtifact("signed.exe");
         byte[] signedArtifactContent = TemporaryFileUtil.getContentAndDispose(signedArtifact);
         assertArrayEquals(signedArtifactBytes, signedArtifactContent);
+
+        wireMockRule.verify(postRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests"))
+                .withHeader("Authorization", equalTo("Bearer " + ciUserToken + ":" + trustedBuildSystemToken))
+                .withRequestBodyPart(aMultipart().withBody(equalTo(projectSlug)).build())
+                .withRequestBodyPart(aMultipart().withBody(equalTo(signingPolicySlug)).build())
+                .withRequestBodyPart(aMultipart().withBody(equalTo(remoteUrl)).build()));
+
+        Request r=wireMockRule.findAll(postRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests"))).get(0);
+
+        assertEquals(unsignedArtifactString, getMultipartFormDataFileContents(r, "Artifact"));
+
+        String buildSettingsFile = getMultipartFormDataFileContents(r, "Origin.BuildSettingsFile");
+        assertTrue(buildSettingsFile.contains("node {writeFile text:"));
+        assertTrue(buildSettingsFile.contains(organizationId));
     }
 
-    private Build CreateRandomBuild(int buildNumber) {
-        String commitId = Some.sha1Hash();
-        int branchCount = Some.integer(1, 2);
-        Branch[] branches = new Branch[branchCount];
-        for (int i = 0; i < branchCount; i++) {
-            branches[i] = CreateRandomBranch();
+    private String getMultipartFormDataFileContents(Request r, String name) throws IOException {
+        String bodyAsString = r.getBodyAsString();
+        Matcher regexResult = Pattern.compile(String.format("name=%s; filename=.*?\\n(.*?)--", name), Pattern.DOTALL).matcher(bodyAsString);
+        if(!regexResult.find()){
+            fail("multipart-form-data with name "+name+" not found in "+ bodyAsString);
         }
 
-        return CreateBuild(buildNumber, commitId, branches);
+        return regexResult.group(1).trim();
     }
 
-    private Build CreateBuild(int buildNumber, String commitId, Branch... branches){
-        Result buildResult = Result.SUCCESS;
-        Revision revision = new Revision(ObjectId.fromString(commitId), Arrays.asList(branches));
-        return new Build(revision, buildNumber, buildResult);
+    private String getMockUrl(){
+        return getMockUrl("");
     }
 
-    private Branch CreateRandomBranch(){
-        return new Branch(Some.stringNonEmpty(), ObjectId.fromString(Some.sha1Hash()));
-    }
-
-    private Branch CreateBranch(String branchId, String branchName){
-        return new Branch(branchName, ObjectId.fromString(branchId));
-    }
-
-    private void addCredentials(CredentialsStore credentialsStore, CredentialsScope scope, String id, String secret) throws IOException {
-        Domain domain = credentialsStore.getDomains().get(0);
-        credentialsStore.addCredentials(domain,
-                new StringCredentialsImpl(scope, id, Some.stringNonEmpty(), Secret.fromString(secret)));
-    }
-
-    private CredentialsStore getCredentialStore(Jenkins jenkins) {
-        for (CredentialsStore credentialsStore : CredentialsProvider.lookupStores(jenkins)) {
-            if(SystemCredentialsProvider.StoreImpl.class.isAssignableFrom(credentialsStore.getClass())){
-                return credentialsStore;
-            }
-        }
-
-        return null;
+    private String getMockUrl(String postfix){
+        return String.format("http://localhost:%d/%s", MockServerPort, postfix);
     }
 }

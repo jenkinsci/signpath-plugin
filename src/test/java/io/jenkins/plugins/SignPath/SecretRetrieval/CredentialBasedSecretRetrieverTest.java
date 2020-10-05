@@ -8,6 +8,7 @@ import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.util.Secret;
 import io.jenkins.plugins.SignPath.Exceptions.SecretNotFoundException;
+import io.jenkins.plugins.SignPath.TestUtils.CredentialStoreUtils;
 import io.jenkins.plugins.SignPath.TestUtils.Some;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
@@ -35,14 +36,14 @@ public class CredentialBasedSecretRetrieverTest {
     public void setup(){
         Jenkins jenkins = Jenkins.getInstanceOrNull();
         sut = new CredentialBasedSecretRetriever(jenkins);
-        credentialStore = getCredentialStore(jenkins);
+        credentialStore = CredentialStoreUtils.getCredentialStore(jenkins);
     }
 
     @Test
     public void retrieveSecret() throws IOException, SecretNotFoundException {
         String id = Some.stringNonEmpty();
         String secret = Some.stringNonEmpty();
-        addCredentials(credentialStore, CredentialsScope.SYSTEM, id, secret);
+        CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, id, secret);
 
         // ACT
         String result = sut.retrieveSecret(id);
@@ -84,7 +85,7 @@ public class CredentialBasedSecretRetrieverTest {
     public void retrieveSecret_WrongScope_Throws() throws IOException {
         String id = Some.stringNonEmpty();
         String secret = Some.stringNonEmpty();
-        addCredentials(credentialStore, CredentialsScope.GLOBAL, id, secret);
+        CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.GLOBAL, id, secret);
 
         // ACT
         ThrowingRunnable act = () -> sut.retrieveSecret(id);
@@ -98,7 +99,7 @@ public class CredentialBasedSecretRetrieverTest {
     public void retrieveSecret_NullScope_Throws() throws IOException {
         String id = Some.stringNonEmpty();
         String secret = Some.stringNonEmpty();
-        addCredentials(credentialStore, null, id, secret);
+        CredentialStoreUtils.addCredentials(credentialStore, null, id, secret);
 
         // ACT
         ThrowingRunnable act = () -> sut.retrieveSecret(id);
@@ -121,20 +122,5 @@ public class CredentialBasedSecretRetrieverTest {
         // ASSERT
         Throwable ex = assertThrows(SecretNotFoundException.class, act);
         assertEquals(ex.getMessage(), String.format("The secret '%s' could not be found in the credential store.", id));
-    }
-
-    private void addCredentials(CredentialsStore credentialsStore, CredentialsScope scope, String id, String secret) throws IOException {
-        Domain domain = credentialsStore.getDomains().get(0);
-        credentialsStore.addCredentials(domain,
-                new StringCredentialsImpl(scope, id,Some.stringNonEmpty(),Secret.fromString(secret)));
-    }
-    private CredentialsStore getCredentialStore(Jenkins jenkins) {
-        for (CredentialsStore credentialsStore : CredentialsProvider.lookupStores(jenkins)) {
-            if(SystemCredentialsProvider.StoreImpl.class.isAssignableFrom(credentialsStore.getClass())){
-                return credentialsStore;
-            }
-        }
-
-        return null;
     }
 }
