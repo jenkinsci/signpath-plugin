@@ -52,10 +52,6 @@ public class SubmitSigningRequestStepEndToEndTest {
 
         String unsignedArtifactString = Some.stringNonEmpty();
 
-        String apiUrl = getMockUrl();
-        String getSigningRequestStatus = "getSigningRequestStatus";
-        String downloadSignedArtifact = "downloadSignedArtifact";
-
         String trustedBuildSystemToken = Some.stringNonEmpty();
         String ciUserToken = Some.stringNonEmpty();
 
@@ -68,6 +64,9 @@ public class SubmitSigningRequestStepEndToEndTest {
 
         CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, Constants.TrustedBuildSystemTokenCredentialId, trustedBuildSystemToken);
 
+        String apiUrl = getMockUrl();
+        String getSigningRequestStatus = "getSigningRequestStatus";
+        String downloadSignedArtifact = "downloadSignedArtifact";
         wireMockRule.stubFor(post(urlEqualTo("/v1/" + organizationId + "/SigningRequests"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -145,6 +144,24 @@ public class SubmitSigningRequestStepEndToEndTest {
         String buildSettingsFile = getMultipartFormDataFileContents(r, "Origin.BuildSettingsFile");
         assertTrue(buildSettingsFile.contains("node {writeFile text:"));
         assertTrue(buildSettingsFile.contains(organizationId));
+    }
+
+    @Theory
+    public void submitSigningRequestWithMissingField() throws Exception  {
+        WorkflowJob workflowJob = j.createWorkflow("SignPath","submitSigningRequest();");
+
+        BuildData buildData = new BuildData(Some.stringNonEmpty());
+        buildData.saveBuild(BuildDataDomainObjectMother.CreateRandomBuild(1));
+        buildData.addRemoteUrl(Some.url());
+
+        // ACT
+        QueueTaskFuture<WorkflowRun> runFuture = workflowJob.scheduleBuild2(0, buildData);
+        assert runFuture != null;
+        WorkflowRun run = runFuture.get();
+
+        // ASSERT
+        assertEquals(Result.FAILURE, run.getResult());
+        assertTrue(run.getLog().contains("SignPathStepInvalidArgumentException"));
     }
 
     private String getMultipartFormDataFileContents(Request r, String name) throws IOException {

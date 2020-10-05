@@ -15,11 +15,14 @@ import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.PowerShellExecutor;
 import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.SignPathPowerShellFacadeFactory;
 import io.jenkins.plugins.SignPath.Artifacts.ArtifactFileManager;
 import io.jenkins.plugins.SignPath.Artifacts.IArtifactFileManager;
+import io.jenkins.plugins.SignPath.Exceptions.SignPathStepInvalidArgumentException;
 import io.jenkins.plugins.SignPath.OriginRetrieval.DefaultConfigFileProvider;
 import io.jenkins.plugins.SignPath.OriginRetrieval.IOriginRetriever;
 import io.jenkins.plugins.SignPath.OriginRetrieval.OriginRetriever;
 import io.jenkins.plugins.SignPath.SecretRetrieval.CredentialBasedSecretRetriever;
 import io.jenkins.plugins.SignPath.SecretRetrieval.ISecretRetriever;
+import io.jenkins.plugins.SignPath.StepInputParser.SigningRequestStepInput;
+import io.jenkins.plugins.SignPath.StepInputParser.SigningRequestStepInputParser;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
@@ -57,7 +60,9 @@ public class SubmitSigningRequestStep extends Step {
 
     // TODO SIGN-3326: Check all input parameters for null! (Write mapper?)
     @Override
-    public StepExecution start(StepContext context) throws IOException, InterruptedException {
+    public StepExecution start(StepContext context) throws IOException, InterruptedException, SignPathStepInvalidArgumentException {
+        SigningRequestStepInput input = SigningRequestStepInputParser.Parse(this);
+
         TaskListener listener = context.get(TaskListener.class);
         assert listener != null;
         Run<?, ?> run = context.get(Run.class);
@@ -78,7 +83,7 @@ public class SubmitSigningRequestStep extends Step {
                 getWaitForCompletionTimeoutInSeconds());
         ISignPathFacadeFactory signPathFacadeFactory = new SignPathPowerShellFacadeFactory(pwsh, apiConfiguration);
 
-        return new SubmitSigningRequestStepExecution(this, context, logger, secretRetriever, originRetriever,artifactFileManager, signPathFacadeFactory);
+        return new SubmitSigningRequestStepExecution(input, context, logger, secretRetriever, originRetriever,artifactFileManager, signPathFacadeFactory);
     }
 
     @Override
