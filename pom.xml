@@ -74,29 +74,11 @@
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>pipeline-build-step</artifactId>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.mock-server/mockserver-netty -->
+        <!-- https://mvnrepository.com/artifact/com.github.tomakehurst/wiremock-standalone -->
         <dependency>
-            <groupId>org.mock-server</groupId>
-            <artifactId>mockserver-netty</artifactId>
-            <version>5.11.1</version>
-            <scope>test</scope>
-            <!-- resolve upper bound check -->
-            <exclusions>
-                <exclusion>
-                    <groupId>com.github.fge</groupId>
-                    <artifactId>json-schema-validator</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>xerces</groupId>
-                    <artifactId>xercesImpl</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/org.mock-server/mockserver-client-java -->
-        <dependency>
-            <groupId>org.mock-server</groupId>
-            <artifactId>mockserver-client-java</artifactId>
-            <version>5.11.1</version>
+            <groupId>com.github.tomakehurst</groupId>
+            <artifactId>wiremock-standalone</artifactId>
+            <version>2.27.2</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

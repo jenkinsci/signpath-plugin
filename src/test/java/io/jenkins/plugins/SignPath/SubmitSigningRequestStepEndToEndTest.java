@@ -5,6 +5,9 @@ import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.Domain;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.matching.StringValuePattern;
+import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 import hudson.Launcher;
 import hudson.model.Result;
 import hudson.model.TaskListener;
@@ -23,55 +26,63 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockserver.integration.ClientAndServer;
 
 import java.io.IOException;
 import java.util.Arrays;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.Assert.*;
 
 public class SubmitSigningRequestStepEndToEndTest {
     @Rule
     public SignPathJenkinsRule j= new SignPathJenkinsRule();
 
-    private ClientAndServer mockServer;
-
-    @Before
-    public void setup(){
-        //mockServer = startClientAndServer();
-    }
-
-    @After
-    public void teardown() {
-        if (mockServer != null) {
-            mockServer.close();
-        }
-    }
+    @Rule
+    public WireMockRule wireMockRule = new WireMockRule(51000);
 
     @Test
     public void submitSigningRequest() throws Exception {
         Launcher launcher = j.createLocalLauncher();
         TaskListener listener = j.createTaskListener();
         Jenkins jenkins = j.jenkins;
+        byte[] signedArtifactBytes = Some.bytes();
         CredentialsStore credentialStore = getCredentialStore(jenkins);
-        String secret = "AOsbMV2JSguwmFyjoLaCTV/8gyLEI7wgJDi/CZDgYCFp";
-        addCredentials(credentialStore, CredentialsScope.SYSTEM, Constants.TrustedBuildSystemTokenCredentialId, secret);
+        String trustedBuildSystemToken = Some.stringNonEmpty();
+        String ciUserToken = Some.stringNonEmpty();
+
+        addCredentials(credentialStore, CredentialsScope.SYSTEM, Constants.TrustedBuildSystemTokenCredentialId, trustedBuildSystemToken);
+
+        String organizationId = Some.uuid().toString();
+        wireMockRule.stubFor(post(urlEqualTo("/v1/"+organizationId+"/SigningRequests"))
+               .willReturn(aResponse()
+                               .withStatus(200)
+                               .withHeader("Location", "http://localhost:51000/getSigningRequestStatus")));
+        wireMockRule.stubFor(get(urlEqualTo("/getSigningRequestStatus"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withBody("{status: 'Completed', signedArtifactLink: 'http://localhost:51000/downloadSignedArtifact'}")));
+
+        wireMockRule.stubFor(get(urlEqualTo("/downloadSignedArtifact"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withBody(signedArtifactBytes)));
 
         WorkflowJob workflowJob = j.createWorkflow("SignPath",
                 "writeFile text: 'hello', file: 'unsigned.exe'; " +
                         "archiveArtifacts artifacts: 'unsigned.exe', fingerprint: true; "+
-                        "submitSigningRequest( apiUrl: 'https://localhost:44328/', " +
+                        "submitSigningRequest( apiUrl: 'http://localhost:51000/', " +
                         "inputArtifactPath: 'unsigned.exe', "+
                         "outputArtifactPath: 'signed.exe', " +
-                        "ciUserToken: 'AB9348mOiqkkLFCpo4JZ938eO9Z7/bmMXxqcmznaPnKa',"+
-                        "organizationId: 'c3bb3384-ae65-4bc5-93ad-2537e4fc87b6'," +
+                        "ciUserToken: '"+ciUserToken+"',"+
+                        "organizationId: '"+organizationId+"'," +
                         "projectSlug: 'Teamcity'," +
                         "signingPolicySlug: 'TestSigning'," +
-                        "waitForCompletion: 'true' );");
+                        "waitForCompletion: 'true'," +
+                        "serviceUnavailableTimeoutInSeconds: 10,"+
+                        "uploadAndDownloadRequestTimeoutInSeconds: 10,"+
+                        "waitForCompletionTimeoutInSeconds: 10);");
 
         BuildData buildData = new BuildData(Some.stringNonEmpty());
         buildData.saveBuild(CreateRandomBuild(1));
@@ -84,12 +95,15 @@ public class SubmitSigningRequestStepEndToEndTest {
             fail();
         }
 
+        wireMockRule.verify(postRequestedFor(urlEqualTo("/v1/"+organizationId+"/SigningRequests"))
+                .withHeader("Authorization", equalTo("Bearer"+ciUserToken+":"+trustedBuildSystemToken)));
+
         ArtifactFileManager artifactFileManager = new ArtifactFileManager(run,launcher, listener);
 
         // ASSERT
         TemporaryFile signedArtifact = artifactFileManager.retrieveArtifact("signed.exe");
         byte[] signedArtifactContent = TemporaryFileUtil.getContentAndDispose(signedArtifact);
-        assertArrayEquals(new byte[0], signedArtifactContent);
+        assertArrayEquals(signedArtifactBytes, signedArtifactContent);
     }
 
     private Build CreateRandomBuild(int buildNumber) {
