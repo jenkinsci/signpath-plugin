@@ -108,7 +108,7 @@ public class SignPathPowerShellFacade implements ISignPathFacade {
     }
 
     private String createGetSignedArtifactCommand(UUID organizationId, UUID signingRequestId, TemporaryFile outputArtifact){
-        return "Submit-SigningRequest " + String.format("-ApiUrl '%s' ", apiConfiguration.getApiUrl()) +
+        return "Get-SignedArtifact " + String.format("-ApiUrl '%s' ", apiConfiguration.getApiUrl()) +
                 String.format("-CIUserToken '%s' ", credentials.toString()) +
                 String.format("-OrganizationId '%s' ", organizationId) +
                 String.format("-SigningRequestId '%s' ", signingRequestId) +
