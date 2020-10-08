@@ -13,14 +13,13 @@ public class PowerShellExecutorTest {
 
     @Before
     public void setup(){
-        sut = new PowerShellExecutor("pwsh", "echo 'setup environment'");
+        sut = new PowerShellExecutor("pwsh");
     }
 
     @Test
     public void execute(){
         PowerShellExecutionResult executionResult = sut.execute("echo 'some string'");
 
-        assertContains("setup environment", executionResult.getOutput());
         assertContains("some string", executionResult.getOutput());
         assertFalse(executionResult.getHasError());
     }

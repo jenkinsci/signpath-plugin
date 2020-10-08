@@ -51,7 +51,6 @@ public class GetSignedArtifactStep extends Step {
     public GetSignedArtifactStep() {
     }
 
-    // TODO SIGN-3326: Check all input parameters for null! (Write mapper?)
     @Override
     public StepExecution start(StepContext context) throws IOException, InterruptedException, SignPathStepInvalidArgumentException {
         GetSignedArtifactStepInput input = SigningRequestStepInputParser.Parse(this);
@@ -66,8 +65,7 @@ public class GetSignedArtifactStep extends Step {
         // TODO SIGN-3326: Share between steps + validate configuration
         ISecretRetriever secretRetriever = new CredentialBasedSecretRetriever(jenkins);
         IArtifactFileManager artifactFileManager = new ArtifactFileManager(run, launcher, listener);
-        String setupEnvironmentCommand = "Import-Module C:\\Temp\\SignPath.psm1";
-        IPowerShellExecutor pwsh = new PowerShellExecutor("pwsh", setupEnvironmentCommand);
+        IPowerShellExecutor pwsh = new PowerShellExecutor("pwsh");
         ApiConfiguration apiConfiguration = new ApiConfiguration(new URL(getApiUrl()),
                 getServiceUnavailableTimeoutInSeconds(),
                 getUploadAndDownloadRequestTimeoutInSeconds(),

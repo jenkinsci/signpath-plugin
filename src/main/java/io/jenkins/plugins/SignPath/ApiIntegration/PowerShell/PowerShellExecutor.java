@@ -7,16 +7,14 @@ import java.nio.charset.StandardCharsets;
 public class PowerShellExecutor implements IPowerShellExecutor {
 
     private final String powerShellExecutableName;
-    private String setupEnvironmentCommand;
 
-    public PowerShellExecutor(String powerShellExecutableName, String setupEnvironmentCommand) {
+    public PowerShellExecutor(String powerShellExecutableName) {
         this.powerShellExecutableName = powerShellExecutableName;
-        this.setupEnvironmentCommand = setupEnvironmentCommand;
     }
 
     public PowerShellExecutionResult execute(String powerShellCommand) {
         try {
-            Process powerShellProcess = Runtime.getRuntime().exec(String.format("%s -command \"%s;%s\"", powerShellExecutableName, setupEnvironmentCommand, powerShellCommand));
+            Process powerShellProcess = Runtime.getRuntime().exec(String.format("%s -command \"%s\"", powerShellExecutableName, powerShellCommand));
             powerShellProcess.getOutputStream().close();
             String standard = IOUtils.toString(powerShellProcess.getInputStream(), StandardCharsets.UTF_8).trim();
             String error = IOUtils.toString(powerShellProcess.getErrorStream(), StandardCharsets.UTF_8).trim();
