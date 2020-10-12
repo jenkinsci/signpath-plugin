@@ -22,7 +22,7 @@ import java.nio.charset.StandardCharsets;
 import static org.junit.Assert.*;
 
 @RunWith(Theories.class)
-public class ArtifactFileManagerTest {
+public class DefaultArtifactFileManagerTest {
     @Rule
     public SignPathJenkinsRule j = new SignPathJenkinsRule();
 
@@ -43,8 +43,9 @@ public class ArtifactFileManagerTest {
     @DataPoints("allFileNames")
     public static String[][] allFileNames() {
         return new String[][]{
-                new String[]{"some.exe", "some.exe"},
-                new String[]{"subfolder/my.dll", "my.dll"}
+                new String[]{"some.exe","some.exe", "some.exe"},
+                new String[]{"subfolder/my.dll","subfolder/my.dll", "my.dll"},
+                new String[]{"subfolder/my.dll","subfolder\\my.dll", "my.dll"},
         };
     }
 
@@ -52,12 +53,13 @@ public class ArtifactFileManagerTest {
     @Theory
     public void retrieveArtifact_returnsCorrectFileName(@FromDataPoints("allFileNames") String[] fileNames) throws Exception {
         String artifactPath = fileNames[0];
-        String expectedFileName = fileNames[1];
+        String artifactRetrievalPath = fileNames[1];
+        String expectedFileName = fileNames[2];
 
         DefaultArtifactFileManager sut = runJob(archiveArtifactScript(artifactPath));
 
         // ACT
-        TemporaryFile retrievedArtifact = sut.retrieveArtifact(artifactPath);
+        TemporaryFile retrievedArtifact = sut.retrieveArtifact(artifactRetrievalPath);
 
         // ASSERT
         String message = String.format("%s must end with %s", retrievedArtifact.getAbsolutePath(), expectedFileName);

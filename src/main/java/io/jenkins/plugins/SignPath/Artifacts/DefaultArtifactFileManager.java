@@ -50,12 +50,12 @@ public class DefaultArtifactFileManager implements ArtifactFileManager {
     }
 
     private String getFileName(String artifactPath) {
-        // we know that artifact paths need to contain / instead of \\ in Jenkins
-        if (artifactPath.contains("/")) {
-            return artifactPath.substring(artifactPath.lastIndexOf("/"));
+        String normalizedArtifactPath = artifactPath.replace("\\", "/");
+        if (normalizedArtifactPath.contains("/")) {
+            return normalizedArtifactPath.substring(normalizedArtifactPath.lastIndexOf("/"));
         }
 
-        return artifactPath;
+        return normalizedArtifactPath;
     }
 
     @Override
