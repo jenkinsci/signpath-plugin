@@ -6,15 +6,29 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 
 public class TemporaryFile implements Closeable {
+    private final File temporaryDirectory;
     private final File temporaryFile;
 
     public TemporaryFile() throws IOException {
-        temporaryFile = File.createTempFile("SignPathTemp", null);
+        temporaryDirectory = null;
+        temporaryFile = File.createTempFile("SignPathJenkinsPluginTemp"  , null);
+
+        temporaryFile.deleteOnExit();
+    }
+
+    public TemporaryFile(String name) throws IOException {
+        // in order to create a file with a specific name, we put it in a custom temporary directory
+        temporaryDirectory = Files.createTempDirectory("SignPathJenkinsPluginTemp").toFile();
+        temporaryFile = new File(temporaryDirectory, name);
+
+        // this should never throw (only if file-already exists, but the temp directory should be unique)
+        assert temporaryFile.createNewFile();
 
         // we indicate that the java vm should delete the file on-exit
-        temporaryFile.deleteOnExit();
+        temporaryDirectory.deleteOnExit();
     }
 
     public File getFile(){
@@ -33,5 +47,10 @@ public class TemporaryFile implements Closeable {
     public void close() {
         //noinspection ResultOfMethodCallIgnored
         temporaryFile.delete();
+
+        if (temporaryDirectory != null) {
+            //noinspection ResultOfMethodCallIgnored
+            temporaryDirectory.delete();
+        }
     }
 }

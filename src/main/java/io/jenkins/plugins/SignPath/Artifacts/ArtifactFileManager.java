@@ -12,6 +12,8 @@ import jenkins.util.VirtualFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 
 // TODO SIGN-3326: Probably add fingerprinting as well.
@@ -35,11 +37,21 @@ public class ArtifactFileManager implements IArtifactFileManager {
             throw new ArtifactNotFoundException(String.format("The artifact at path \"%s\" was not found.", artifactPath));
         }
 
-        TemporaryFile temporaryArtifactFile = new TemporaryFile();
+        String fileName = getFileName(artifactPath);
+        TemporaryFile temporaryArtifactFile = new TemporaryFile(fileName);
         try (InputStream in = artifactFile.open()) {
             temporaryArtifactFile.copyFrom(in);
         }
         return temporaryArtifactFile;
+    }
+
+    private String getFileName(String artifactPath) {
+        // we know that artifact paths need to contain / instead of \\ in Jenkins
+        if(artifactPath.contains("/")){
+            return artifactPath.substring(artifactPath.lastIndexOf("/"));
+        }
+
+        return artifactPath;
     }
 
     @Override
