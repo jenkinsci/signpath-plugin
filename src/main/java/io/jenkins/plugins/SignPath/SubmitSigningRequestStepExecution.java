@@ -7,10 +7,7 @@ import io.jenkins.plugins.SignPath.ApiIntegration.Model.SigningRequestOriginMode
 import io.jenkins.plugins.SignPath.ApiIntegration.SignPathCredentials;
 import io.jenkins.plugins.SignPath.Artifacts.IArtifactFileManager;
 import io.jenkins.plugins.SignPath.Common.TemporaryFile;
-import io.jenkins.plugins.SignPath.Exceptions.OriginNotRetrievableException;
-import io.jenkins.plugins.SignPath.Exceptions.SecretNotFoundException;
-import io.jenkins.plugins.SignPath.Exceptions.SignPathFacadeCallException;
-import io.jenkins.plugins.SignPath.Exceptions.SignPathStepFailedException;
+import io.jenkins.plugins.SignPath.Exceptions.*;
 import io.jenkins.plugins.SignPath.OriginRetrieval.IOriginRetriever;
 import io.jenkins.plugins.SignPath.SecretRetrieval.ISecretRetriever;
 import io.jenkins.plugins.SignPath.StepInputParser.SubmitSigningRequestStepInput;
@@ -84,7 +81,7 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution<
                 logger.print("\nSigning step succeeded\n");
                 return signingRequestId.toString();
             }
-        } catch (SecretNotFoundException | OriginNotRetrievableException | SignPathFacadeCallException | IOException | InterruptedException ex) {
+        } catch (SecretNotFoundException | OriginNotRetrievableException | SignPathFacadeCallException | IOException | InterruptedException | ArtifactNotFoundException ex) {
             logger.print("\nSigning step failed: " + ex.getMessage() + "\n");
             throw new SignPathStepFailedException("Signing step failed: " + ex.getMessage(), ex);
         }

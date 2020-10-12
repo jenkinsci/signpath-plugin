@@ -5,6 +5,7 @@ import hudson.Launcher;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import io.jenkins.plugins.SignPath.Common.TemporaryFile;
+import io.jenkins.plugins.SignPath.Exceptions.ArtifactNotFoundException;
 import jenkins.model.ArtifactManager;
 import jenkins.util.BuildListenerAdapter;
 import jenkins.util.VirtualFile;
@@ -26,13 +27,12 @@ public class ArtifactFileManager implements IArtifactFileManager {
     }
 
     @Override
-    public TemporaryFile retrieveArtifact(String artifactPath) throws IOException {
+    public TemporaryFile retrieveArtifact(String artifactPath) throws IOException, ArtifactNotFoundException {
         ArtifactManager artifactManager = run.getArtifactManager();
 
-        // TODO SIGN-3326: Check if root == null + throw proper exception! maybe artifact path is null as well
         VirtualFile artifactFile = artifactManager.root().child(artifactPath);
         if (!artifactFile.exists()) {
-            throw new IllegalArgumentException("artifact file does not exist");
+            throw new ArtifactNotFoundException(String.format("The artifact at path \"%s\" was not found.", artifactPath));
         }
 
         TemporaryFile temporaryArtifactFile = new TemporaryFile();
