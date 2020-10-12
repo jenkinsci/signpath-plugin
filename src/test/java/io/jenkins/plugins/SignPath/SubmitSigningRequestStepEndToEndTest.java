@@ -12,6 +12,7 @@ import hudson.plugins.git.util.BuildData;
 import io.jenkins.plugins.SignPath.Artifacts.ArtifactFileManager;
 import io.jenkins.plugins.SignPath.Common.TemporaryFile;
 import io.jenkins.plugins.SignPath.TestUtils.*;
+import jenkins.model.JenkinsLocationConfiguration;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Rule;
@@ -175,6 +176,40 @@ public class SubmitSigningRequestStepEndToEndTest {
         assertTrue(run.getLog().contains("SignPathStepInvalidArgumentException"));
     }
 
+    @Theory
+    public void submitSigningRequestWithWrongOrMissingRootUrl(@FromDataPoints("allRootUrls")  String rootUrl) throws Exception {
+        String unsignedArtifactString = Some.stringNonEmpty();
+        String ciUserToken = Some.stringNonEmpty();
+        String projectSlug = Some.stringNonEmpty();
+        String signingPolicySlug = Some.stringNonEmpty();
+        String organizationId = Some.uuid().toString();
+        String trustedBuildSystemToken = Some.stringNonEmpty();
+        String apiUrl = getMockUrl();
+
+        WorkflowJob workflowJob = createWorkflowJob(apiUrl, ciUserToken, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, false);
+
+        CredentialsStore credentialStore = CredentialStoreUtils.getCredentialStore(j.jenkins);
+        assert credentialStore != null;
+        CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, Constants.TrustedBuildSystemTokenCredentialId, trustedBuildSystemToken);
+
+        BuildData buildData = new BuildData(Some.stringNonEmpty());
+        buildData.saveBuild(BuildDataDomainObjectMother.CreateRandomBuild(1));
+        buildData.addRemoteUrl(Some.url());
+
+        // we set a missing root-url
+        JenkinsLocationConfiguration.get().setUrl(rootUrl);
+
+        // ACT
+        QueueTaskFuture<WorkflowRun> runFuture = workflowJob.scheduleBuild2(0, buildData);
+        assert runFuture != null;
+        WorkflowRun run = runFuture.get();
+
+        // ASSERT
+        assertEquals(Result.FAILURE, run.getResult());
+        assertTrue(run.getLog(), run.getLog().contains("SignPathStepInvalidArgumentException"));
+        wireMockRule.verify(exactly(0), postRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests")));
+    }
+
     private WorkflowJob createWorkflowJob(String apiUrl,
                                           String ciUserToken,
                                           String organizationId,
@@ -289,6 +324,11 @@ public class SubmitSigningRequestStepEndToEndTest {
 
     private String getMockUrl(String postfix){
         return String.format("http://localhost:%d/%s", MockServerPort, postfix);
+    }
+
+    @DataPoints("allRootUrls")
+    public static String[] allRootUrls() {
+        return new String[]{"", "not a valid url"};
     }
 
     @DataPoints("allBooleans")

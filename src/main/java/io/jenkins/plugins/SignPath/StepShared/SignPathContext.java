@@ -10,6 +10,7 @@ import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.PowerShellExecutor;
 import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.SignPathPowerShellFacadeFactory;
 import io.jenkins.plugins.SignPath.Artifacts.ArtifactFileManager;
 import io.jenkins.plugins.SignPath.Artifacts.IArtifactFileManager;
+import io.jenkins.plugins.SignPath.Exceptions.SignPathStepInvalidArgumentException;
 import io.jenkins.plugins.SignPath.OriginRetrieval.DefaultConfigFileProvider;
 import io.jenkins.plugins.SignPath.OriginRetrieval.IOriginRetriever;
 import io.jenkins.plugins.SignPath.OriginRetrieval.OriginRetriever;
@@ -83,7 +84,8 @@ public class SignPathContext {
         return signPathFacadeFactory;
     }
 
-    public static SignPathContext CreateForStep(StepContext context, ApiConfiguration apiConfiguration) throws IOException, InterruptedException {
+    public static SignPathContext CreateForStep(StepContext context, ApiConfiguration apiConfiguration)
+            throws IOException, InterruptedException, SignPathStepInvalidArgumentException {
         TaskListener listener = context.get(TaskListener.class);
         assert listener != null;
         Run<?, ?> run = context.get(Run.class);
@@ -92,6 +94,11 @@ public class SignPathContext {
         Jenkins jenkins = Jenkins.get();
         JenkinsLocationConfiguration config = JenkinsLocationConfiguration.get();
         String jenkinsRootUrl = config.getUrl();
+
+        // non-valid urls result in null value here
+        if(jenkinsRootUrl == null || jenkinsRootUrl.isEmpty()) {
+            throw new SignPathStepInvalidArgumentException("The configured jenkins root url " + jenkinsRootUrl + " is not valid.");
+        }
 
         ISecretRetriever secretRetriever = new CredentialBasedSecretRetriever(jenkins);
         IOriginRetriever originRetriever = new OriginRetriever(new DefaultConfigFileProvider(run), run, jenkinsRootUrl);
