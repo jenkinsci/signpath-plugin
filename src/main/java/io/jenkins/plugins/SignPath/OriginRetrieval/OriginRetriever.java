@@ -36,7 +36,7 @@ public class OriginRetriever implements IOriginRetriever {
         int buildNumber = run.getNumber();
         Map.Entry<String, Build> matchingBuild = findMatchingBuild(buildData, buildNumber);
         String repositoryUrl = getSingleRemoteUrl(buildData, buildNumber);
-        String branchName = matchingBuild.getKey();
+        String branchName = parseBranchName(matchingBuild.getKey());
         String commitId = matchingBuild.getValue().getRevision().getSha1String();
         RepositoryMetadataModel repositoryMetadata = new RepositoryMetadataModel(sourceControlManagementType, repositoryUrl, branchName, commitId);
 
@@ -44,6 +44,10 @@ public class OriginRetriever implements IOriginRetriever {
         String buildUrl = StringUtils.strip(rootUrl,"/") + "/" + StringUtils.strip(jobUrl, "/");
         TemporaryFile buildSettingsFile = getBuildSettingsFile();
         return new SigningRequestOriginModel(repositoryMetadata, buildUrl, buildSettingsFile);
+    }
+
+    private String parseBranchName(String key) {
+        return key.replaceFirst("^refs/remotes/.*?/","");
     }
 
     private TemporaryFile getBuildSettingsFile() throws IOException {
