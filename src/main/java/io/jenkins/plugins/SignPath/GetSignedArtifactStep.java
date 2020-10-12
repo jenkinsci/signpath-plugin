@@ -18,10 +18,10 @@ import io.jenkins.plugins.SignPath.Artifacts.IArtifactFileManager;
 import io.jenkins.plugins.SignPath.Exceptions.SignPathStepInvalidArgumentException;
 import io.jenkins.plugins.SignPath.SecretRetrieval.CredentialBasedSecretRetriever;
 import io.jenkins.plugins.SignPath.SecretRetrieval.ISecretRetriever;
-import io.jenkins.plugins.SignPath.StepInputParser.GetSignedArtifactStepInput;
-import io.jenkins.plugins.SignPath.StepInputParser.SigningRequestStepInputParser;
+import io.jenkins.plugins.SignPath.StepShared.GetSignedArtifactStepInput;
+import io.jenkins.plugins.SignPath.StepShared.SignPathContext;
+import io.jenkins.plugins.SignPath.StepShared.SigningRequestStepInputParser;
 import jenkins.model.Jenkins;
-import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
@@ -33,15 +33,9 @@ import java.io.PrintStream;
 import java.net.URL;
 import java.util.Set;
 
-public class GetSignedArtifactStep extends Step {
+public class GetSignedArtifactStep extends SignPathStepBase {
     private final static String FunctionName = "getSignedArtifact";
     private final static String DisplayName = "Download SignPath Signed Artifact";
-
-    private String apiUrl =  "https://app.signpath.io/api/";
-    private int serviceUnavailableTimeoutInSeconds = 600;
-    private int uploadAndDownloadRequestTimeoutInSeconds = 300;
-    private int waitForCompletionTimeoutInSeconds = 600;
-    private String ciUserToken;
 
     private String organizationId;
     private String signingRequestId;
@@ -49,30 +43,15 @@ public class GetSignedArtifactStep extends Step {
 
     @DataBoundConstructor
     public GetSignedArtifactStep() {
+        super();
     }
 
     @Override
     public StepExecution start(StepContext context) throws IOException, InterruptedException, SignPathStepInvalidArgumentException {
-        GetSignedArtifactStepInput input = SigningRequestStepInputParser.Parse(this);
-
-        TaskListener listener = context.get(TaskListener.class);
-        assert listener != null;
-        Run<?, ?> run = context.get(Run.class);
-        Launcher launcher = context.get(Launcher.class);
-        PrintStream logger = listener.getLogger();
-        Jenkins jenkins = Jenkins.get();
-
-        // TODO SIGN-3326: Share between steps + validate configuration
-        ISecretRetriever secretRetriever = new CredentialBasedSecretRetriever(jenkins);
-        IArtifactFileManager artifactFileManager = new ArtifactFileManager(run, launcher, listener);
-        IPowerShellExecutor pwsh = new PowerShellExecutor("pwsh");
-        ApiConfiguration apiConfiguration = new ApiConfiguration(new URL(getApiUrl()),
-                getServiceUnavailableTimeoutInSeconds(),
-                getUploadAndDownloadRequestTimeoutInSeconds(),
-                getWaitForCompletionTimeoutInSeconds());
-        ISignPathFacadeFactory signPathFacadeFactory = new SignPathPowerShellFacadeFactory(pwsh, apiConfiguration);
-
-        return new GetSignedArtifactStepExecution(input, context, logger, secretRetriever, artifactFileManager, signPathFacadeFactory);
+        GetSignedArtifactStepInput input = SigningRequestStepInputParser.ParseInput(this);
+        ApiConfiguration apiConfiguration = SigningRequestStepInputParser.ParseApiConfiguration(this);
+        SignPathContext signPathContext = SignPathContext.CreateForStep(context,apiConfiguration);
+        return new GetSignedArtifactStepExecution(input, signPathContext);
     }
 
     @Override
@@ -100,14 +79,6 @@ public class GetSignedArtifactStep extends Step {
         }
     }
 
-    public String getApiUrl() {
-        return apiUrl;
-    }
-
-    public String getCiUserToken() {
-        return ciUserToken;
-    }
-
     public String getOrganizationId() {
         return organizationId;
     }
@@ -116,30 +87,8 @@ public class GetSignedArtifactStep extends Step {
         return signingRequestId;
     }
 
-    public int getServiceUnavailableTimeoutInSeconds() {
-        return serviceUnavailableTimeoutInSeconds;
-    }
-
-    public int getUploadAndDownloadRequestTimeoutInSeconds() {
-        return uploadAndDownloadRequestTimeoutInSeconds;
-    }
-
     public String getOutputArtifactPath() {
         return outputArtifactPath;
-    }
-
-    public int getWaitForCompletionTimeoutInSeconds() {
-        return waitForCompletionTimeoutInSeconds;
-    }
-
-    @DataBoundSetter
-    public void setApiUrl(String apiUrl) {
-        this.apiUrl = apiUrl;
-    }
-
-    @DataBoundSetter
-    public void setCiUserToken(String ciUserToken) {
-        this.ciUserToken = ciUserToken;
     }
 
     @DataBoundSetter
@@ -153,22 +102,7 @@ public class GetSignedArtifactStep extends Step {
     }
 
     @DataBoundSetter
-    public void setServiceUnavailableTimeoutInSeconds(int serviceUnavailableTimeoutInSeconds) {
-        this.serviceUnavailableTimeoutInSeconds = serviceUnavailableTimeoutInSeconds;
-    }
-
-    @DataBoundSetter
-    public void setUploadAndDownloadRequestTimeoutInSeconds(int uploadAndDownloadRequestTimeoutInSeconds) {
-        this.uploadAndDownloadRequestTimeoutInSeconds = uploadAndDownloadRequestTimeoutInSeconds;
-    }
-
-    @DataBoundSetter
     public void setOutputArtifactPath(String outputArtifactPath) {
         this.outputArtifactPath = outputArtifactPath;
-    }
-
-    @DataBoundSetter
-    public void setWaitForCompletionTimeoutInSeconds(int waitForCompletionTimeoutInSeconds) {
-        this.waitForCompletionTimeoutInSeconds = waitForCompletionTimeoutInSeconds;
     }
 }

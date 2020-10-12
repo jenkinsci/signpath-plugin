@@ -1,4 +1,4 @@
-package io.jenkins.plugins.SignPath.StepInputParser;
+package io.jenkins.plugins.SignPath.StepShared;
 
 import java.util.UUID;
 

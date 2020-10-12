@@ -9,23 +9,10 @@ import hudson.Launcher;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import io.jenkins.plugins.SignPath.ApiIntegration.ApiConfiguration;
-import io.jenkins.plugins.SignPath.ApiIntegration.ISignPathFacadeFactory;
-import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.IPowerShellExecutor;
-import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.PowerShellExecutor;
-import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.SignPathPowerShellFacadeFactory;
-import io.jenkins.plugins.SignPath.Artifacts.ArtifactFileManager;
-import io.jenkins.plugins.SignPath.Artifacts.IArtifactFileManager;
 import io.jenkins.plugins.SignPath.Exceptions.SignPathStepInvalidArgumentException;
-import io.jenkins.plugins.SignPath.OriginRetrieval.DefaultConfigFileProvider;
-import io.jenkins.plugins.SignPath.OriginRetrieval.IOriginRetriever;
-import io.jenkins.plugins.SignPath.OriginRetrieval.OriginRetriever;
-import io.jenkins.plugins.SignPath.SecretRetrieval.CredentialBasedSecretRetriever;
-import io.jenkins.plugins.SignPath.SecretRetrieval.ISecretRetriever;
-import io.jenkins.plugins.SignPath.StepInputParser.SubmitSigningRequestStepInput;
-import io.jenkins.plugins.SignPath.StepInputParser.SigningRequestStepInputParser;
-import jenkins.model.Jenkins;
-import jenkins.model.JenkinsLocationConfiguration;
-import org.jenkinsci.plugins.workflow.steps.Step;
+import io.jenkins.plugins.SignPath.StepShared.SignPathContext;
+import io.jenkins.plugins.SignPath.StepShared.SubmitSigningRequestStepInput;
+import io.jenkins.plugins.SignPath.StepShared.SigningRequestStepInputParser;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
@@ -33,57 +20,34 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.net.URL;
 import java.util.Set;
 
-public class SubmitSigningRequestStep extends Step {
+public class SubmitSigningRequestStep extends SignPathStepBase {
     private final static String FunctionName = "submitSigningRequest";
     private final static String DisplayName = "Submit SignPath SigningRequest";
 
-    private String apiUrl =  "https://app.signpath.io/api/";
-    private String ciUserToken;
     private String organizationId;
     private String projectSlug;
     private String artifactConfigurationSlug;
     private String signingPolicySlug;
     private String inputArtifactPath;
     private String description;
-    private int serviceUnavailableTimeoutInSeconds = 600;
-    private int uploadAndDownloadRequestTimeoutInSeconds = 300;
     private Boolean waitForCompletion = false;
     private String outputArtifactPath;
-    private int waitForCompletionTimeoutInSeconds = 600;
 
     @DataBoundConstructor
     public SubmitSigningRequestStep() {
+        super();
     }
 
     @Override
     public StepExecution start(StepContext context) throws IOException, InterruptedException, SignPathStepInvalidArgumentException {
-        SubmitSigningRequestStepInput input = SigningRequestStepInputParser.Parse(this);
+        SubmitSigningRequestStepInput input = SigningRequestStepInputParser.ParseInput(this);
+        ApiConfiguration apiConfiguration = SigningRequestStepInputParser.ParseApiConfiguration(this);
+        SignPathContext signPathContext = SignPathContext.CreateForStep(context, apiConfiguration);
 
-        TaskListener listener = context.get(TaskListener.class);
-        assert listener != null;
-        Run<?, ?> run = context.get(Run.class);
-        Launcher launcher = context.get(Launcher.class);
-        PrintStream logger = listener.getLogger();
-        Jenkins jenkins = Jenkins.get();
-        JenkinsLocationConfiguration config = JenkinsLocationConfiguration.get();
-        String jenkinsRootUrl = config.getUrl();
-
-        // TODO SIGN-3326: Share between steps + validate configuration
-        ISecretRetriever secretRetriever = new CredentialBasedSecretRetriever(jenkins);
-        IOriginRetriever originRetriever = new OriginRetriever(new DefaultConfigFileProvider(run), run, jenkinsRootUrl);
-        IArtifactFileManager artifactFileManager = new ArtifactFileManager(run, launcher, listener);
-        IPowerShellExecutor pwsh = new PowerShellExecutor("pwsh");
-        ApiConfiguration apiConfiguration = new ApiConfiguration(new URL(getApiUrl()),
-                getServiceUnavailableTimeoutInSeconds(),
-                getUploadAndDownloadRequestTimeoutInSeconds(),
-                getWaitForCompletionTimeoutInSeconds());
-        ISignPathFacadeFactory signPathFacadeFactory = new SignPathPowerShellFacadeFactory(pwsh, apiConfiguration);
-
-        return new SubmitSigningRequestStepExecution(input, context, logger, secretRetriever, originRetriever,artifactFileManager, signPathFacadeFactory);
+        return new SubmitSigningRequestStepExecution(input, signPathContext);
     }
 
     @Override
@@ -111,14 +75,6 @@ public class SubmitSigningRequestStep extends Step {
         }
     }
 
-    public String getApiUrl() {
-        return apiUrl;
-    }
-
-    public String getCiUserToken() {
-        return ciUserToken;
-    }
-
     public String getOrganizationId() {
         return organizationId;
     }
@@ -143,34 +99,12 @@ public class SubmitSigningRequestStep extends Step {
         return description;
     }
 
-    public int getServiceUnavailableTimeoutInSeconds() {
-        return serviceUnavailableTimeoutInSeconds;
-    }
-
-    public int getUploadAndDownloadRequestTimeoutInSeconds() {
-        return uploadAndDownloadRequestTimeoutInSeconds;
-    }
-
     public Boolean getWaitForCompletion() {
         return waitForCompletion;
     }
 
     public String getOutputArtifactPath() {
         return outputArtifactPath;
-    }
-
-    public int getWaitForCompletionTimeoutInSeconds() {
-        return waitForCompletionTimeoutInSeconds;
-    }
-
-    @DataBoundSetter
-    public void setApiUrl(String apiUrl) {
-        this.apiUrl = apiUrl;
-    }
-
-    @DataBoundSetter
-    public void setCiUserToken(String ciUserToken) {
-        this.ciUserToken = ciUserToken;
     }
 
     @DataBoundSetter
@@ -204,16 +138,6 @@ public class SubmitSigningRequestStep extends Step {
     }
 
     @DataBoundSetter
-    public void setServiceUnavailableTimeoutInSeconds(int serviceUnavailableTimeoutInSeconds) {
-        this.serviceUnavailableTimeoutInSeconds = serviceUnavailableTimeoutInSeconds;
-    }
-
-    @DataBoundSetter
-    public void setUploadAndDownloadRequestTimeoutInSeconds(int uploadAndDownloadRequestTimeoutInSeconds) {
-        this.uploadAndDownloadRequestTimeoutInSeconds = uploadAndDownloadRequestTimeoutInSeconds;
-    }
-
-    @DataBoundSetter
     public void setWaitForCompletion(Boolean waitForCompletion) {
         this.waitForCompletion = waitForCompletion;
     }
@@ -221,10 +145,5 @@ public class SubmitSigningRequestStep extends Step {
     @DataBoundSetter
     public void setOutputArtifactPath(String outputArtifactPath) {
         this.outputArtifactPath = outputArtifactPath;
-    }
-
-    @DataBoundSetter
-    public void setWaitForCompletionTimeoutInSeconds(int waitForCompletionTimeoutInSeconds) {
-        this.waitForCompletionTimeoutInSeconds = waitForCompletionTimeoutInSeconds;
     }
 }

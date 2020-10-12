@@ -10,8 +10,8 @@ import io.jenkins.plugins.SignPath.Common.TemporaryFile;
 import io.jenkins.plugins.SignPath.Exceptions.*;
 import io.jenkins.plugins.SignPath.OriginRetrieval.IOriginRetriever;
 import io.jenkins.plugins.SignPath.SecretRetrieval.ISecretRetriever;
-import io.jenkins.plugins.SignPath.StepInputParser.SubmitSigningRequestStepInput;
-import org.jenkinsci.plugins.workflow.steps.StepContext;
+import io.jenkins.plugins.SignPath.StepShared.SignPathContext;
+import io.jenkins.plugins.SignPath.StepShared.SubmitSigningRequestStepInput;
 import org.jenkinsci.plugins.workflow.steps.SynchronousStepExecution;
 
 import java.io.IOException;
@@ -27,19 +27,14 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution<
     private final SubmitSigningRequestStepInput input;
 
     protected SubmitSigningRequestStepExecution(SubmitSigningRequestStepInput input,
-                                                StepContext context,
-                                                PrintStream logger,
-                                                ISecretRetriever secretRetriever,
-                                                IOriginRetriever originRetriever,
-                                                IArtifactFileManager artifactFileManager,
-                                                ISignPathFacadeFactory signPathFacadeFactory) {
-        super(context);
+                                                SignPathContext context) {
+        super(context.getStepContext());
         this.input = input;
-        this.logger = logger;
-        this.secretRetriever = secretRetriever;
-        this.originRetriever = originRetriever;
-        this.artifactFileManager = artifactFileManager;
-        this.signPathFacadeFactory = signPathFacadeFactory;
+        this.logger = context.getLogger();
+        this.secretRetriever = context.getSecretRetriever();
+        this.originRetriever = context.getOriginRetriever();
+        this.artifactFileManager = context.getArtifactFileManager();
+        this.signPathFacadeFactory = context.getSignPathFacadeFactory();
     }
 
     @Override
