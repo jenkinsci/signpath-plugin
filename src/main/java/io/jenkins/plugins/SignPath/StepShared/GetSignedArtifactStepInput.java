@@ -2,11 +2,16 @@ package io.jenkins.plugins.SignPath.StepShared;
 
 import java.util.UUID;
 
+/**
+ * Holds all input data specific to the
+ *
+ * @see io.jenkins.plugins.SignPath.GetSignedArtifactStep
+ */
 public class GetSignedArtifactStepInput {
     private final UUID organizationId;
     private final UUID signingRequestId;
     private final String ciUserToken;
-    private String outputArtifactPath;
+    private final String outputArtifactPath;
 
     public GetSignedArtifactStepInput(UUID organizationId, UUID signingRequestId, String ciUserToken, String outputArtifactPath) {
         this.organizationId = organizationId;

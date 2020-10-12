@@ -21,15 +21,15 @@ public class Some {
         return minValue + RANDOM.nextInt(maxValue - minValue);
     }
 
-    public static Boolean bool(){
+    public static boolean bool() {
         return RANDOM.nextBoolean();
     }
 
-    public static String stringNonEmpty(){
+    public static String stringNonEmpty() {
         return RandomStringUtils.random(1 + RANDOM.nextInt(100), true, true);
     }
 
-    public static String sha1Hash(){
+    public static String sha1Hash() {
         String message = stringNonEmpty();
 
         MessageDigest digest = GetSha1Digest();
@@ -49,9 +49,9 @@ public class Some {
         }
     }
 
-    public static String url(){
+    public static String url() {
         String fragmentEnd = RANDOM.nextBoolean() ? "/" : "";
-        return "https://"+stringNonEmpty()+"/"+stringNonEmpty()+fragmentEnd;
+        return "https://" + stringNonEmpty() + "/" + stringNonEmpty() + fragmentEnd;
     }
 
     public static String urlFragment() {
@@ -61,7 +61,7 @@ public class Some {
     }
 
     public static byte[] bytes() {
-        byte[] randomBytes = new byte[1+RANDOM.nextInt(100)];
+        byte[] randomBytes = new byte[1 + RANDOM.nextInt(100)];
         RANDOM.nextBytes(randomBytes);
         return randomBytes;
     }

@@ -1,15 +1,21 @@
 package io.jenkins.plugins.SignPath.ApiIntegration.PowerShell;
 
+/**
+ * Indicates whether a given execution via
+ *
+ * @see PowerShellExecutor
+ * has been successful or not.
+ */
 public class PowerShellExecutionResult {
-    private Boolean hasError;
-    private String output;
+    private final boolean hasError;
+    private final String output;
 
-    public PowerShellExecutionResult(Boolean hasError, String output) {
+    public PowerShellExecutionResult(boolean hasError, String output) {
         this.hasError = hasError;
         this.output = output;
     }
 
-    public Boolean getHasError() {
+    public boolean getHasError() {
         return hasError;
     }
 

@@ -4,16 +4,19 @@ import io.jenkins.plugins.SignPath.Common.TemporaryFile;
 
 import java.util.UUID;
 
+/**
+ * This class holds all the information that is needed to create a signing-request on SignPath
+ */
 public class SigningRequestModel {
-    private UUID organizationId;
-    private String projectSlug;
-    private String artifactConfigurationSlug;
-    private String signingPolicySlug;
-    private String description;
-    private SigningRequestOriginModel origin;
-    private TemporaryFile artifact;
+    private final UUID organizationId;
+    private final String projectSlug;
+    private final String artifactConfigurationSlug;
+    private final String signingPolicySlug;
+    private final String description;
+    private final SigningRequestOriginModel origin;
+    private final TemporaryFile artifact;
 
-    public SigningRequestModel(UUID organizationId, String projectSlug, String artifactConfigurationSlug, String signingPolicySlug, String description, SigningRequestOriginModel origin, TemporaryFile artifact){
+    public SigningRequestModel(UUID organizationId, String projectSlug, String artifactConfigurationSlug, String signingPolicySlug, String description, SigningRequestOriginModel origin, TemporaryFile artifact) {
         this.organizationId = organizationId;
         this.projectSlug = projectSlug;
         this.artifactConfigurationSlug = artifactConfigurationSlug;

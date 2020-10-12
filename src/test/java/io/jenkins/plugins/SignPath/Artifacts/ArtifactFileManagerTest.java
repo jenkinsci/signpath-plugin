@@ -24,11 +24,11 @@ import static org.junit.Assert.*;
 @RunWith(Theories.class)
 public class ArtifactFileManagerTest {
     @Rule
-    public SignPathJenkinsRule j= new SignPathJenkinsRule();
+    public SignPathJenkinsRule j = new SignPathJenkinsRule();
 
     @Theory
     public void retrieveArtifact() throws Exception {
-        ArtifactFileManager sut = runJob(archiveArtifactScript("hello.txt"));
+        DefaultArtifactFileManager sut = runJob(archiveArtifactScript("hello.txt"));
 
         // ACT
         TemporaryFile retrievedArtifact = sut.retrieveArtifact("hello.txt");
@@ -50,11 +50,11 @@ public class ArtifactFileManagerTest {
 
 
     @Theory
-    public void retrieveArtifact_ReturnsCorrectFileName(@FromDataPoints("allFileNames") String[] fileNames) throws Exception {
+    public void retrieveArtifact_returnsCorrectFileName(@FromDataPoints("allFileNames") String[] fileNames) throws Exception {
         String artifactPath = fileNames[0];
         String expectedFileName = fileNames[1];
 
-        ArtifactFileManager sut = runJob(archiveArtifactScript(artifactPath));
+        DefaultArtifactFileManager sut = runJob(archiveArtifactScript(artifactPath));
 
         // ACT
         TemporaryFile retrievedArtifact = sut.retrieveArtifact(artifactPath);
@@ -65,32 +65,32 @@ public class ArtifactFileManagerTest {
     }
 
     @Theory
-    public void retrieveArtifact_WithoutArtifacts_Throws() throws Exception{
-        ArtifactFileManager sut = runJob("");
+    public void retrieveArtifact_withoutArtifacts_throws() throws Exception {
+        DefaultArtifactFileManager sut = runJob("");
 
         // ACT
         ThrowingRunnable act = () -> sut.retrieveArtifact("hello.txt");
 
         // ASSERT
         Throwable ex = assertThrows(ArtifactNotFoundException.class, act);
-        assertEquals("The artifact at path \"hello.txt\" was not found.", ex.getMessage() );
+        assertEquals("The artifact at path \"hello.txt\" was not found.", ex.getMessage());
     }
 
     @Theory
-    public void retrieveArtifact_WithWrongArtifact_Throws() throws Exception{
-        ArtifactFileManager sut = runJob(archiveArtifactScript("hello.txt"));
+    public void retrieveArtifact_withWrongArtifact_throws() throws Exception {
+        DefaultArtifactFileManager sut = runJob(archiveArtifactScript("hello.txt"));
 
         // ACT
         ThrowingRunnable act = () -> sut.retrieveArtifact("does not exist.txt");
 
         // ASSERT
         Throwable ex = assertThrows(ArtifactNotFoundException.class, act);
-        assertEquals("The artifact at path \"does not exist.txt\" was not found.", ex.getMessage() );
+        assertEquals("The artifact at path \"does not exist.txt\" was not found.", ex.getMessage());
     }
 
     @Theory
     public void storeAndRetrieveArtifact() throws Exception {
-        ArtifactFileManager sut = runJob("");
+        DefaultArtifactFileManager sut = runJob("");
 
         byte[] artifactContent = Some.bytes();
         TemporaryFile artifact = TemporaryFileUtil.create(artifactContent);
@@ -110,11 +110,11 @@ public class ArtifactFileManagerTest {
                 "archiveArtifacts artifacts: '" + artifactName + "', fingerprint: true ";
     }
 
-    private ArtifactFileManager runJob(String script) throws Exception {
+    private DefaultArtifactFileManager runJob(String script) throws Exception {
         Launcher launcher = j.createLocalLauncher();
         TaskListener listener = j.createTaskListener();
         WorkflowJob workflowJob = j.createWorkflow("SignPath", script);
         WorkflowRun run = j.assertBuildStatusSuccess(workflowJob.scheduleBuild2(0));
-        return new ArtifactFileManager(run, launcher, listener);
+        return new DefaultArtifactFileManager(run, launcher, listener);
     }
 }

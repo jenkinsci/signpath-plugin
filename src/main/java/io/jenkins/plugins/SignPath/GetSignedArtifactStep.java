@@ -9,19 +9,10 @@ import hudson.Launcher;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import io.jenkins.plugins.SignPath.ApiIntegration.ApiConfiguration;
-import io.jenkins.plugins.SignPath.ApiIntegration.ISignPathFacadeFactory;
-import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.IPowerShellExecutor;
-import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.PowerShellExecutor;
-import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.SignPathPowerShellFacadeFactory;
-import io.jenkins.plugins.SignPath.Artifacts.ArtifactFileManager;
-import io.jenkins.plugins.SignPath.Artifacts.IArtifactFileManager;
 import io.jenkins.plugins.SignPath.Exceptions.SignPathStepInvalidArgumentException;
-import io.jenkins.plugins.SignPath.SecretRetrieval.CredentialBasedSecretRetriever;
-import io.jenkins.plugins.SignPath.SecretRetrieval.ISecretRetriever;
 import io.jenkins.plugins.SignPath.StepShared.GetSignedArtifactStepInput;
 import io.jenkins.plugins.SignPath.StepShared.SignPathContext;
 import io.jenkins.plugins.SignPath.StepShared.SigningRequestStepInputParser;
-import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
@@ -29,10 +20,12 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import java.io.IOException;
-import java.io.PrintStream;
-import java.net.URL;
 import java.util.Set;
 
+/**
+ * Represents the getSignedArtifact step that is executable via pipeline-script
+ * For a how-to use example see *EndToEnd tests
+ */
 public class GetSignedArtifactStep extends SignPathStepBase {
     private final static String FunctionName = "getSignedArtifact";
     private final static String DisplayName = "Download SignPath Signed Artifact";
@@ -50,7 +43,7 @@ public class GetSignedArtifactStep extends SignPathStepBase {
     public StepExecution start(StepContext context) throws IOException, InterruptedException, SignPathStepInvalidArgumentException {
         GetSignedArtifactStepInput input = SigningRequestStepInputParser.ParseInput(this);
         ApiConfiguration apiConfiguration = SigningRequestStepInputParser.ParseApiConfiguration(this);
-        SignPathContext signPathContext = SignPathContext.CreateForStep(context,apiConfiguration);
+        SignPathContext signPathContext = SignPathContext.CreateForStep(context, apiConfiguration);
         return new GetSignedArtifactStepExecution(input, signPathContext);
     }
 

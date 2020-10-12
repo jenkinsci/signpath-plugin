@@ -1,23 +1,24 @@
 package io.jenkins.plugins.SignPath.ApiIntegration;
 
+import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.DefaultPowerShellExecutor;
 import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.PowerShellExecutionResult;
-import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.PowerShellExecutor;
 import org.junit.Before;
 import org.junit.Test;
 
 import static io.jenkins.plugins.SignPath.TestUtils.AssertionExtensions.assertContains;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class PowerShellExecutorTest {
-    private PowerShellExecutor sut;
+    private DefaultPowerShellExecutor sut;
 
     @Before
-    public void setup(){
-        sut = new PowerShellExecutor("pwsh");
+    public void setup() {
+        sut = new DefaultPowerShellExecutor("pwsh");
     }
 
     @Test
-    public void execute(){
+    public void execute() {
         PowerShellExecutionResult executionResult = sut.execute("echo 'some string'");
 
         assertContains("some string", executionResult.getOutput());
@@ -25,7 +26,7 @@ public class PowerShellExecutorTest {
     }
 
     @Test
-    public void execute_withError(){
+    public void execute_withError() {
         PowerShellExecutionResult executionResult = sut.execute("echo 'some string'; exit 1");
 
         assertContains("some string", executionResult.getOutput());
@@ -33,7 +34,7 @@ public class PowerShellExecutorTest {
     }
 
     @Test
-    public void execute_WithErrorText(){
+    public void execute_withErrorText() {
         PowerShellExecutionResult executionResult = sut.execute("Write-Error 'fatal';");
 
         assertContains("fatal", executionResult.getOutput());

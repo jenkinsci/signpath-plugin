@@ -19,15 +19,14 @@ public class TemporaryFileUtil {
         return temporaryFile;
     }
 
-    public static byte[] getContentAndDispose(TemporaryFile temporaryFile) throws IOException
-    {
-        try(TemporaryFile t = temporaryFile) {
+    public static byte[] getContentAndDispose(TemporaryFile temporaryFile) throws IOException {
+        try (TemporaryFile t = temporaryFile) {
             return Files.readAllBytes(Paths.get(temporaryFile.getAbsolutePath()));
         }
     }
 
-    public static String getAbsolutePathAndDispose(TemporaryFile temporaryFile){
-        try(TemporaryFile t = temporaryFile){
+    public static String getAbsolutePathAndDispose(TemporaryFile temporaryFile) {
+        try (TemporaryFile t = temporaryFile) {
             return t.getAbsolutePath();
         }
     }

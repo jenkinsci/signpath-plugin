@@ -3,8 +3,8 @@ package io.jenkins.plugins.SignPath.ApiIntegration;
 import io.jenkins.plugins.SignPath.ApiIntegration.Model.RepositoryMetadataModel;
 import io.jenkins.plugins.SignPath.ApiIntegration.Model.SigningRequestModel;
 import io.jenkins.plugins.SignPath.ApiIntegration.Model.SigningRequestOriginModel;
-import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.IPowerShellExecutor;
 import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.PowerShellExecutionResult;
+import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.PowerShellExecutor;
 import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.SignPathPowerShellFacade;
 import io.jenkins.plugins.SignPath.Common.TemporaryFile;
 import io.jenkins.plugins.SignPath.Exceptions.SignPathFacadeCallException;
@@ -38,7 +38,7 @@ public class SignPathPowerShellFacadeTest {
     public MockitoRule mockitoRule = MockitoJUnit.rule();
 
     @Mock
-    private IPowerShellExecutor powershellExecutor;
+    private PowerShellExecutor powershellExecutor;
 
     private SignPathCredentials credentials;
     private ApiConfiguration apiConfiguration;
@@ -53,14 +53,14 @@ public class SignPathPowerShellFacadeTest {
         sut = new SignPathPowerShellFacade(powershellExecutor, credentials, apiConfiguration);
 
         powerShellExecutionResult = new PowerShellExecutionResult(false, Some.stringNonEmpty());
-        when(powershellExecutor.execute(anyString())).then(a-> {
+        when(powershellExecutor.execute(anyString())).then(a -> {
             capturedCommandArray[0] = a.getArgumentAt(0, String.class);
             return powerShellExecutionResult;
         });
     }
 
     @Theory
-    public void submitSigningRequest(@FromDataPoints("allBooleans") Boolean withOptionalFields) throws IOException, SignPathFacadeCallException {
+    public void submitSigningRequest(@FromDataPoints("allBooleans") boolean withOptionalFields) throws IOException, SignPathFacadeCallException {
         SigningRequestModel signingRequestModel = randomSigningRequest(withOptionalFields);
 
         // ACT
@@ -79,14 +79,14 @@ public class SignPathPowerShellFacadeTest {
     }
 
     @Theory
-    public void submitSigningRequestAsync(@FromDataPoints("allBooleans") Boolean withOptionalFields) throws IOException, SignPathFacadeCallException {
+    public void submitSigningRequestAsync(@FromDataPoints("allBooleans") boolean withOptionalFields) throws IOException, SignPathFacadeCallException {
         SigningRequestModel signingRequestModel = randomSigningRequest(withOptionalFields);
 
         UUID organizationId = signingRequestModel.getOrganizationId();
         UUID signingRequestId = Some.uuid();
 
-        powerShellExecutionResult = new PowerShellExecutionResult(false,"SHA256 hash: "+Some.sha1Hash()+"\n" +
-                "Submitted signing request at 'https://app.signpath.io/api/v1/"+organizationId+"/SigningRequests/"+signingRequestId+"'\n" +
+        powerShellExecutionResult = new PowerShellExecutionResult(false, "SHA256 hash: " + Some.sha1Hash() + "\n" +
+                "Submitted signing request at 'https://app.signpath.io/api/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "'\n" +
                 signingRequestId);
 
         // ACT
@@ -103,14 +103,14 @@ public class SignPathPowerShellFacadeTest {
     }
 
     @Theory
-    public void submitSigningRequestAsync_WithUnexpectedOutput_Throws() throws IOException {
-        Boolean withOptionalFields = Some.bool();
+    public void submitSigningRequestAsync_withUnexpectedOutput_throws() throws IOException {
+        boolean withOptionalFields = Some.bool();
         SigningRequestModel signingRequestModel = randomSigningRequest(withOptionalFields);
 
-        powerShellExecutionResult = new PowerShellExecutionResult(false,"some unexpected string");
+        powerShellExecutionResult = new PowerShellExecutionResult(false, "some unexpected string");
 
         // ACT
-        ThrowingRunnable act = () ->  sut.submitSigningRequestAsync(signingRequestModel);
+        ThrowingRunnable act = () -> sut.submitSigningRequestAsync(signingRequestModel);
 
         // ASSERT
         Throwable ex = assertThrows(SignPathFacadeCallException.class, act);
@@ -139,11 +139,11 @@ public class SignPathPowerShellFacadeTest {
     }
 
     @Theory
-    public void submitSigningRequest_PowerShellError_Throws() {
+    public void submitSigningRequest_powerShellError_throws() {
         powerShellExecutionResult = new PowerShellExecutionResult(true, Some.stringNonEmpty());
 
         // ACT
-        ThrowingRunnable act = () ->  sut.submitSigningRequest(randomSigningRequest(Some.bool()));
+        ThrowingRunnable act = () -> sut.submitSigningRequest(randomSigningRequest(Some.bool()));
 
         // ASSERT
         Throwable ex = assertThrows(SignPathFacadeCallException.class, act);
@@ -151,11 +151,11 @@ public class SignPathPowerShellFacadeTest {
     }
 
     @Theory
-    public void submitSigningRequestAsync_PowerShellError_Throws() {
+    public void submitSigningRequestAsync_powerShellError_throws() {
         powerShellExecutionResult = new PowerShellExecutionResult(true, Some.stringNonEmpty());
 
         // ACT
-        ThrowingRunnable act = () ->  sut.submitSigningRequestAsync(randomSigningRequest(Some.bool()));
+        ThrowingRunnable act = () -> sut.submitSigningRequestAsync(randomSigningRequest(Some.bool()));
 
         // ASSERT
         Throwable ex = assertThrows(SignPathFacadeCallException.class, act);
@@ -163,22 +163,22 @@ public class SignPathPowerShellFacadeTest {
     }
 
     @Theory
-    public void getSignedArtifact_PowerShellError_Throws() {
+    public void getSignedArtifact_powerShellError_throws() {
         powerShellExecutionResult = new PowerShellExecutionResult(true, Some.stringNonEmpty());
 
         // ACT
-        ThrowingRunnable act = () ->  sut.getSignedArtifact(Some.uuid(), Some.uuid());
+        ThrowingRunnable act = () -> sut.getSignedArtifact(Some.uuid(), Some.uuid());
 
         // ASSERT
         Throwable ex = assertThrows(SignPathFacadeCallException.class, act);
         assertEquals(String.format("PowerShell script exited with error: '%s'", powerShellExecutionResult.getOutput()), ex.getMessage());
     }
 
-    private String getCapturedPowerShellCommand(){
+    private String getCapturedPowerShellCommand() {
         return capturedCommandArray[0];
     }
 
-    private SigningRequestModel randomSigningRequest(Boolean withOptionalFields) throws IOException {
+    private SigningRequestModel randomSigningRequest(boolean withOptionalFields) throws IOException {
         UUID organizationId = Some.uuid();
         String projectSlug = Some.stringNonEmpty();
         String artifactConfigurationSlug = withOptionalFields ? Some.stringNonEmpty() : Some.stringEmptyOrNull();
@@ -196,25 +196,25 @@ public class SignPathPowerShellFacadeTest {
 
         RepositoryMetadataModel repositoryMetadata = new RepositoryMetadataModel(sourceControlManagementType, repositoryUrl, branchName, commidId);
         SigningRequestOriginModel origin = new SigningRequestOriginModel(repositoryMetadata, buildUrl, buildSettingsFile);
-        return new SigningRequestModel(organizationId, projectSlug, artifactConfigurationSlug, signingPolicySlug, description, origin,unsignedArtifact);
+        return new SigningRequestModel(organizationId, projectSlug, artifactConfigurationSlug, signingPolicySlug, description, origin, unsignedArtifact);
     }
 
-    private void assertContainsSigningRequestModel(SigningRequestModel signingRequestModel, String capturedCommand, Boolean withOptionalFields) {
+    private void assertContainsSigningRequestModel(SigningRequestModel signingRequestModel, String capturedCommand, boolean withOptionalFields) {
         SigningRequestOriginModel origin = signingRequestModel.getOrigin();
         RepositoryMetadataModel repositoryMetadata = origin.getRepositoryMetadata();
         assertContains(signingRequestModel.getOrganizationId().toString(), capturedCommand);
         assertContains(signingRequestModel.getProjectSlug(), capturedCommand);
         assertContains(signingRequestModel.getSigningPolicySlug(), capturedCommand);
 
-        String artifactConfigurationSlug=signingRequestModel.getArtifactConfigurationSlug();
+        String artifactConfigurationSlug = signingRequestModel.getArtifactConfigurationSlug();
         String description = signingRequestModel.getDescription();
-        if(withOptionalFields) {
-            assertTrue(artifactConfigurationSlug!=null&&!artifactConfigurationSlug.isEmpty());
-            assertTrue(description!=null&&!description.isEmpty());
+        if (withOptionalFields) {
+            assertTrue(artifactConfigurationSlug != null && !artifactConfigurationSlug.isEmpty());
+            assertTrue(description != null && !description.isEmpty());
 
             assertContains(artifactConfigurationSlug, capturedCommand);
             assertContains(description, capturedCommand);
-        }else {
+        } else {
             assertTrue(artifactConfigurationSlug == null || artifactConfigurationSlug.isEmpty());
             assertTrue(description == null || description.isEmpty());
         }
@@ -234,18 +234,18 @@ public class SignPathPowerShellFacadeTest {
         assertContains(credentials.toString(), capturedCommand);
     }
 
-    private void assertContainsConfiguration(ApiConfiguration apiConfiguration, String capturedCommand, Boolean withWaitTime) {
+    private void assertContainsConfiguration(ApiConfiguration apiConfiguration, String capturedCommand, boolean withWaitTime) {
         assertContains(apiConfiguration.getApiUrl().toString(), capturedCommand);
         assertContains(String.valueOf(apiConfiguration.getServiceUnavailableTimeoutInSeconds()), capturedCommand);
         assertContains(String.valueOf(apiConfiguration.getUploadAndDownloadRequestTimeoutInSeconds()), capturedCommand);
 
-        if(withWaitTime) {
+        if (withWaitTime) {
             assertContains(String.valueOf(apiConfiguration.getWaitForCompletionTimeoutInSeconds()), capturedCommand);
         }
     }
 
     @DataPoints("allBooleans")
-    public static Boolean[] allBooleans(){
-        return new Boolean[]{true, false};
+    public static boolean[] allBooleans() {
+        return new boolean[]{true, false};
     }
 }

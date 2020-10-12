@@ -8,7 +8,7 @@ import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.plugins.git.util.BuildData;
-import io.jenkins.plugins.SignPath.Artifacts.ArtifactFileManager;
+import io.jenkins.plugins.SignPath.Artifacts.DefaultArtifactFileManager;
 import io.jenkins.plugins.SignPath.Common.TemporaryFile;
 import io.jenkins.plugins.SignPath.TestUtils.*;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -28,7 +28,7 @@ public class GetSignedArtifactStepEndToEndTest {
     private static final int MockServerPort = 51000;
 
     @Rule
-    public SignPathJenkinsRule j= new SignPathJenkinsRule();
+    public SignPathJenkinsRule j = new SignPathJenkinsRule();
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(MockServerPort);
@@ -47,7 +47,7 @@ public class GetSignedArtifactStepEndToEndTest {
 
         String apiUrl = getMockUrl();
         String downloadSignedArtifact = "downloadSignedArtifact";
-        wireMockRule.stubFor(get(urlEqualTo("/v1/" + organizationId + "/SigningRequests/"+signingRequestId))
+        wireMockRule.stubFor(get(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody("{status: 'Completed', signedArtifactLink: '" + getMockUrl(downloadSignedArtifact) + "'}")));
@@ -57,11 +57,11 @@ public class GetSignedArtifactStepEndToEndTest {
                         .withStatus(200)
                         .withBody(signedArtifactBytes)));
 
-        WorkflowJob workflowJob = createWorkflowJob(apiUrl,ciUserToken,organizationId,signingRequestId);
+        WorkflowJob workflowJob = createWorkflowJob(apiUrl, ciUserToken, organizationId, signingRequestId);
 
         String remoteUrl = Some.url();
         BuildData buildData = new BuildData(Some.stringNonEmpty());
-        buildData.saveBuild(BuildDataDomainObjectMother.CreateRandomBuild(1));
+        buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(1));
         buildData.addRemoteUrl(remoteUrl);
 
         // ACT
@@ -77,21 +77,21 @@ public class GetSignedArtifactStepEndToEndTest {
 
         Launcher launcher = j.createLocalLauncher();
         TaskListener listener = j.createTaskListener();
-        ArtifactFileManager artifactFileManager = new ArtifactFileManager(run, launcher, listener);
+        DefaultArtifactFileManager artifactFileManager = new DefaultArtifactFileManager(run, launcher, listener);
         TemporaryFile signedArtifact = artifactFileManager.retrieveArtifact("signed.exe");
         byte[] signedArtifactContent = TemporaryFileUtil.getContentAndDispose(signedArtifact);
         assertArrayEquals(signedArtifactBytes, signedArtifactContent);
 
-        wireMockRule.verify(getRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests/"+signingRequestId))
+        wireMockRule.verify(getRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId))
                 .withHeader("Authorization", equalTo("Bearer " + ciUserToken + ":" + trustedBuildSystemToken)));
     }
 
     @Theory
-    public void getSignedArtifact_WithMissingField_Throws() throws Exception  {
-        WorkflowJob workflowJob = j.createWorkflow("SignPath","getSignedArtifact();");
+    public void getSignedArtifact_withMissingField_fails() throws Exception {
+        WorkflowJob workflowJob = j.createWorkflow("SignPath", "getSignedArtifact();");
 
         BuildData buildData = new BuildData(Some.stringNonEmpty());
-        buildData.saveBuild(BuildDataDomainObjectMother.CreateRandomBuild(1));
+        buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(1));
         buildData.addRemoteUrl(Some.url());
 
         // ACT
@@ -109,7 +109,7 @@ public class GetSignedArtifactStepEndToEndTest {
                                           String organizationId,
                                           String signingRequestId) throws IOException {
         return j.createWorkflow("SignPath",
-                        "getSignedArtifact( apiUrl: '" + apiUrl + "', " +
+                "getSignedArtifact( apiUrl: '" + apiUrl + "', " +
                         "outputArtifactPath: 'signed.exe', " +
                         "ciUserToken: '" + ciUserToken + "'," +
                         "organizationId: '" + organizationId + "'," +
@@ -119,11 +119,11 @@ public class GetSignedArtifactStepEndToEndTest {
                         "waitForCompletionTimeoutInSeconds: 10);");
     }
 
-    private String getMockUrl(){
+    private String getMockUrl() {
         return getMockUrl("");
     }
 
-    private String getMockUrl(String postfix){
+    private String getMockUrl(String postfix) {
         return String.format("http://localhost:%d/%s", MockServerPort, postfix);
     }
 }

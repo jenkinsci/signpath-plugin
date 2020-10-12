@@ -1,22 +1,26 @@
 package io.jenkins.plugins.SignPath.ApiIntegration.PowerShell;
 
 import io.jenkins.plugins.SignPath.ApiIntegration.ApiConfiguration;
-import io.jenkins.plugins.SignPath.ApiIntegration.ISignPathFacade;
-import io.jenkins.plugins.SignPath.ApiIntegration.ISignPathFacadeFactory;
 import io.jenkins.plugins.SignPath.ApiIntegration.SignPathCredentials;
+import io.jenkins.plugins.SignPath.ApiIntegration.SignPathFacade;
+import io.jenkins.plugins.SignPath.ApiIntegration.SignPathFacadeFactory;
 
-public class SignPathPowerShellFacadeFactory implements ISignPathFacadeFactory {
-    private IPowerShellExecutor powerShellExecutor;
-    private ApiConfiguration apiConfiguration;
+/**
+ * @see SignPathFacadeFactory
+ * that produces a
+ * @see SignPathPowerShellFacade
+ */
+public class SignPathPowerShellFacadeFactory implements SignPathFacadeFactory {
+    private final PowerShellExecutor powerShellExecutor;
+    private final ApiConfiguration apiConfiguration;
 
-    public SignPathPowerShellFacadeFactory(IPowerShellExecutor powerShellExecutor, ApiConfiguration apiConfiguration){
-
+    public SignPathPowerShellFacadeFactory(PowerShellExecutor powerShellExecutor, ApiConfiguration apiConfiguration) {
         this.powerShellExecutor = powerShellExecutor;
         this.apiConfiguration = apiConfiguration;
     }
 
     @Override
-    public ISignPathFacade create(SignPathCredentials credentials) {
+    public SignPathFacade create(SignPathCredentials credentials) {
         return new SignPathPowerShellFacade(powerShellExecutor, credentials, apiConfiguration);
     }
 }

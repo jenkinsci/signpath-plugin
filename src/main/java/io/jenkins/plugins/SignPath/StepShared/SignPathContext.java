@@ -4,18 +4,18 @@ import hudson.Launcher;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import io.jenkins.plugins.SignPath.ApiIntegration.ApiConfiguration;
-import io.jenkins.plugins.SignPath.ApiIntegration.ISignPathFacadeFactory;
-import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.IPowerShellExecutor;
+import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.DefaultPowerShellExecutor;
 import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.PowerShellExecutor;
 import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.SignPathPowerShellFacadeFactory;
+import io.jenkins.plugins.SignPath.ApiIntegration.SignPathFacadeFactory;
 import io.jenkins.plugins.SignPath.Artifacts.ArtifactFileManager;
-import io.jenkins.plugins.SignPath.Artifacts.IArtifactFileManager;
+import io.jenkins.plugins.SignPath.Artifacts.DefaultArtifactFileManager;
 import io.jenkins.plugins.SignPath.Exceptions.SignPathStepInvalidArgumentException;
 import io.jenkins.plugins.SignPath.OriginRetrieval.DefaultConfigFileProvider;
-import io.jenkins.plugins.SignPath.OriginRetrieval.IOriginRetriever;
+import io.jenkins.plugins.SignPath.OriginRetrieval.GitOriginRetriever;
 import io.jenkins.plugins.SignPath.OriginRetrieval.OriginRetriever;
 import io.jenkins.plugins.SignPath.SecretRetrieval.CredentialBasedSecretRetriever;
-import io.jenkins.plugins.SignPath.SecretRetrieval.ISecretRetriever;
+import io.jenkins.plugins.SignPath.SecretRetrieval.SecretRetriever;
 import jenkins.model.Jenkins;
 import jenkins.model.JenkinsLocationConfiguration;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
@@ -24,25 +24,32 @@ import java.io.IOException;
 import java.io.PrintStream;
 
 // REVIEW SIGN-3415: This class essentially represents a dependency-injection replacement - is this ok?
+
+/**
+ * A helper class that helps us share all dependencies needed for the
+ *
+ * @see io.jenkins.plugins.SignPath.SignPathStepBase
+ * implementations
+ */
 public class SignPathContext {
-    private StepContext context;
+    private final StepContext stepContext;
     private final Run<?, ?> run;
     private final PrintStream logger;
     private final String jenkinsRootUrl;
-    private final ISecretRetriever secretRetriever;
-    private final IOriginRetriever originRetriever;
-    private final IArtifactFileManager artifactFileManager;
-    private final ISignPathFacadeFactory signPathFacadeFactory;
+    private final SecretRetriever secretRetriever;
+    private final OriginRetriever originRetriever;
+    private final ArtifactFileManager artifactFileManager;
+    private final SignPathFacadeFactory signPathFacadeFactory;
 
-    private SignPathContext(StepContext context,
+    private SignPathContext(StepContext stepContext,
                             Run<?, ?> run,
                             PrintStream logger,
                             String jenkinsRootUrl,
-                            ISecretRetriever secretRetriever,
-                            IOriginRetriever originRetriever,
-                            IArtifactFileManager artifactFileManager,
-                            ISignPathFacadeFactory signPathFacadeFactory) {
-        this.context = context;
+                            SecretRetriever secretRetriever,
+                            OriginRetriever originRetriever,
+                            ArtifactFileManager artifactFileManager,
+                            SignPathFacadeFactory signPathFacadeFactory) {
+        this.stepContext = stepContext;
         this.run = run;
         this.logger = logger;
         this.jenkinsRootUrl = jenkinsRootUrl;
@@ -53,7 +60,7 @@ public class SignPathContext {
     }
 
     public StepContext getStepContext() {
-        return context;
+        return stepContext;
     }
 
     public Run<?, ?> getRun() {
@@ -68,19 +75,19 @@ public class SignPathContext {
         return jenkinsRootUrl;
     }
 
-    public ISecretRetriever getSecretRetriever() {
+    public SecretRetriever getSecretRetriever() {
         return secretRetriever;
     }
 
-    public IOriginRetriever getOriginRetriever() {
+    public OriginRetriever getOriginRetriever() {
         return originRetriever;
     }
 
-    public IArtifactFileManager getArtifactFileManager() {
+    public ArtifactFileManager getArtifactFileManager() {
         return artifactFileManager;
     }
 
-    public ISignPathFacadeFactory getSignPathFacadeFactory() {
+    public SignPathFacadeFactory getSignPathFacadeFactory() {
         return signPathFacadeFactory;
     }
 
@@ -96,15 +103,15 @@ public class SignPathContext {
         String jenkinsRootUrl = config.getUrl();
 
         // non-valid urls result in null value here
-        if(jenkinsRootUrl == null || jenkinsRootUrl.isEmpty()) {
+        if (jenkinsRootUrl == null || jenkinsRootUrl.isEmpty()) {
             throw new SignPathStepInvalidArgumentException("The configured jenkins root url " + jenkinsRootUrl + " is not valid.");
         }
 
-        ISecretRetriever secretRetriever = new CredentialBasedSecretRetriever(jenkins);
-        IOriginRetriever originRetriever = new OriginRetriever(new DefaultConfigFileProvider(run), run, jenkinsRootUrl);
-        IArtifactFileManager artifactFileManager = new ArtifactFileManager(run, launcher, listener);
-        IPowerShellExecutor pwsh = new PowerShellExecutor("pwsh");
-        ISignPathFacadeFactory signPathFacadeFactory = new SignPathPowerShellFacadeFactory(pwsh, apiConfiguration);
+        SecretRetriever secretRetriever = new CredentialBasedSecretRetriever(jenkins);
+        OriginRetriever originRetriever = new GitOriginRetriever(new DefaultConfigFileProvider(run), run, jenkinsRootUrl);
+        ArtifactFileManager artifactFileManager = new DefaultArtifactFileManager(run, launcher, listener);
+        PowerShellExecutor pwsh = new DefaultPowerShellExecutor("pwsh");
+        SignPathFacadeFactory signPathFacadeFactory = new SignPathPowerShellFacadeFactory(pwsh, apiConfiguration);
 
         return new SignPathContext(context, run, logger, jenkinsRootUrl, secretRetriever, originRetriever, artifactFileManager, signPathFacadeFactory);
     }

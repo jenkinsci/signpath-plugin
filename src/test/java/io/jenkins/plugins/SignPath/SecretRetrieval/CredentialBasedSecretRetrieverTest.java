@@ -1,9 +1,7 @@
 package io.jenkins.plugins.SignPath.SecretRetrieval;
 
-import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
-import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.util.Secret;
@@ -33,7 +31,7 @@ public class CredentialBasedSecretRetrieverTest {
     public JenkinsRule j = new JenkinsRule();
 
     @Before
-    public void setup(){
+    public void setup() {
         Jenkins jenkins = Jenkins.getInstanceOrNull();
         sut = new CredentialBasedSecretRetriever(jenkins);
         credentialStore = CredentialStoreUtils.getCredentialStore(jenkins);
@@ -53,7 +51,7 @@ public class CredentialBasedSecretRetrieverTest {
     }
 
     @Test
-    public void retrieveSecret_DifferentDomain() throws IOException, SecretNotFoundException {
+    public void retrieveSecret_differentDomain() throws IOException, SecretNotFoundException {
         String id = Some.stringNonEmpty();
         String secret = Some.stringNonEmpty();
         String domainName = Some.stringNonEmpty();
@@ -70,7 +68,7 @@ public class CredentialBasedSecretRetrieverTest {
     }
 
     @Test
-    public void retrieveSecret_NonExisting_Throws() {
+    public void retrieveSecret_nonExisting_throws() {
         String nonExistingId = Some.stringNonEmpty();
 
         // ACT
@@ -82,7 +80,7 @@ public class CredentialBasedSecretRetrieverTest {
     }
 
     @Test
-    public void retrieveSecret_WrongScope_Throws() throws IOException {
+    public void retrieveSecret_wrongScope_throws() throws IOException {
         String id = Some.stringNonEmpty();
         String secret = Some.stringNonEmpty();
         CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.GLOBAL, id, secret);
@@ -96,7 +94,7 @@ public class CredentialBasedSecretRetrieverTest {
     }
 
     @Test
-    public void retrieveSecret_NullScope_Throws() throws IOException {
+    public void retrieveSecret_nullScope_throws() throws IOException {
         String id = Some.stringNonEmpty();
         String secret = Some.stringNonEmpty();
         CredentialStoreUtils.addCredentials(credentialStore, null, id, secret);
@@ -110,7 +108,7 @@ public class CredentialBasedSecretRetrieverTest {
     }
 
     @Test
-    public void retrieveSecret_WrongCredentialType_Throws() throws IOException {
+    public void retrieveSecret_wrongCredentialType_throws() throws IOException {
         String id = Some.stringNonEmpty();
         String secret = Some.stringNonEmpty();
         Domain domain = credentialStore.getDomains().get(0);

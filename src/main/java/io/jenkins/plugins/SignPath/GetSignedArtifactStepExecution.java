@@ -1,14 +1,14 @@
 package io.jenkins.plugins.SignPath;
 
-import io.jenkins.plugins.SignPath.ApiIntegration.ISignPathFacade;
-import io.jenkins.plugins.SignPath.ApiIntegration.ISignPathFacadeFactory;
 import io.jenkins.plugins.SignPath.ApiIntegration.SignPathCredentials;
-import io.jenkins.plugins.SignPath.Artifacts.IArtifactFileManager;
+import io.jenkins.plugins.SignPath.ApiIntegration.SignPathFacade;
+import io.jenkins.plugins.SignPath.ApiIntegration.SignPathFacadeFactory;
+import io.jenkins.plugins.SignPath.Artifacts.ArtifactFileManager;
 import io.jenkins.plugins.SignPath.Common.TemporaryFile;
 import io.jenkins.plugins.SignPath.Exceptions.SecretNotFoundException;
 import io.jenkins.plugins.SignPath.Exceptions.SignPathFacadeCallException;
 import io.jenkins.plugins.SignPath.Exceptions.SignPathStepFailedException;
-import io.jenkins.plugins.SignPath.SecretRetrieval.ISecretRetriever;
+import io.jenkins.plugins.SignPath.SecretRetrieval.SecretRetriever;
 import io.jenkins.plugins.SignPath.StepShared.GetSignedArtifactStepInput;
 import io.jenkins.plugins.SignPath.StepShared.SignPathContext;
 import org.jenkinsci.plugins.workflow.steps.SynchronousStepExecution;
@@ -16,11 +16,16 @@ import org.jenkinsci.plugins.workflow.steps.SynchronousStepExecution;
 import java.io.IOException;
 import java.io.PrintStream;
 
+/**
+ * The step-execution for the
+ *
+ * @see GetSignedArtifactStep
+ */
 public class GetSignedArtifactStepExecution extends SynchronousStepExecution<String> {
     private final PrintStream logger;
-    private final ISecretRetriever secretRetriever;
-    private final IArtifactFileManager artifactFileManager;
-    private final ISignPathFacadeFactory signPathFacadeFactory;
+    private final SecretRetriever secretRetriever;
+    private final ArtifactFileManager artifactFileManager;
+    private final SignPathFacadeFactory signPathFacadeFactory;
     private final GetSignedArtifactStepInput input;
 
     protected GetSignedArtifactStepExecution(GetSignedArtifactStepInput input,
@@ -40,7 +45,7 @@ public class GetSignedArtifactStepExecution extends SynchronousStepExecution<Str
         try {
             String trustedBuildSystemToken = secretRetriever.retrieveSecret(Constants.TrustedBuildSystemTokenCredentialId);
             SignPathCredentials credentials = new SignPathCredentials(input.getCiUserToken(), trustedBuildSystemToken);
-            ISignPathFacade signPathFacade = signPathFacadeFactory.create(credentials);
+            SignPathFacade signPathFacade = signPathFacadeFactory.create(credentials);
             TemporaryFile signedArtifact = signPathFacade.getSignedArtifact(input.getOrganizationId(), input.getSigningRequestId());
 
             artifactFileManager.storeArtifact(signedArtifact, input.getOutputArtifactPath());

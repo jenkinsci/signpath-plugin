@@ -2,16 +2,21 @@ package io.jenkins.plugins.SignPath.StepShared;
 
 import java.util.UUID;
 
+/**
+ * Holds all input specific to the
+ *
+ * @see io.jenkins.plugins.SignPath.SubmitSigningRequestStep
+ */
 public class SubmitSigningRequestStepInput {
-    private UUID organizationId;
-    private String ciUserToken;
-    private String projectSlug;
-    private String artifactConfigurationSlug;
-    private String signingPolicySlug;
-    private String inputArtifactPath;
-    private String description;
-    private String outputArtifactPath;
-    private Boolean waitForCompletion;
+    private final UUID organizationId;
+    private final String ciUserToken;
+    private final String projectSlug;
+    private final String artifactConfigurationSlug;
+    private final String signingPolicySlug;
+    private final String inputArtifactPath;
+    private final String description;
+    private final String outputArtifactPath;
+    private final boolean waitForCompletion;
 
     public SubmitSigningRequestStepInput(UUID organizationId,
                                          String ciUserToken,
@@ -21,7 +26,7 @@ public class SubmitSigningRequestStepInput {
                                          String inputArtifactPath,
                                          String description,
                                          String outputArtifactPath,
-                                         Boolean waitForCompletion) {
+                                         boolean waitForCompletion) {
         this.organizationId = organizationId;
         this.ciUserToken = ciUserToken;
         this.projectSlug = projectSlug;
@@ -37,7 +42,7 @@ public class SubmitSigningRequestStepInput {
         return organizationId;
     }
 
-    public Boolean getWaitForCompletion() {
+    public boolean getWaitForCompletion() {
         return waitForCompletion;
     }
 

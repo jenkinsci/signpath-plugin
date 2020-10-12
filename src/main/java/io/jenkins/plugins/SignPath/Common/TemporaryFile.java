@@ -8,13 +8,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 
+/**
+ * A helper class for handling (creating and disposing) temporary files
+ */
 public class TemporaryFile implements Closeable {
     private final File temporaryDirectory;
     private final File temporaryFile;
 
     public TemporaryFile() throws IOException {
         temporaryDirectory = null;
-        temporaryFile = File.createTempFile("SignPathJenkinsPluginTemp"  , null);
+        temporaryFile = File.createTempFile("SignPathJenkinsPluginTemp", null);
 
         temporaryFile.deleteOnExit();
     }
@@ -31,7 +34,7 @@ public class TemporaryFile implements Closeable {
         temporaryDirectory.deleteOnExit();
     }
 
-    public File getFile(){
+    public File getFile() {
         return temporaryFile;
     }
 

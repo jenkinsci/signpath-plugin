@@ -20,7 +20,7 @@ public class CredentialStoreUtils {
 
     public static CredentialsStore getCredentialStore(Jenkins jenkins) {
         for (CredentialsStore credentialsStore : CredentialsProvider.lookupStores(jenkins)) {
-            if(SystemCredentialsProvider.StoreImpl.class.isAssignableFrom(credentialsStore.getClass())){
+            if (SystemCredentialsProvider.StoreImpl.class.isAssignableFrom(credentialsStore.getClass())) {
                 return credentialsStore;
             }
         }

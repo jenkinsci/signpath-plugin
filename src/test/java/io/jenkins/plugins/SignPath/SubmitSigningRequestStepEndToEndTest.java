@@ -9,7 +9,7 @@ import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.plugins.git.util.BuildData;
-import io.jenkins.plugins.SignPath.Artifacts.ArtifactFileManager;
+import io.jenkins.plugins.SignPath.Artifacts.DefaultArtifactFileManager;
 import io.jenkins.plugins.SignPath.Common.TemporaryFile;
 import io.jenkins.plugins.SignPath.TestUtils.*;
 import jenkins.model.JenkinsLocationConfiguration;
@@ -36,13 +36,13 @@ public class SubmitSigningRequestStepEndToEndTest {
     private static final int MockServerPort = 51000;
 
     @Rule
-    public SignPathJenkinsRule j= new SignPathJenkinsRule();
+    public SignPathJenkinsRule j = new SignPathJenkinsRule();
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(MockServerPort);
 
     @Theory
-    public void submitSigningRequest(@FromDataPoints("allBooleans") Boolean withOptionalFields) throws Exception {
+    public void submitSigningRequest(@FromDataPoints("allBooleans") boolean withOptionalFields) throws Exception {
         byte[] signedArtifactBytes = Some.bytes();
         String trustedBuildSystemToken = Some.stringNonEmpty();
         String unsignedArtifactString = Some.stringNonEmpty();
@@ -80,7 +80,7 @@ public class SubmitSigningRequestStepEndToEndTest {
 
         String remoteUrl = Some.url();
         BuildData buildData = new BuildData(Some.stringNonEmpty());
-        buildData.saveBuild(BuildDataDomainObjectMother.CreateRandomBuild(1));
+        buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(1));
         buildData.addRemoteUrl(remoteUrl);
 
         // ACT
@@ -96,7 +96,7 @@ public class SubmitSigningRequestStepEndToEndTest {
 
         Launcher launcher = j.createLocalLauncher();
         TaskListener listener = j.createTaskListener();
-        ArtifactFileManager artifactFileManager = new ArtifactFileManager(run, launcher, listener);
+        DefaultArtifactFileManager artifactFileManager = new DefaultArtifactFileManager(run, launcher, listener);
         TemporaryFile signedArtifact = artifactFileManager.retrieveArtifact("signed.exe");
         byte[] signedArtifactContent = TemporaryFileUtil.getContentAndDispose(signedArtifact);
         assertArrayEquals(signedArtifactBytes, signedArtifactContent);
@@ -109,7 +109,7 @@ public class SubmitSigningRequestStepEndToEndTest {
     }
 
     @Theory
-    public void submitSigningRequest_WithoutWaitForCompletion(@FromDataPoints("allBooleans") Boolean withOptionalFields) throws Exception {
+    public void submitSigningRequest_withoutWaitForCompletion(@FromDataPoints("allBooleans") boolean withOptionalFields) throws Exception {
         String unsignedArtifactString = Some.stringNonEmpty();
         String trustedBuildSystemToken = Some.stringNonEmpty();
         String ciUserToken = Some.stringNonEmpty();
@@ -128,7 +128,7 @@ public class SubmitSigningRequestStepEndToEndTest {
         wireMockRule.stubFor(post(urlEqualTo("/v1/" + organizationId + "/SigningRequests"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Location", getMockUrl("v1/"+organizationId+"/SigningRequests/"+signingRequestId))));
+                        .withHeader("Location", getMockUrl("v1/" + organizationId + "/SigningRequests/" + signingRequestId))));
 
         WorkflowJob workflowJob = withOptionalFields ?
                 createWorkflowJob(apiUrl, ciUserToken, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, artifactConfigurationSlug, description, false)
@@ -136,7 +136,7 @@ public class SubmitSigningRequestStepEndToEndTest {
 
         String remoteUrl = Some.url();
         BuildData buildData = new BuildData(Some.stringNonEmpty());
-        buildData.saveBuild(BuildDataDomainObjectMother.CreateRandomBuild(1));
+        buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(1));
         buildData.addRemoteUrl(remoteUrl);
 
         // ACT
@@ -150,7 +150,7 @@ public class SubmitSigningRequestStepEndToEndTest {
             fail();
         }
 
-        assertTrue(run.getLog().contains("<returnValue>:\""+signingRequestId+"\""));
+        assertTrue(run.getLog().contains("<returnValue>:\"" + signingRequestId + "\""));
 
         if (withOptionalFields)
             assertRequest(ciUserToken, trustedBuildSystemToken, unsignedArtifactString, remoteUrl, organizationId, projectSlug, signingPolicySlug, artifactConfigurationSlug, description);
@@ -159,11 +159,11 @@ public class SubmitSigningRequestStepEndToEndTest {
     }
 
     @Theory
-    public void submitSigningRequestWithMissingField() throws Exception  {
-        WorkflowJob workflowJob = j.createWorkflow("SignPath","submitSigningRequest();");
+    public void submitSigningRequest_withMissingField_fails() throws Exception {
+        WorkflowJob workflowJob = j.createWorkflow("SignPath", "submitSigningRequest();");
 
         BuildData buildData = new BuildData(Some.stringNonEmpty());
-        buildData.saveBuild(BuildDataDomainObjectMother.CreateRandomBuild(1));
+        buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(1));
         buildData.addRemoteUrl(Some.url());
 
         // ACT
@@ -177,7 +177,7 @@ public class SubmitSigningRequestStepEndToEndTest {
     }
 
     @Theory
-    public void submitSigningRequestWithWrongOrMissingRootUrl(@FromDataPoints("allRootUrls")  String rootUrl) throws Exception {
+    public void submitSigningRequest_withWrongOrMissingRootUrl_fails(@FromDataPoints("allRootUrls") String rootUrl) throws Exception {
         String unsignedArtifactString = Some.stringNonEmpty();
         String ciUserToken = Some.stringNonEmpty();
         String projectSlug = Some.stringNonEmpty();
@@ -193,7 +193,7 @@ public class SubmitSigningRequestStepEndToEndTest {
         CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, Constants.TrustedBuildSystemTokenCredentialId, trustedBuildSystemToken);
 
         BuildData buildData = new BuildData(Some.stringNonEmpty());
-        buildData.saveBuild(BuildDataDomainObjectMother.CreateRandomBuild(1));
+        buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(1));
         buildData.addRemoteUrl(Some.url());
 
         // we set a missing root-url
@@ -220,7 +220,7 @@ public class SubmitSigningRequestStepEndToEndTest {
                                           String description,
                                           boolean waitForCompletion) throws IOException {
         return j.createWorkflow("SignPath",
-                "writeFile text: '"+ unsignedArtifactString +"', file: 'unsigned.exe'; " +
+                "writeFile text: '" + unsignedArtifactString + "', file: 'unsigned.exe'; " +
                         "archiveArtifacts artifacts: 'unsigned.exe', fingerprint: true; " +
                         "echo '<returnValue>:\"'+ submitSigningRequest( apiUrl: '" + apiUrl + "', " +
                         "inputArtifactPath: 'unsigned.exe', " +
@@ -229,9 +229,9 @@ public class SubmitSigningRequestStepEndToEndTest {
                         "organizationId: '" + organizationId + "'," +
                         "projectSlug: '" + projectSlug + "'," +
                         "signingPolicySlug: '" + signingPolicySlug + "'," +
-                        "artifactConfigurationSlug: '"+ artifactConfigurationSlug +"'," +
-                        "description: '"+ description +"'," +
-                        "waitForCompletion: '"+waitForCompletion+"'," +
+                        "artifactConfigurationSlug: '" + artifactConfigurationSlug + "'," +
+                        "description: '" + description + "'," +
+                        "waitForCompletion: '" + waitForCompletion + "'," +
                         "serviceUnavailableTimeoutInSeconds: 10," +
                         "uploadAndDownloadRequestTimeoutInSeconds: 10," +
                         "waitForCompletionTimeoutInSeconds: 10) + '\"';");
@@ -245,7 +245,7 @@ public class SubmitSigningRequestStepEndToEndTest {
                                           String unsignedArtifactString,
                                           boolean waitForCompletion) throws IOException {
         return j.createWorkflow("SignPath",
-                "writeFile text: '"+ unsignedArtifactString +"', file: 'unsigned.exe'; " +
+                "writeFile text: '" + unsignedArtifactString + "', file: 'unsigned.exe'; " +
                         "archiveArtifacts artifacts: 'unsigned.exe', fingerprint: true; " +
                         "echo '<returnValue>:\"'+ submitSigningRequest( apiUrl: '" + apiUrl + "', " +
                         "inputArtifactPath: 'unsigned.exe', " +
@@ -254,7 +254,7 @@ public class SubmitSigningRequestStepEndToEndTest {
                         "organizationId: '" + organizationId + "'," +
                         "projectSlug: '" + projectSlug + "'," +
                         "signingPolicySlug: '" + signingPolicySlug + "'," +
-                        "waitForCompletion: '"+waitForCompletion+"'," +
+                        "waitForCompletion: '" + waitForCompletion + "'," +
                         "serviceUnavailableTimeoutInSeconds: 10," +
                         "uploadAndDownloadRequestTimeoutInSeconds: 10," +
                         "waitForCompletionTimeoutInSeconds: 10) + '\"';");
@@ -311,18 +311,18 @@ public class SubmitSigningRequestStepEndToEndTest {
     private String getMultipartFormDataFileContents(Request r, String name) {
         String bodyAsString = r.getBodyAsString();
         Matcher regexResult = Pattern.compile(String.format("name=%s; filename=.*?\\n(.*?)--", name), Pattern.DOTALL).matcher(bodyAsString);
-        if(!regexResult.find()){
-            fail("multipart-form-data with name "+name+" not found in "+ bodyAsString);
+        if (!regexResult.find()) {
+            fail("multipart-form-data with name " + name + " not found in " + bodyAsString);
         }
 
         return regexResult.group(1).trim();
     }
 
-    private String getMockUrl(){
+    private String getMockUrl() {
         return getMockUrl("");
     }
 
-    private String getMockUrl(String postfix){
+    private String getMockUrl(String postfix) {
         return String.format("http://localhost:%d/%s", MockServerPort, postfix);
     }
 
@@ -332,7 +332,7 @@ public class SubmitSigningRequestStepEndToEndTest {
     }
 
     @DataPoints("allBooleans")
-    public static Boolean[] allBooleans(){
-        return new Boolean[]{true, false};
+    public static boolean[] allBooleans() {
+        return new boolean[]{true, false};
     }
 }

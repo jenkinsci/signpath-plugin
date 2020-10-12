@@ -4,11 +4,16 @@ import hudson.model.Run;
 
 import java.io.File;
 
-public class DefaultConfigFileProvider implements IConfigFileProvider {
+/**
+ * Default implementation of the
+ *
+ * @see ConfigFileProvider interface
+ */
+public class DefaultConfigFileProvider implements ConfigFileProvider {
 
     private final Run<?, ?> run;
 
-    public DefaultConfigFileProvider(Run<?, ?> run){
+    public DefaultConfigFileProvider(Run<?, ?> run) {
         this.run = run;
     }
 

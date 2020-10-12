@@ -29,10 +29,10 @@ import static org.mockito.Mockito.when;
 @RunWith(Theories.class)
 public class OriginRetrieverTest {
 
-    private OriginRetriever sut;
+    private GitOriginRetriever sut;
 
     @Mock
-    IConfigFileProvider configFileProvider;
+    ConfigFileProvider configFileProvider;
 
     @Mock
     Run<?, ?> run;
@@ -46,10 +46,10 @@ public class OriginRetrieverTest {
     private String repositoryUrl;
 
     @Before
-    public void setup(){
+    public void setup() {
         String jenkinsRootUrl = Some.url();
         String jobUrl = Some.urlFragment();
-        buildUrl = StringUtils.strip(jenkinsRootUrl,"/") + "/" + StringUtils.strip(jobUrl, "/");
+        buildUrl = StringUtils.strip(jenkinsRootUrl, "/") + "/" + StringUtils.strip(jobUrl, "/");
         repositoryUrl = Some.stringNonEmpty();
 
         // hard-coded to avoid conflicts with other build numbers
@@ -60,7 +60,7 @@ public class OriginRetrieverTest {
         when(run.getUrl()).thenReturn(jobUrl);
         when(run.getNumber()).thenReturn(buildNumber);
         when(run.getAction(BuildData.class)).thenReturn(buildData);
-        sut = new OriginRetriever(configFileProvider, run, jenkinsRootUrl);
+        sut = new GitOriginRetriever(configFileProvider, run, jenkinsRootUrl);
     }
 
     @Theory
@@ -70,9 +70,9 @@ public class OriginRetrieverTest {
         String branchName = Some.stringNonEmpty();
         byte[] jobConfigXmlContent = Some.bytes();
 
-        buildData.saveBuild(BuildDataDomainObjectMother.CreateRandomBuild(101));
-        buildData.saveBuild(BuildDataDomainObjectMother.CreateBuild(buildNumber, commitId, BuildDataDomainObjectMother.CreateBranch(branchId, branchName)));
-        buildData.saveBuild(BuildDataDomainObjectMother.CreateRandomBuild(102));
+        buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(101));
+        buildData.saveBuild(BuildDataDomainObjectMother.createBuild(buildNumber, commitId, BuildDataDomainObjectMother.createBranch(branchId, branchName)));
+        buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(102));
 
         TemporaryFile jobConfigTemporaryFile = TemporaryFileUtil.create(jobConfigXmlContent);
         when(configFileProvider.retrieveBuildConfigFile()).thenReturn(jobConfigTemporaryFile.getFile());
@@ -107,22 +107,22 @@ public class OriginRetrieverTest {
     }
 
     @Theory
-    public void retrieveOrigin_withRefBranchName (@FromDataPoints("allBranchNames") String[] branchNames) throws IOException, OriginNotRetrievableException {
+    public void retrieveOrigin_withRefBranchName(@FromDataPoints("allBranchNames") String[] branchNames) throws IOException, OriginNotRetrievableException {
         String actualBranchName = branchNames[0];
         String expectedBranchName = branchNames[1];
-        buildData.saveBuild(BuildDataDomainObjectMother.CreateBuild(buildNumber, Some.sha1Hash(), BuildDataDomainObjectMother.CreateBranch(Some.sha1Hash(), actualBranchName)));
+        buildData.saveBuild(BuildDataDomainObjectMother.createBuild(buildNumber, Some.sha1Hash(), BuildDataDomainObjectMother.createBranch(Some.sha1Hash(), actualBranchName)));
 
         TemporaryFile jobConfigTemporaryFile = TemporaryFileUtil.create(Some.bytes());
         when(configFileProvider.retrieveBuildConfigFile()).thenReturn(jobConfigTemporaryFile.getFile());
 
         SigningRequestOriginModel result = sut.retrieveOrigin();
 
-        assertEquals( expectedBranchName, result.getRepositoryMetadata().getBranchName());
+        assertEquals(expectedBranchName, result.getRepositoryMetadata().getBranchName());
     }
 
     @Theory
-    public void retrieveOrigin_NoMatchingBuildNumber_Throws() {
-        buildData.saveBuild(BuildDataDomainObjectMother.CreateRandomBuild(buildNumber + 1));
+    public void retrieveOrigin_noMatchingBuildNumber_throws() {
+        buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(buildNumber + 1));
 
         ThrowingRunnable act = () -> sut.retrieveOrigin();
 
@@ -131,9 +131,9 @@ public class OriginRetrieverTest {
     }
 
     @Theory
-    public void retrieveOrigin_MultipleMatchingBuildNumber_Throws() {
-        buildData.saveBuild(BuildDataDomainObjectMother.CreateRandomBuild(buildNumber));
-        buildData.saveBuild(BuildDataDomainObjectMother.CreateRandomBuild(buildNumber));
+    public void retrieveOrigin_multipleMatchingBuildNumber_throws() {
+        buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(buildNumber));
+        buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(buildNumber));
 
         ThrowingRunnable act = () -> sut.retrieveOrigin();
 
@@ -142,8 +142,8 @@ public class OriginRetrieverTest {
     }
 
     @Theory
-    public void retrieveOrigin_MultipleBranches_Throws() {
-        buildData.saveBuild(BuildDataDomainObjectMother.CreateBuild(buildNumber, Some.sha1Hash(), BuildDataDomainObjectMother.CreateRandomBranch(), BuildDataDomainObjectMother.CreateRandomBranch()));
+    public void retrieveOrigin_multipleBranches_throws() {
+        buildData.saveBuild(BuildDataDomainObjectMother.createBuild(buildNumber, Some.sha1Hash(), BuildDataDomainObjectMother.createRandomBranch(), BuildDataDomainObjectMother.createRandomBranch()));
 
         ThrowingRunnable act = () -> sut.retrieveOrigin();
 
@@ -152,8 +152,8 @@ public class OriginRetrieverTest {
     }
 
     @Theory
-    public void retrieveOrigin_NoRemoteUrls_Throws() {
-        buildData.saveBuild(BuildDataDomainObjectMother.CreateRandomBuild(buildNumber));
+    public void retrieveOrigin_noRemoteUrls_throws() {
+        buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(buildNumber));
         buildData.remoteUrls.clear();
 
         ThrowingRunnable act = () -> sut.retrieveOrigin();
@@ -163,8 +163,8 @@ public class OriginRetrieverTest {
     }
 
     @Theory
-    public void retrieveOrigin_MultipleRemoteUrls_Throws() {
-        buildData.saveBuild(BuildDataDomainObjectMother.CreateRandomBuild(buildNumber));
+    public void retrieveOrigin_multipleRemoteUrls_throws() {
+        buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(buildNumber));
         buildData.addRemoteUrl(Some.stringNonEmpty());
 
         ThrowingRunnable act = () -> sut.retrieveOrigin();

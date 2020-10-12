@@ -11,8 +11,8 @@ import hudson.model.TaskListener;
 import io.jenkins.plugins.SignPath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.SignPath.Exceptions.SignPathStepInvalidArgumentException;
 import io.jenkins.plugins.SignPath.StepShared.SignPathContext;
-import io.jenkins.plugins.SignPath.StepShared.SubmitSigningRequestStepInput;
 import io.jenkins.plugins.SignPath.StepShared.SigningRequestStepInputParser;
+import io.jenkins.plugins.SignPath.StepShared.SubmitSigningRequestStepInput;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
@@ -20,9 +20,14 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.Set;
 
+/**
+ * Represents the submitSigningRequestStep step that is executable via pipeline-script
+ * Encapsulates both the sync and async version of the step
+ * -> thus the waitForCompletion param is used to toggle between the two modes
+ * For a how-to use example see *EndToEnd tests
+ */
 public class SubmitSigningRequestStep extends SignPathStepBase {
     private final static String FunctionName = "submitSigningRequest";
     private final static String DisplayName = "Submit SignPath SigningRequest";
@@ -33,7 +38,7 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
     private String signingPolicySlug;
     private String inputArtifactPath;
     private String description;
-    private Boolean waitForCompletion = false;
+    private boolean waitForCompletion = false;
     private String outputArtifactPath;
 
     @DataBoundConstructor
@@ -99,7 +104,7 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
         return description;
     }
 
-    public Boolean getWaitForCompletion() {
+    public boolean getWaitForCompletion() {
         return waitForCompletion;
     }
 
@@ -138,7 +143,7 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
     }
 
     @DataBoundSetter
-    public void setWaitForCompletion(Boolean waitForCompletion) {
+    public void setWaitForCompletion(boolean waitForCompletion) {
         this.waitForCompletion = waitForCompletion;
     }
 

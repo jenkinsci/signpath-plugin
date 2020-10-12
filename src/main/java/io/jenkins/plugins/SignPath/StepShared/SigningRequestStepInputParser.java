@@ -10,8 +10,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.UUID;
 
-public class SigningRequestStepInputParser {
-
+/**
+ * A utility class that "parses" and validates user-input arguments given to a step
+ *
+ * @throws SignPathStepInvalidArgumentException if any parameter does not fulfill the requirements
+ */
+public final class SigningRequestStepInputParser {
     public static ApiConfiguration ParseApiConfiguration(SignPathStepBase step) throws SignPathStepInvalidArgumentException {
         return new ApiConfiguration(
                 ensureValidURL(step.getApiUrl()),
@@ -38,7 +42,7 @@ public class SigningRequestStepInputParser {
                 ensureValidUUID(step.getOrganizationId(), "organizationId"),
                 ensureValidUUID(step.getSigningRequestId(), "signingRequestId"),
                 ensureNotNull(step.getCiUserToken(), "ciUserToken"),
-                ensureNotNull(step.getOutputArtifactPath(),"outputArtifactPath"));
+                ensureNotNull(step.getOutputArtifactPath(), "outputArtifactPath"));
     }
 
     private static URL ensureValidURL(String apiUrl) throws SignPathStepInvalidArgumentException {
@@ -58,7 +62,7 @@ public class SigningRequestStepInputParser {
     }
 
     private static String ensureNotNull(String input, String name) throws SignPathStepInvalidArgumentException {
-        if(input == null)
+        if (input == null)
             throw new SignPathStepInvalidArgumentException(name + " must be set");
 
         return input;

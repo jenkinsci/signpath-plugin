@@ -2,11 +2,14 @@ package io.jenkins.plugins.SignPath.ApiIntegration;
 
 import java.net.URL;
 
+/**
+ * Holds all general configuration values that are necessary for talking to the SignPath Api
+ */
 public class ApiConfiguration {
-    private URL apiUrl;
-    private int serviceUnavailableTimeoutInSeconds;
-    private int uploadAndDownloadRequestTimeoutInSeconds;
-    private int waitForCompletionTimeoutInSeconds;
+    private final URL apiUrl;
+    private final int serviceUnavailableTimeoutInSeconds;
+    private final int uploadAndDownloadRequestTimeoutInSeconds;
+    private final int waitForCompletionTimeoutInSeconds;
 
     public ApiConfiguration(URL apiUrl, int serviceUnavailableTimeoutInSeconds, int uploadAndDownloadRequestTimeoutInSeconds, int waitForCompletionTimeoutInSeconds) {
         this.apiUrl = apiUrl;

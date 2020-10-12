@@ -12,10 +12,21 @@ import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import java.util.Collections;
 import java.util.List;
 
-public class CredentialBasedSecretRetriever implements ISecretRetriever {
+/**
+ * Implementation of the
+ *
+ * @see SecretRetriever interface
+ * that connects
+ * @see CredentialsProvider from cloudbees
+ * this plugin is installed by default on Jenkins
+ * <p>
+ * Only allows to retrieve secrets in SYSTEM scope as a security measure
+ * (those cannot be retrieve from agent nodes / build scripts)
+ */
+public class CredentialBasedSecretRetriever implements SecretRetriever {
     private final Jenkins jenkins;
 
-    public CredentialBasedSecretRetriever(Jenkins jenkins){
+    public CredentialBasedSecretRetriever(Jenkins jenkins) {
         this.jenkins = jenkins;
     }
 
@@ -26,11 +37,11 @@ public class CredentialBasedSecretRetriever implements ISecretRetriever {
         CredentialsMatcher matcher = CredentialsMatchers.withId(id);
         StringCredentials credential = CredentialsMatchers.firstOrNull(credentials, matcher);
 
-        if(credential == null) {
+        if (credential == null) {
             throw new SecretNotFoundException(String.format("The secret '%s' could not be found in the credential store.", id));
         }
 
-        if(credential.getScope() != CredentialsScope.SYSTEM) {
+        if (credential.getScope() != CredentialsScope.SYSTEM) {
             CredentialsScope scope = credential.getScope();
             String scopeName = scope == null ? "null" : scope.getDisplayName();
             throw new SecretNotFoundException(

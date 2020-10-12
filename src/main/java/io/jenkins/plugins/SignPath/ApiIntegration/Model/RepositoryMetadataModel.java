@@ -1,5 +1,11 @@
 package io.jenkins.plugins.SignPath.ApiIntegration.Model;
 
+/**
+ * Holds information about the source-control repository.
+ * This information is submitted to SignPath as part of the
+ *
+ * @see SigningRequestOriginModel
+ */
 public class RepositoryMetadataModel {
     private final String sourceControlManagementType;
     private final String repositoryUrl;
