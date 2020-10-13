@@ -1,6 +1,7 @@
 package io.jenkins.plugins.SignPath.StepShared;
 
 import hudson.Launcher;
+import hudson.model.FingerprintMap;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import io.jenkins.plugins.SignPath.ApiIntegration.ApiConfiguration;
@@ -99,6 +100,7 @@ public class SignPathContext {
         Launcher launcher = context.get(Launcher.class);
         PrintStream logger = listener.getLogger();
         Jenkins jenkins = Jenkins.get();
+        FingerprintMap fingerprintMap = jenkins.getFingerprintMap();
         JenkinsLocationConfiguration config = JenkinsLocationConfiguration.get();
         String jenkinsRootUrl = config.getUrl();
 
@@ -109,7 +111,7 @@ public class SignPathContext {
 
         SecretRetriever secretRetriever = new CredentialBasedSecretRetriever(jenkins);
         OriginRetriever originRetriever = new GitOriginRetriever(new DefaultConfigFileProvider(run), run, jenkinsRootUrl);
-        ArtifactFileManager artifactFileManager = new DefaultArtifactFileManager(run, launcher, listener);
+        ArtifactFileManager artifactFileManager = new DefaultArtifactFileManager(fingerprintMap, run, launcher, listener);
         PowerShellExecutor pwsh = new DefaultPowerShellExecutor("pwsh");
         SignPathFacadeFactory signPathFacadeFactory = new SignPathPowerShellFacadeFactory(pwsh, apiConfiguration);
 

@@ -16,6 +16,7 @@ import org.jenkinsci.plugins.workflow.steps.SynchronousStepExecution;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
 
 /**
@@ -80,7 +81,7 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution<
                 logger.print("\nSigning step succeeded\n");
                 return signingRequestId.toString();
             }
-        } catch (SecretNotFoundException | OriginNotRetrievableException | SignPathFacadeCallException | IOException | InterruptedException | ArtifactNotFoundException ex) {
+        } catch (SecretNotFoundException | OriginNotRetrievableException | SignPathFacadeCallException | IOException | InterruptedException | ArtifactNotFoundException | NoSuchAlgorithmException ex) {
             logger.print("\nSigning step failed: " + ex.getMessage() + "\n");
             throw new SignPathStepFailedException("Signing step failed: " + ex.getMessage(), ex);
         }

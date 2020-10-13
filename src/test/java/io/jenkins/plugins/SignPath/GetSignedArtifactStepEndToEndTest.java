@@ -4,6 +4,7 @@ import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import hudson.Launcher;
+import hudson.model.FingerprintMap;
 import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.model.queue.QueueTaskFuture;
@@ -77,7 +78,8 @@ public class GetSignedArtifactStepEndToEndTest {
 
         Launcher launcher = j.createLocalLauncher();
         TaskListener listener = j.createTaskListener();
-        DefaultArtifactFileManager artifactFileManager = new DefaultArtifactFileManager(run, launcher, listener);
+        FingerprintMap fingerprintMap = j.jenkins.getFingerprintMap();
+        DefaultArtifactFileManager artifactFileManager = new DefaultArtifactFileManager(fingerprintMap, run, launcher, listener);
         TemporaryFile signedArtifact = artifactFileManager.retrieveArtifact("signed.exe");
         byte[] signedArtifactContent = TemporaryFileUtil.getContentAndDispose(signedArtifact);
         assertArrayEquals(signedArtifactBytes, signedArtifactContent);

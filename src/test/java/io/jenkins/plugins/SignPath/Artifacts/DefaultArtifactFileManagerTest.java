@@ -1,6 +1,8 @@
 package io.jenkins.plugins.SignPath.Artifacts;
 
 import hudson.Launcher;
+import hudson.model.Fingerprint;
+import hudson.model.FingerprintMap;
 import hudson.model.TaskListener;
 import io.jenkins.plugins.SignPath.Common.TemporaryFile;
 import io.jenkins.plugins.SignPath.Exceptions.ArtifactNotFoundException;
@@ -107,6 +109,27 @@ public class DefaultArtifactFileManagerTest {
         artifact.close();
     }
 
+    @Theory
+    public void storeArtifact(@FromDataPoints("allFileNames") String[] fileNames) throws Exception {
+        String fileNameToStore = fileNames[1];
+        String expectedFileName = fileNames[2];
+
+        DefaultArtifactFileManager sut = runJob("");
+
+        byte[] artifactContent = Some.bytes();
+        TemporaryFile artifact = TemporaryFileUtil.create(artifactContent);
+
+        // ACT
+        sut.storeArtifact(artifact, fileNameToStore);
+
+        // ASSERT
+        String expectedHash =  TemporaryFileUtil.getDigestAndDispose(artifact);
+        Fingerprint fingerprint = j.jenkins.getFingerprintMap().get(expectedHash);
+        assertNotNull(fingerprint);
+        assertEquals(expectedFileName,fingerprint.getFileName());
+        assertEquals(expectedHash,fingerprint.getHashString());
+    }
+
     private String archiveArtifactScript(String artifactName) {
         return "writeFile text: 'hello', file: '" + artifactName + "'; " +
                 "archiveArtifacts artifacts: '" + artifactName + "', fingerprint: true ";
@@ -115,8 +138,9 @@ public class DefaultArtifactFileManagerTest {
     private DefaultArtifactFileManager runJob(String script) throws Exception {
         Launcher launcher = j.createLocalLauncher();
         TaskListener listener = j.createTaskListener();
+        FingerprintMap fingerprintMap = j.jenkins.getFingerprintMap();
         WorkflowJob workflowJob = j.createWorkflow("SignPath", script);
         WorkflowRun run = j.assertBuildStatusSuccess(workflowJob.scheduleBuild2(0));
-        return new DefaultArtifactFileManager(run, launcher, listener);
+        return new DefaultArtifactFileManager(fingerprintMap, run, launcher, listener);
     }
 }

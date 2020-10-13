@@ -5,6 +5,7 @@ import io.jenkins.plugins.SignPath.Exceptions.ArtifactNotFoundException;
 import jenkins.model.ArtifactManager;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * A wrapper around the
@@ -30,5 +31,5 @@ public interface ArtifactFileManager {
      * @throws IOException          occurs if something goes wrong with storing the artifact on Jenkins
      * @throws InterruptedException occurs if something goes wrong with storing the artifact on Jenkins
      */
-    void storeArtifact(TemporaryFile artifact, String targetArtifactPath) throws IOException, InterruptedException;
+    void storeArtifact(TemporaryFile artifact, String targetArtifactPath) throws IOException, InterruptedException, NoSuchAlgorithmException;
 }

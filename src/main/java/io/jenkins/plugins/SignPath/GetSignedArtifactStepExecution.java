@@ -15,6 +15,7 @@ import org.jenkinsci.plugins.workflow.steps.SynchronousStepExecution;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * The step-execution for the
@@ -51,7 +52,7 @@ public class GetSignedArtifactStepExecution extends SynchronousStepExecution<Str
             artifactFileManager.storeArtifact(signedArtifact, input.getOutputArtifactPath());
             logger.print("\nSigning step succeeded\n");
             return "";
-        } catch (SecretNotFoundException | SignPathFacadeCallException | IOException | InterruptedException ex) {
+        } catch (SecretNotFoundException | SignPathFacadeCallException | IOException | InterruptedException | NoSuchAlgorithmException ex) {
             logger.print("\nSigning step failed: " + ex.getMessage() + "\n");
             throw new SignPathStepFailedException("Signing step failed: " + ex.getMessage(), ex);
         }
