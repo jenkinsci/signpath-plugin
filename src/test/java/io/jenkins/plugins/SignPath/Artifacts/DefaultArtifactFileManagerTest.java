@@ -42,6 +42,18 @@ public class DefaultArtifactFileManagerTest {
         assertEquals("hello", retrievedArtifactString);
     }
 
+    @Theory
+    public void retrieveArtifact_fromParent_throws() throws Exception {
+        DefaultArtifactFileManager sut = runJob("");
+
+        // ACT
+        ThrowingRunnable act = () -> sut.retrieveArtifact("../build.xml");
+
+        // ASSERT
+        Throwable ex = assertThrows(IllegalAccessError.class, act);
+        assertEquals("artifactPath cannot be in parent directory.", ex.getMessage());
+    }
+
     @DataPoints("allFileNames")
     public static String[][] allFileNames() {
         return new String[][]{
@@ -128,6 +140,21 @@ public class DefaultArtifactFileManagerTest {
         assertNotNull(fingerprint);
         assertEquals(expectedFileName,fingerprint.getFileName());
         assertEquals(expectedHash,fingerprint.getHashString());
+    }
+
+    @Theory
+    public void storeArtifact_inParent_throws() throws Exception {
+        DefaultArtifactFileManager sut = runJob("");
+
+        byte[] artifactContent = Some.bytes();
+        TemporaryFile artifact = TemporaryFileUtil.create(artifactContent);
+
+        // ACT
+        ThrowingRunnable act = () -> sut.storeArtifact(artifact, "../Please store me in parent.txt");
+
+        // ASSERT
+        Throwable ex = assertThrows(IllegalAccessError.class, act);
+        assertEquals("targetArtifactPath cannot be in parent directory.", ex.getMessage());
     }
 
     private String archiveArtifactScript(String artifactName) {

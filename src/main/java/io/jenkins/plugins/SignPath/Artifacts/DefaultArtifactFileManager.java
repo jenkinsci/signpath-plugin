@@ -40,6 +40,9 @@ public class DefaultArtifactFileManager implements ArtifactFileManager {
 
     @Override
     public TemporaryFile retrieveArtifact(String artifactPath) throws IOException, ArtifactNotFoundException {
+        if(artifactPath.contains(".."))
+            throw new IllegalAccessError("artifactPath cannot be in parent directory.");
+
         ArtifactManager artifactManager = run.getArtifactManager();
 
         VirtualFile artifactFile = artifactManager.root().child(artifactPath);
@@ -66,9 +69,13 @@ public class DefaultArtifactFileManager implements ArtifactFileManager {
 
     @Override
     public void storeArtifact(TemporaryFile artifact, String targetArtifactPath) throws IOException, InterruptedException, NoSuchAlgorithmException {
+        if(targetArtifactPath.contains(".."))
+            throw new IllegalAccessError("targetArtifactPath cannot be in parent directory.");
+
         ArtifactManager artifactManager = run.getArtifactManager();
 
         String normalizedArtifactPath = targetArtifactPath.replace("\\", "/");
+
         artifactManager.archive(
                 new FilePath(artifact.getFile().getParentFile()),
                 launcher,
