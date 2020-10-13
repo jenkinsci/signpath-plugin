@@ -1,4 +1,4 @@
 <?jelly escape-by-default='true'?>
 <div>
-    TODO
+    Signs the artifact from the current build with <b>SignPath.io</b>
 </div>

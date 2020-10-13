@@ -18,8 +18,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 
-// TODO SIGN-3326: Probably add fingerprinting as well.
-
 /**
  * The default implementation of the
  *
@@ -61,6 +59,7 @@ public class DefaultArtifactFileManager implements ArtifactFileManager {
     private String getFileName(String artifactPath) {
         String normalizedArtifactPath = artifactPath.replace("\\", "/");
         if (normalizedArtifactPath.contains("/")) {
+            // TODO SIGN-3415: Slash at the end probably kills this
             return normalizedArtifactPath.substring(normalizedArtifactPath.lastIndexOf("/")+1);
         }
 
@@ -74,6 +73,7 @@ public class DefaultArtifactFileManager implements ArtifactFileManager {
 
         ArtifactManager artifactManager = run.getArtifactManager();
 
+        // TODO SIGN-3415: Normalize could be a method and shared with above
         String normalizedArtifactPath = targetArtifactPath.replace("\\", "/");
 
         artifactManager.archive(
@@ -82,6 +82,7 @@ public class DefaultArtifactFileManager implements ArtifactFileManager {
                 BuildListenerAdapter.wrap(listener),
                 Collections.singletonMap(normalizedArtifactPath, artifact.getFile().getName()));
 
+        // TODO SIGN-3415: Put into method which ddescribes what this does
         String targetFileName = getFileName(targetArtifactPath);
         MessageDigest md5 = MessageDigest.getInstance("MD5");
         String digest = Util.toHexString(digest(artifact.getFile(), md5));
@@ -93,6 +94,7 @@ public class DefaultArtifactFileManager implements ArtifactFileManager {
         try (FileInputStream fis = new FileInputStream(file)) {
             try (BufferedInputStream bis = new BufferedInputStream(fis)) {
                 try (DigestInputStream dis = new DigestInputStream(bis, algorithm)) {
+                    // TODO SIGN-3415: Google how to stream a whole stream.
                     while (dis.read() != -1) {
                     }
                     return algorithm.digest();

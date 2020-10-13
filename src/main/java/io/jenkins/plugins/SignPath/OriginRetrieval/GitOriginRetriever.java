@@ -29,7 +29,6 @@ public class GitOriginRetriever implements OriginRetriever {
     private final ConfigFileProvider configFileProvider;
     private final Run<?, ?> run;
     private final String rootUrl;
-    private PrintStream logger;
 
     public GitOriginRetriever(ConfigFileProvider configFileProvider, Run<?, ?> run, String rootUrl) {
         this.configFileProvider = configFileProvider;
@@ -79,6 +78,7 @@ public class GitOriginRetriever implements OriginRetriever {
         return remoteUrls.stream().findFirst().get();
     }
 
+    // TODO SIGN-3415: Add docs comment that we dont know about this enough...
     private Map.Entry<String, Build> findMatchingBuild(BuildData buildData, int buildNumber) throws OriginNotRetrievableException {
         List<Map.Entry<String, Build>> matchingBuilds = buildData.getBuildsByBranchName().entrySet().stream()
                 .filter(buildByBranchName -> buildByBranchName.getValue().hudsonBuildNumber == buildNumber)

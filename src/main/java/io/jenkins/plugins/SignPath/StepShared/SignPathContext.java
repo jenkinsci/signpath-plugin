@@ -24,8 +24,6 @@ import org.jenkinsci.plugins.workflow.steps.StepContext;
 import java.io.IOException;
 import java.io.PrintStream;
 
-// REVIEW SIGN-3415: This class essentially represents a dependency-injection replacement - is this ok?
-
 /**
  * A helper class that helps us share all dependencies needed for the
  *

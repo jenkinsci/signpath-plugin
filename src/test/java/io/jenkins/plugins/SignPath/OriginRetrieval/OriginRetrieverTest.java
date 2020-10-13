@@ -52,7 +52,7 @@ public class OriginRetrieverTest {
         buildUrl = StringUtils.strip(jenkinsRootUrl, "/") + "/" + StringUtils.strip(jobUrl, "/");
         repositoryUrl = Some.stringNonEmpty();
 
-        // hard-coded to avoid conflicts with other build numbers
+        // hard-coded to avoid conflicts with other build numbers in the tests
         buildNumber = 99;
         buildData = new BuildData(Some.stringNonEmpty());
         buildData.addRemoteUrl(repositoryUrl);
@@ -95,7 +95,7 @@ public class OriginRetrieverTest {
         assertArrayEquals(jobConfigXmlContent, TemporaryFileUtil.getContentAndDispose(buildSettingsFile));
     }
 
-
+    // TODO SIGN-3415: Put on top of test everywhere.
     @DataPoints("allBranchNames")
     public static String[][] allBranchNames() {
         return new String[][]{
@@ -131,7 +131,7 @@ public class OriginRetrieverTest {
     }
 
     @Theory
-    public void retrieveOrigin_multipleMatchingBuildNumber_throws() {
+    public void retrieveOrigin_multipleMatchingBuildNumbers_throws() {
         buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(buildNumber));
         buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(buildNumber));
 

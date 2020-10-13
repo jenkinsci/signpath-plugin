@@ -23,6 +23,7 @@ public class TemporaryFile implements Closeable {
     }
 
     public TemporaryFile(String name) throws IOException {
+        // TODO SIGN-3415: Check if name navigates to parent ../ ?
         // in order to create a file with a specific name, we put it in a custom temporary directory
         temporaryDirectory = Files.createTempDirectory("SignPathJenkinsPluginTemp").toFile();
         temporaryFile = new File(temporaryDirectory, name);

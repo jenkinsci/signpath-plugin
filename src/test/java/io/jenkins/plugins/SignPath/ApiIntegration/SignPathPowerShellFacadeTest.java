@@ -43,7 +43,7 @@ public class SignPathPowerShellFacadeTest {
     private SignPathCredentials credentials;
     private ApiConfiguration apiConfiguration;
     private SignPathPowerShellFacade sut;
-    private final String[] capturedCommandArray = new String[1];
+    private String capturedCommand;
     private PowerShellExecutionResult powerShellExecutionResult;
 
     @Before
@@ -54,7 +54,7 @@ public class SignPathPowerShellFacadeTest {
 
         powerShellExecutionResult = new PowerShellExecutionResult(false, Some.stringNonEmpty());
         when(powershellExecutor.execute(anyString())).then(a -> {
-            capturedCommandArray[0] = a.getArgumentAt(0, String.class);
+            capturedCommand = a.getArgumentAt(0, String.class);
             return powerShellExecutionResult;
         });
     }
@@ -69,7 +69,6 @@ public class SignPathPowerShellFacadeTest {
         // ASSERT
         assertNotNull(signedArtifactResultFile);
         String signedArtifactPath = TemporaryFileUtil.getAbsolutePathAndDispose(signedArtifactResultFile);
-        String capturedCommand = getCapturedPowerShellCommand();
         assertNotNull(capturedCommand);
 
         assertContainsCredentials(credentials, capturedCommand);
@@ -94,7 +93,6 @@ public class SignPathPowerShellFacadeTest {
 
         // ASSERT
         assertEquals(signingRequestId, result);
-        String capturedCommand = getCapturedPowerShellCommand();
         assertNotNull(capturedCommand);
 
         assertContainsCredentials(credentials, capturedCommand);
@@ -128,8 +126,7 @@ public class SignPathPowerShellFacadeTest {
         // ASSERT
         assertNotNull(signedArtifactResultFile);
         String signedArtifactPath = TemporaryFileUtil.getAbsolutePathAndDispose(signedArtifactResultFile);
-        String capturedCommand = getCapturedPowerShellCommand();
-        assertNotNull(capturedCommand);
+            assertNotNull(capturedCommand);
 
         assertContainsCredentials(credentials, capturedCommand);
         assertContainsConfiguration(apiConfiguration, capturedCommand, true);
@@ -172,10 +169,6 @@ public class SignPathPowerShellFacadeTest {
         // ASSERT
         Throwable ex = assertThrows(SignPathFacadeCallException.class, act);
         assertEquals(String.format("PowerShell script exited with error: '%s'", powerShellExecutionResult.getOutput()), ex.getMessage());
-    }
-
-    private String getCapturedPowerShellCommand() {
-        return capturedCommandArray[0];
     }
 
     private SigningRequestModel randomSigningRequest(boolean withOptionalFields) throws IOException {
