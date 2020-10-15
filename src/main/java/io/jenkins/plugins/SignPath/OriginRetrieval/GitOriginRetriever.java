@@ -65,6 +65,9 @@ public class GitOriginRetriever implements OriginRetriever {
         return buildSettingsFile;
     }
 
+    /**
+     * We don't support multiple remote-urls at the moment, think about it once a customer needs it.
+     */
     private String getSingleRemoteUrl(BuildData buildData, int buildNumber) throws OriginNotRetrievableException {
         Set<String> remoteUrls = buildData.getRemoteUrls();
         if (remoteUrls.size() == 0) {
@@ -78,7 +81,10 @@ public class GitOriginRetriever implements OriginRetriever {
         return remoteUrls.stream().findFirst().get();
     }
 
-    // TODO SIGN-3415: Add docs comment that we dont know about this enough...
+    /**
+     *  We don't really know a lot about the BuildData structure - i.e. why it is possible that there are multiple builds in it
+     *  PSA and PSC had a discussion in Slack about this topic: https://signpath.slack.com/archives/C9Q8FUSDR/p1601306416006800
+      */
     private Map.Entry<String, Build> findMatchingBuild(BuildData buildData, int buildNumber) throws OriginNotRetrievableException {
         List<Map.Entry<String, Build>> matchingBuilds = buildData.getBuildsByBranchName().entrySet().stream()
                 .filter(buildByBranchName -> buildByBranchName.getValue().hudsonBuildNumber == buildNumber)
