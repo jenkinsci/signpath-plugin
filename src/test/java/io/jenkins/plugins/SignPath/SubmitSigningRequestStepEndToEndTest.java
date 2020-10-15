@@ -180,8 +180,13 @@ public class SubmitSigningRequestStepEndToEndTest {
         assertTrue(run.getLog().contains("SignPathStepInvalidArgumentException"));
     }
 
+    @DataPoints("allInvalidRootUrls")
+    public static String[] allInvalidRootUrls() {
+        return new String[]{"", "not a valid url"};
+    }
+
     @Theory
-    public void submitSigningRequest_withWrongOrMissingRootUrl_fails(@FromDataPoints("allRootUrls") String rootUrl) throws Exception {
+    public void submitSigningRequest_withWrongOrMissingRootUrl_fails(@FromDataPoints("allInvalidRootUrls") String rootUrl) throws Exception {
         String unsignedArtifactString = Some.stringNonEmpty();
         String ciUserToken = Some.stringNonEmpty();
         String projectSlug = Some.stringNonEmpty();
@@ -328,12 +333,6 @@ public class SubmitSigningRequestStepEndToEndTest {
 
     private String getMockUrl(String postfix) {
         return String.format("http://localhost:%d/%s", MockServerPort, postfix);
-    }
-
-    // TODO SIGN-3415: allInvalidRootUrls
-    @DataPoints("allRootUrls")
-    public static String[] allRootUrls() {
-        return new String[]{"", "not a valid url"};
     }
 
     @DataPoints("allBooleans")

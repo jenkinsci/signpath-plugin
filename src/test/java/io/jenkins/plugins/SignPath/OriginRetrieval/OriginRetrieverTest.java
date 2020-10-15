@@ -95,7 +95,6 @@ public class OriginRetrieverTest {
         assertArrayEquals(jobConfigXmlContent, TemporaryFileUtil.getContentAndDispose(buildSettingsFile));
     }
 
-    // TODO SIGN-3415: Put on top of test everywhere.
     @DataPoints("allBranchNames")
     public static String[][] allBranchNames() {
         return new String[][]{
