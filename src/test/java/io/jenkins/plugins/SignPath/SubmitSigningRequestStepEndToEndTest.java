@@ -31,9 +31,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.Assert.*;
 
 // TODO SIGN-3326: Think of strategy to inject PowerShell Module into the Jenkins PowerShell Session
-// At the moment the developer has to manually install the correct version of the PowerShell Module (see /Tools)
-// TODO SIGN-3326: Create wiki page that tells you how to work with this repo (Using IntelliJ, adding the run configs, using the docker-agent vs JNLP, using the local repository and installing the powershell module so tests run)
-
 @RunWith(Theories.class)
 public class SubmitSigningRequestStepEndToEndTest {
     private static final int MockServerPort = 51000;
