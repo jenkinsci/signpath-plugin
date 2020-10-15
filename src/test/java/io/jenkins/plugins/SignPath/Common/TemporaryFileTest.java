@@ -17,7 +17,16 @@ public class TemporaryFileTest {
 
         // ASSERT
         assertTrue(temporaryFile.getAbsolutePath().endsWith("file.txt"));
-        temporaryFile.close();
+    }
+
+    @Test
+    public void create_withSubfolder() throws IOException {
+        // ACT
+        TemporaryFile temporaryFile = new TemporaryFile("subfolder/file.txt");
+
+        // ASSERT
+        assertFalse(temporaryFile.getAbsolutePath().contains("subfolder"));
+        assertTrue(temporaryFile.getAbsolutePath().endsWith("file.txt"));
     }
 
     @Test
