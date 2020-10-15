@@ -99,7 +99,7 @@ public class DefaultArtifactFileManager implements ArtifactFileManager {
         try (FileInputStream fis = new FileInputStream(file)) {
             try (BufferedInputStream bis = new BufferedInputStream(fis)) {
                 try (DigestInputStream dis = new DigestInputStream(bis, algorithm)) {
-                    // TODO SIGN-3415: Google how to stream a whole stream.
+                    // This is the best way to read a DigestInputStream in Java according to our current knowledge
                     while (dis.read() != -1) {
                     }
                     return algorithm.digest();
