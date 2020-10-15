@@ -41,7 +41,7 @@ public class GetSignedArtifactStepExecution extends SynchronousStepExecution<Str
 
     @Override
     protected String run() throws SignPathStepFailedException {
-        logger.printf("GetSignedArtifactStepExecution organizationId: %s signingRequestId: %s\n", input.getOrganizationId(), input.getSigningRequestId());
+        logger.printf("Downloading signed artifact for organization: %s and signingRequest: %s\n", input.getOrganizationId(), input.getSigningRequestId());
 
         try {
             String trustedBuildSystemToken = secretRetriever.retrieveSecret(Constants.TrustedBuildSystemTokenCredentialId);
@@ -50,11 +50,11 @@ public class GetSignedArtifactStepExecution extends SynchronousStepExecution<Str
             TemporaryFile signedArtifact = signPathFacade.getSignedArtifact(input.getOrganizationId(), input.getSigningRequestId());
 
             artifactFileManager.storeArtifact(signedArtifact, input.getOutputArtifactPath());
-            logger.print("\nSigning step succeeded\n");
+            logger.print("Downloading signed artifact succeeded\n");
             return "";
         } catch (SecretNotFoundException | SignPathFacadeCallException | IOException | InterruptedException | NoSuchAlgorithmException ex) {
-            logger.print("\nSigning step failed: " + ex.getMessage() + "\n");
-            throw new SignPathStepFailedException("Signing step failed: " + ex.getMessage(), ex);
+            logger.print("Downloading signed artifact failed: " + ex.getMessage() + "\n");
+            throw new SignPathStepFailedException("Downloading signed artifact failed: " + ex.getMessage(), ex);
         }
     }
 }

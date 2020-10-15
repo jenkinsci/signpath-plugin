@@ -46,7 +46,7 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution<
     @Override
     protected String run() throws SignPathStepFailedException {
 
-        logger.printf("SubmitSigningRequestStepExecution organizationId:%s waitForCompletion: %s\n", input.getOrganizationId(), input.getWaitForCompletion());
+        logger.printf("Submitting signing request for organization:%s (waiting for completion: %s)\n", input.getOrganizationId(), input.getWaitForCompletion());
 
         try {
             String trustedBuildSystemToken = secretRetriever.retrieveSecret(Constants.TrustedBuildSystemTokenCredentialId);
@@ -66,7 +66,7 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution<
                         unsignedArtifact));
 
                 artifactFileManager.storeArtifact(signedArtifact, input.getOutputArtifactPath());
-                logger.print("\nSigning step succeeded\n");
+                logger.print("Signing step succeeded\n");
                 return "";
             } else {
                 UUID signingRequestId = signPathFacade.submitSigningRequestAsync(new SigningRequestModel(
@@ -78,7 +78,7 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution<
                         originModel,
                         unsignedArtifact));
 
-                logger.print("\nSigning step succeeded\n");
+                logger.print(String.format( "Signing request created: %s\n", signingRequestId.toString()));
                 return signingRequestId.toString();
             }
         } catch (SecretNotFoundException | OriginNotRetrievableException | SignPathFacadeCallException | IOException | InterruptedException | ArtifactNotFoundException | NoSuchAlgorithmException ex) {
