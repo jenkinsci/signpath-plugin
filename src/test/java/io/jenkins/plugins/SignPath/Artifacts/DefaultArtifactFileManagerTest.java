@@ -59,7 +59,10 @@ public class DefaultArtifactFileManagerTest {
         return new String[][]{
                 new String[]{"some.exe","some.exe", "some.exe"},
                 new String[]{"subfolder/my.dll","subfolder/my.dll", "my.dll"},
+                new String[]{"subfolder/my.dll","subfolder/my.dll/", "my.dll"},
                 new String[]{"subfolder/my.dll","subfolder\\my.dll", "my.dll"},
+                new String[]{"subfolder/my.dll","subfolder\\my.dll\\", "my.dll"},
+                new String[]{"subfolder/my.dll","subfolder/my.dll\\", "my.dll"},
         };
     }
 

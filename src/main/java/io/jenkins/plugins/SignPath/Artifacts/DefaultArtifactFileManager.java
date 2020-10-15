@@ -11,6 +11,7 @@ import io.jenkins.plugins.SignPath.Exceptions.ArtifactNotFoundException;
 import jenkins.model.ArtifactManager;
 import jenkins.util.BuildListenerAdapter;
 import jenkins.util.VirtualFile;
+import org.apache.commons.lang.StringUtils;
 
 import java.io.*;
 import java.security.DigestInputStream;
@@ -24,7 +25,7 @@ import java.util.Collections;
  * @see ArtifactFileManager interface
  */
 public class DefaultArtifactFileManager implements ArtifactFileManager {
-    private FingerprintMap fingerprintMap;
+    private final FingerprintMap fingerprintMap;
     private final Run<?, ?> run;
     private final Launcher launcher;
     private final TaskListener listener;
@@ -57,13 +58,16 @@ public class DefaultArtifactFileManager implements ArtifactFileManager {
     }
 
     private String getFileName(String artifactPath) {
-        String normalizedArtifactPath = artifactPath.replace("\\", "/");
+        String normalizedArtifactPath = getNormalizedPath(artifactPath);
         if (normalizedArtifactPath.contains("/")) {
-            // TODO SIGN-3415: Slash at the end probably kills this
             return normalizedArtifactPath.substring(normalizedArtifactPath.lastIndexOf("/")+1);
         }
 
         return normalizedArtifactPath;
+    }
+
+    private String getNormalizedPath(String artifactPath){
+        return StringUtils.strip(artifactPath.replace("\\", "/"), "/");
     }
 
     @Override
@@ -73,8 +77,7 @@ public class DefaultArtifactFileManager implements ArtifactFileManager {
 
         ArtifactManager artifactManager = run.getArtifactManager();
 
-        // TODO SIGN-3415: Normalize could be a method and shared with above
-        String normalizedArtifactPath = targetArtifactPath.replace("\\", "/");
+        String normalizedArtifactPath = getNormalizedPath(targetArtifactPath);
 
         artifactManager.archive(
                 new FilePath(artifact.getFile().getParentFile()),
