@@ -78,14 +78,16 @@ public class DefaultArtifactFileManager implements ArtifactFileManager {
         ArtifactManager artifactManager = run.getArtifactManager();
 
         String normalizedArtifactPath = getNormalizedPath(targetArtifactPath);
-
         artifactManager.archive(
                 new FilePath(artifact.getFile().getParentFile()),
                 launcher,
                 BuildListenerAdapter.wrap(listener),
                 Collections.singletonMap(normalizedArtifactPath, artifact.getFile().getName()));
 
-        // TODO SIGN-3415: Put into method which ddescribes what this does
+        createFingerprint(artifact, targetArtifactPath);
+    }
+
+    private void createFingerprint(TemporaryFile artifact, String targetArtifactPath) throws NoSuchAlgorithmException, IOException {
         String targetFileName = getFileName(targetArtifactPath);
         MessageDigest md5 = MessageDigest.getInstance("MD5");
         String digest = Util.toHexString(digest(artifact.getFile(), md5));
