@@ -1,0 +1,4 @@
+<?jelly escape-by-default='true'?>
+<div>
+    Signs the artifact from the current build with <a href="https://www.signpath.io">SignPath.io</a>.
+</div>
