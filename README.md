@@ -6,10 +6,10 @@ The SignPath Jenkins Plugin provides two useful steps that can be used to sign y
 
 ## Getting started
 
-Prerequisties
-- Jenkins Credentials Plugin [com.cloudbees.plugins.credentials]
-- Git Plugin [hudson.plugins.git.util.Build]
-- Declarative Pipeline
+Plugins required
+- Credentials Binding [com.cloudbees.plugins.credentials]
+- Git [hudson.plugins.git.util.Build]
+- Pipeline
 
 Add a new *System* Secret **SignPath.TrustedBuildSystemToken** to Jenkins.
 This secret should contain the secret token that you can retrieve when you create a new trusted build system in your SignPath Organization.
