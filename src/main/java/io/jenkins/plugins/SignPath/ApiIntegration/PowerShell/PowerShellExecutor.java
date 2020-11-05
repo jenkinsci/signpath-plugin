@@ -9,9 +9,8 @@ public interface PowerShellExecutor {
      * Executes the given powershell command
      *
      * @param powerShellCommand the command to execute
-     * @return a
-     * @see PowerShellExecutionResult
-     * indicating wether the command has succeeded or failed
+     * @param timeoutInSeconds the maximum time before the command will be aborted
+     * @return a @see PowerShellExecutionResult indicating whether the command has succeeded or failed
      */
-    PowerShellExecutionResult execute(String powerShellCommand);
+    PowerShellExecutionResult execute(String powerShellCommand, int timeoutInSeconds);
 }

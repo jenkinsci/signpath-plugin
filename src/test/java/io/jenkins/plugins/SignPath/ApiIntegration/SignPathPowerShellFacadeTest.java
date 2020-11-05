@@ -23,13 +23,14 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.UUID;
 
 import static io.jenkins.plugins.SignPath.TestUtils.AssertionExtensions.assertContains;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.when;
 
 @RunWith(Theories.class)
@@ -42,6 +43,10 @@ public class SignPathPowerShellFacadeTest {
 
     private SignPathCredentials credentials;
     private ApiConfiguration apiConfiguration;
+
+    @Mock
+    private PrintStream logger;
+
     private SignPathPowerShellFacade sut;
     private String capturedCommand;
     private PowerShellExecutionResult powerShellExecutionResult;
@@ -49,11 +54,11 @@ public class SignPathPowerShellFacadeTest {
     @Before
     public void setup() throws MalformedURLException {
         credentials = new SignPathCredentials(Some.stringNonEmpty(), Some.stringNonEmpty());
-        apiConfiguration = new ApiConfiguration(new URL(Some.url()), Some.integer(), Some.integer(), Some.integer());
-        sut = new SignPathPowerShellFacade(powershellExecutor, credentials, apiConfiguration);
+        apiConfiguration = new ApiConfiguration(new URL(Some.url()), Some.integer(), Some.integer(), Some.integer(), Some.integer());
+        sut = new SignPathPowerShellFacade(powershellExecutor, credentials, apiConfiguration, logger);
 
         powerShellExecutionResult = new PowerShellExecutionResult(false, Some.stringNonEmpty());
-        when(powershellExecutor.execute(anyString())).then(a -> {
+        when(powershellExecutor.execute(anyString(), anyInt())).then(a -> {
             capturedCommand = a.getArgumentAt(0, String.class);
             return powerShellExecutionResult;
         });
@@ -180,14 +185,14 @@ public class SignPathPowerShellFacadeTest {
         String sourceControlManagementType = Some.stringNonEmpty();
         String repositoryUrl = Some.stringNonEmpty();
         String branchName = Some.stringNonEmpty();
-        String commidId = Some.sha1Hash();
+        String commitId = Some.sha1Hash();
         String buildUrl = Some.url();
         byte[] buildSettingsArtifactBytes = Some.bytes();
         byte[] unsignedArtifactBytes = Some.bytes();
         TemporaryFile buildSettingsFile = TemporaryFileUtil.create(buildSettingsArtifactBytes);
         TemporaryFile unsignedArtifact = TemporaryFileUtil.create(unsignedArtifactBytes);
 
-        RepositoryMetadataModel repositoryMetadata = new RepositoryMetadataModel(sourceControlManagementType, repositoryUrl, branchName, commidId);
+        RepositoryMetadataModel repositoryMetadata = new RepositoryMetadataModel(sourceControlManagementType, repositoryUrl, branchName, commitId);
         SigningRequestOriginModel origin = new SigningRequestOriginModel(repositoryMetadata, buildUrl, buildSettingsFile);
         return new SigningRequestModel(organizationId, projectSlug, artifactConfigurationSlug, signingPolicySlug, description, origin, unsignedArtifact);
     }

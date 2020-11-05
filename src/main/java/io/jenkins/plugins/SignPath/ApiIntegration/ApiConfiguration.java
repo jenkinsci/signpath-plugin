@@ -10,12 +10,14 @@ public class ApiConfiguration {
     private final int serviceUnavailableTimeoutInSeconds;
     private final int uploadAndDownloadRequestTimeoutInSeconds;
     private final int waitForCompletionTimeoutInSeconds;
+    private final int waitForPowerShellTimeoutInSeconds;
 
-    public ApiConfiguration(URL apiUrl, int serviceUnavailableTimeoutInSeconds, int uploadAndDownloadRequestTimeoutInSeconds, int waitForCompletionTimeoutInSeconds) {
+    public ApiConfiguration(URL apiUrl, int serviceUnavailableTimeoutInSeconds, int uploadAndDownloadRequestTimeoutInSeconds, int waitForCompletionTimeoutInSeconds, int waitForPowerShellTimeoutInSeconds) {
         this.apiUrl = apiUrl;
         this.serviceUnavailableTimeoutInSeconds = serviceUnavailableTimeoutInSeconds;
         this.uploadAndDownloadRequestTimeoutInSeconds = uploadAndDownloadRequestTimeoutInSeconds;
         this.waitForCompletionTimeoutInSeconds = waitForCompletionTimeoutInSeconds;
+        this.waitForPowerShellTimeoutInSeconds = waitForPowerShellTimeoutInSeconds;
     }
 
     public URL getApiUrl() {
@@ -32,5 +34,9 @@ public class ApiConfiguration {
 
     public int getWaitForCompletionTimeoutInSeconds() {
         return waitForCompletionTimeoutInSeconds;
+    }
+
+    public int getWaitForPowerShellTimeoutInSeconds() {
+        return waitForPowerShellTimeoutInSeconds;
     }
 }

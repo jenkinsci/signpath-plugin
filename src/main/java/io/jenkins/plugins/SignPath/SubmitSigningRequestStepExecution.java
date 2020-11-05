@@ -46,7 +46,7 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution<
     @Override
     protected String run() throws SignPathStepFailedException {
 
-        logger.printf("Submitting signing request for organization:%s (waiting for completion: %s)\n", input.getOrganizationId(), input.getWaitForCompletion());
+        logger.printf("Submitting signing request for organization: %s (waiting for completion: %s)\n", input.getOrganizationId(), input.getWaitForCompletion());
 
         try {
             String trustedBuildSystemToken = secretRetriever.retrieveSecret(Constants.TrustedBuildSystemTokenCredentialId);

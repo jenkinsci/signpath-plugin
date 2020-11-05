@@ -10,6 +10,7 @@ import io.jenkins.plugins.SignPath.Common.TemporaryFile;
 import io.jenkins.plugins.SignPath.Exceptions.SignPathFacadeCallException;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,14 +24,16 @@ import java.util.regex.Pattern;
  */
 public class SignPathPowerShellFacade implements SignPathFacade {
 
-    private final ApiConfiguration apiConfiguration;
     private final PowerShellExecutor powerShellExecutor;
     private final SignPathCredentials credentials;
+    private final ApiConfiguration apiConfiguration;
+    private final PrintStream logger;
 
-    public SignPathPowerShellFacade(PowerShellExecutor powerShellExecutor, SignPathCredentials credentials, ApiConfiguration apiConfiguration) {
+    public SignPathPowerShellFacade(PowerShellExecutor powerShellExecutor, SignPathCredentials credentials, ApiConfiguration apiConfiguration, PrintStream logger) {
         this.powerShellExecutor = powerShellExecutor;
         this.credentials = credentials;
         this.apiConfiguration = apiConfiguration;
+        this.logger = logger;
     }
 
     @Override
@@ -57,11 +60,16 @@ public class SignPathPowerShellFacade implements SignPathFacade {
     }
 
     private String executePowerShellSafe(String command) throws SignPathFacadeCallException {
-        PowerShellExecutionResult result = powerShellExecutor.execute(command);
-        if (result.getHasError())
-            throw new SignPathFacadeCallException(String.format("PowerShell script exited with error: '%s'", result.getOutput()));
+        PowerShellExecutionResult result = powerShellExecutor.execute(command, apiConfiguration.getWaitForPowerShellTimeoutInSeconds());
 
-        return result.getOutput();
+        String output = result.getOutput();
+
+        if (result.getHasError())
+            throw new SignPathFacadeCallException(String.format("PowerShell script exited with error: '%s'", output));
+        else
+            logger.printf("PowerShell script ran successfully with the following output:\n%s", output);
+
+        return output;
     }
 
     private UUID extractSigningRequestId(String output) throws SignPathFacadeCallException {
