@@ -69,4 +69,8 @@ public abstract class SignPathStepBase extends Step {
         this.waitForCompletionTimeoutInSeconds = waitForCompletionTimeoutInSeconds;
     }
 
+    @DataBoundSetter
+    public void setWaitForPowerShellTimeoutInSeconds(int waitForPowerShellTimeoutInSeconds) {
+        this.waitForPowerShellTimeoutInSeconds = waitForPowerShellTimeoutInSeconds;
+    }
 }
