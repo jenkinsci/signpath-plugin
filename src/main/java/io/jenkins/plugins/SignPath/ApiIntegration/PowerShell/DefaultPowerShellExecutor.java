@@ -1,8 +1,10 @@
 package io.jenkins.plugins.SignPath.ApiIntegration.PowerShell;
 
-import org.apache.commons.io.IOUtils;
+import io.jenkins.plugins.SignPath.Common.TemporaryFile;
 
-import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.concurrent.TimeUnit;
 
 public class DefaultPowerShellExecutor implements PowerShellExecutor {
 
@@ -12,19 +14,32 @@ public class DefaultPowerShellExecutor implements PowerShellExecutor {
         this.powerShellExecutableName = powerShellExecutableName;
     }
 
-    public PowerShellExecutionResult execute(String powerShellCommand) {
+    public PowerShellExecutionResult execute(String powerShellCommand, int timeoutInSeconds) {
         try {
-            Process powerShellProcess = Runtime.getRuntime().exec(String.format("%s -command \"%s\"", powerShellExecutableName, powerShellCommand));
-            powerShellProcess.getOutputStream().close();
-            String standard = IOUtils.toString(powerShellProcess.getInputStream(), StandardCharsets.UTF_8).trim();
-            String error = IOUtils.toString(powerShellProcess.getErrorStream(), StandardCharsets.UTF_8).trim();
-            powerShellProcess.destroy();
-            int exitValue = powerShellProcess.exitValue();
-            if (exitValue != 0 || !error.isEmpty()) {
-                return new PowerShellExecutionResult(true, standard + error);
-            }
+            ProcessBuilder processBuilder = new ProcessBuilder();
+            processBuilder.command(powerShellExecutableName, "-command", powerShellCommand);
 
-            return new PowerShellExecutionResult(false, standard + error);
+            try (TemporaryFile outputFile = new TemporaryFile()) {
+                processBuilder.redirectError(ProcessBuilder.Redirect.appendTo(outputFile.getFile()));
+                processBuilder.redirectOutput(ProcessBuilder.Redirect.appendTo(outputFile.getFile()));
+
+                Process process = processBuilder.start();
+                boolean hasCompletedWithoutTimeout = process.waitFor(timeoutInSeconds, TimeUnit.SECONDS);
+
+                if (!hasCompletedWithoutTimeout) {
+                    return new PowerShellExecutionResult(true, String.format("Execution did not complete within %ds", timeoutInSeconds));
+                }
+
+                int exitValue = process.exitValue();
+
+                String output = String.join(System.lineSeparator(), Files.readAllLines(Paths.get(outputFile.getAbsolutePath())));
+
+                if (exitValue != 0) {
+                    return new PowerShellExecutionResult(true, output);
+                }
+
+                return new PowerShellExecutionResult(false, output);
+            }
         } catch (Exception e) {
             return new PowerShellExecutionResult(true, e.toString());
         }
