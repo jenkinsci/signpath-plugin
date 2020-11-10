@@ -21,7 +21,8 @@ public final class SigningRequestStepInputParser {
                 ensureValidURL(step.getApiUrl()),
                 step.getServiceUnavailableTimeoutInSeconds(),
                 step.getUploadAndDownloadRequestTimeoutInSeconds(),
-                step.getWaitForCompletionTimeoutInSeconds());
+                step.getWaitForCompletionTimeoutInSeconds(),
+                step.getWaitForPowerShellTimeoutInSeconds());
     }
 
     public static SubmitSigningRequestStepInput ParseInput(SubmitSigningRequestStep step) throws SignPathStepInvalidArgumentException {

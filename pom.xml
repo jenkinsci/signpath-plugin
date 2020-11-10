@@ -12,8 +12,8 @@
     <version>${revision}${changelist}</version>
     <packaging>hpi</packaging>
     <properties>
-        <revision>1.0</revision>
-        <changelist>-SNAPSHOT</changelist>
+        <revision>1.0.1</revision>
+        <changelist></changelist>
         <jenkins.version>2.249.1</jenkins.version>
         <java.level>8</java.level>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -32,8 +32,8 @@
     </developers>
     <licenses>
         <license>
-            <name>MIT License</name>
-            <url>https://opensource.org/licenses/MIT</url>
+            <name>Copyright by SignPath GmbH</name>
+            <url>https://about.signpath.io</url>
         </license>
     </licenses>
     <dependencies>

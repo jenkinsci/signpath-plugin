@@ -6,10 +6,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static io.jenkins.plugins.SignPath.TestUtils.AssertionExtensions.assertContains;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
-public class PowerShellExecutorTest {
+public class DefaultPowerShellExecutorTest {
     private DefaultPowerShellExecutor sut;
 
     @Before
@@ -19,7 +18,7 @@ public class PowerShellExecutorTest {
 
     @Test
     public void execute() {
-        PowerShellExecutionResult executionResult = sut.execute("echo 'some string'");
+        PowerShellExecutionResult executionResult = sut.execute("echo 'some string'", Integer.MAX_VALUE);
 
         assertContains("some string", executionResult.getOutput());
         assertFalse(executionResult.getHasError());
@@ -27,17 +26,17 @@ public class PowerShellExecutorTest {
 
     @Test
     public void execute_withError() {
-        PowerShellExecutionResult executionResult = sut.execute("echo 'some string'; exit 1");
+        PowerShellExecutionResult executionResult = sut.execute("echo 'some string'; exit 1", Integer.MAX_VALUE);
 
         assertContains("some string", executionResult.getOutput());
         assertTrue(executionResult.getHasError());
     }
 
     @Test
-    public void execute_withErrorText() {
-        PowerShellExecutionResult executionResult = sut.execute("Write-Error 'fatal';");
+    public void execute_withTimeout() {
+        PowerShellExecutionResult executionResult = sut.execute("Start-Sleep -Seconds 5;", 0);
 
-        assertContains("fatal", executionResult.getOutput());
+        assertEquals("Execution did not complete within 0s", executionResult.getOutput());
         assertTrue(executionResult.getHasError());
     }
 }
