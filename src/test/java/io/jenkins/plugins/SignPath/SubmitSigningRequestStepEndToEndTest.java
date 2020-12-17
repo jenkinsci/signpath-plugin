@@ -67,7 +67,7 @@ public class SubmitSigningRequestStepEndToEndTest {
         wireMockRule.stubFor(get(urlEqualTo("/" + getSigningRequestStatus))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withBody("{status: 'Completed', signedArtifactLink: '" + getMockUrl(downloadSignedArtifact) + "'}")));
+                        .withBody("{status: 'Completed', isFinalStatus: true, signedArtifactLink: '" + getMockUrl(downloadSignedArtifact) + "'}")));
 
         wireMockRule.stubFor(get(urlEqualTo("/" + downloadSignedArtifact))
                 .willReturn(aResponse()
