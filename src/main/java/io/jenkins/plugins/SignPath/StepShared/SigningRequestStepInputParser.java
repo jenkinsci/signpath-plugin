@@ -26,6 +26,9 @@ public final class SigningRequestStepInputParser {
     }
 
     public static SubmitSigningRequestStepInput ParseInput(SubmitSigningRequestStep step) throws SignPathStepInvalidArgumentException {
+        boolean waitForCompletion = step.getWaitForCompletion();
+        String outputArtifactPath = waitForCompletion ? ensureNotNull(step.getOutputArtifactPath(), "outputArtifactPath") : null;
+
         return new SubmitSigningRequestStepInput(
                 ensureValidUUID(step.getOrganizationId(), "organizationId"),
                 ensureNotNull(step.getTrustedBuildSystemTokenCredentialId(), "trustedBuildSystemTokenCredentialId"),
@@ -35,8 +38,8 @@ public final class SigningRequestStepInputParser {
                 ensureNotNull(step.getSigningPolicySlug(), "signingPolicySlug"),
                 ensureNotNull(step.getInputArtifactPath(), "inputArtifactPath"),
                 step.getDescription(),
-                ensureNotNull(step.getOutputArtifactPath(), "outputArtifactPath"),
-                step.getWaitForCompletion());
+                outputArtifactPath,
+                waitForCompletion);
     }
 
     public static GetSignedArtifactStepInput ParseInput(GetSignedArtifactStep step) throws SignPathStepInvalidArgumentException {

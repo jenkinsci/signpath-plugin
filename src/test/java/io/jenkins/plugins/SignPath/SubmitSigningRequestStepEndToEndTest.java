@@ -249,12 +249,16 @@ public class SubmitSigningRequestStepEndToEndTest {
                                           String signingPolicySlug,
                                           String unsignedArtifactString,
                                           boolean waitForCompletion) throws IOException {
+        String outputArtifactPath = waitForCompletion
+                ? "outputArtifactPath: 'signed.exe', "
+                : "";
+
         return j.createWorkflow("SignPath",
                 "writeFile text: '" + unsignedArtifactString + "', file: 'unsigned.exe'; " +
                         "archiveArtifacts artifacts: 'unsigned.exe', fingerprint: true; " +
                         "echo '<returnValue>:\"'+ submitSigningRequest( apiUrl: '" + apiUrl + "', " +
                         "inputArtifactPath: 'unsigned.exe', " +
-                        "outputArtifactPath: 'signed.exe', " +
+                        outputArtifactPath +
                         "trustedBuildSystemTokenCredentialId: '" + trustedBuildSystemTokenCredentialId + "'," +
                         "ciUserTokenCredentialId: '" + ciUserTokenCredentialId + "'," +
                         "organizationId: '" + organizationId + "'," +
