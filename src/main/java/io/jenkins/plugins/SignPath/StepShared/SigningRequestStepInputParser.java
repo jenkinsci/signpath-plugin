@@ -28,7 +28,7 @@ public final class SigningRequestStepInputParser {
     public static SubmitSigningRequestStepInput ParseInput(SubmitSigningRequestStep step) throws SignPathStepInvalidArgumentException {
         return new SubmitSigningRequestStepInput(
                 ensureValidUUID(step.getOrganizationId(), "organizationId"),
-                ensureNotNull(step.getCiUserToken(), "ciUserToken"),
+                ensureNotNull(step.getCiUserTokenCredentialId(), "ciUserTokenCredentialId"),
                 ensureNotNull(step.getProjectSlug(), "projectSlug"),
                 step.getArtifactConfigurationSlug(),
                 ensureNotNull(step.getSigningPolicySlug(), "signingPolicySlug"),
@@ -42,7 +42,7 @@ public final class SigningRequestStepInputParser {
         return new GetSignedArtifactStepInput(
                 ensureValidUUID(step.getOrganizationId(), "organizationId"),
                 ensureValidUUID(step.getSigningRequestId(), "signingRequestId"),
-                ensureNotNull(step.getCiUserToken(), "ciUserToken"),
+                ensureNotNull(step.getCiUserTokenCredentialId(), "ciUserTokenCredentialId"),
                 ensureNotNull(step.getOutputArtifactPath(), "outputArtifactPath"));
     }
 

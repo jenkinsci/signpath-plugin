@@ -9,7 +9,7 @@ import java.util.UUID;
  */
 public class SubmitSigningRequestStepInput {
     private final UUID organizationId;
-    private final String ciUserToken;
+    private final String ciUserTokenCredentialId;
     private final String projectSlug;
     private final String artifactConfigurationSlug;
     private final String signingPolicySlug;
@@ -19,7 +19,7 @@ public class SubmitSigningRequestStepInput {
     private final boolean waitForCompletion;
 
     public SubmitSigningRequestStepInput(UUID organizationId,
-                                         String ciUserToken,
+                                         String ciUserTokenCredentialId,
                                          String projectSlug,
                                          String artifactConfigurationSlug,
                                          String signingPolicySlug,
@@ -28,7 +28,7 @@ public class SubmitSigningRequestStepInput {
                                          String outputArtifactPath,
                                          boolean waitForCompletion) {
         this.organizationId = organizationId;
-        this.ciUserToken = ciUserToken;
+        this.ciUserTokenCredentialId = ciUserTokenCredentialId;
         this.projectSlug = projectSlug;
         this.artifactConfigurationSlug = artifactConfigurationSlug;
         this.signingPolicySlug = signingPolicySlug;
@@ -46,8 +46,8 @@ public class SubmitSigningRequestStepInput {
         return waitForCompletion;
     }
 
-    public String getCiUserToken() {
-        return ciUserToken;
+    public String getCiUserTokenCredentialId() {
+        return ciUserTokenCredentialId;
     }
 
     public String getInputArtifactPath() {
