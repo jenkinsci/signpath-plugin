@@ -49,7 +49,7 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution<
         logger.printf("Submitting signing request for organization: %s (waiting for completion: %s)\n", input.getOrganizationId(), input.getWaitForCompletion());
 
         try {
-            String trustedBuildSystemToken = secretRetriever.retrieveSecret(Constants.TrustedBuildSystemTokenCredentialIdDefaultValue);
+            String trustedBuildSystemToken = secretRetriever.retrieveSecret(input.getTrustedBuildSystemTokenCredentialId());
             String ciUserToken = secretRetriever.retrieveSecret(input.getCiUserTokenCredentialId());
             SignPathCredentials credentials = new SignPathCredentials(ciUserToken, trustedBuildSystemToken);
             SignPathFacade signPathFacade = signPathFacadeFactory.create(credentials);

@@ -18,11 +18,14 @@ public abstract class SignPathStepBase extends Step {
     private int uploadAndDownloadRequestTimeoutInSeconds = 300;
     private int waitForCompletionTimeoutInSeconds = 600;
     private int waitForPowerShellTimeoutInSeconds = 60;
+    private String trustedBuildSystemTokenCredentialId = "SignPath.TrustedBuildSystemToken";
     private String ciUserTokenCredentialId = "SignPath.CIUserToken";
 
     public String getApiUrl() {
         return apiUrl;
     }
+
+    public String getTrustedBuildSystemTokenCredentialId() { return trustedBuildSystemTokenCredentialId; }
 
     public String getCiUserTokenCredentialId() { return ciUserTokenCredentialId; }
 
@@ -45,6 +48,11 @@ public abstract class SignPathStepBase extends Step {
     @DataBoundSetter
     public void setApiUrl(String apiUrl) {
         this.apiUrl = apiUrl;
+    }
+
+    @DataBoundSetter
+    public void setTrustedBuildSystemTokenCredentialId(String trustedBuildSystemTokenCredentialId) {
+        this.trustedBuildSystemTokenCredentialId = trustedBuildSystemTokenCredentialId;
     }
 
     @DataBoundSetter
