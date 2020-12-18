@@ -8,6 +8,7 @@ import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.PowerShellExecutor;
 import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.SignPathPowerShellFacade;
 import io.jenkins.plugins.SignPath.Common.TemporaryFile;
 import io.jenkins.plugins.SignPath.Exceptions.SignPathFacadeCallException;
+import io.jenkins.plugins.SignPath.Exceptions.SignPathStepInvalidArgumentException;
 import io.jenkins.plugins.SignPath.TestUtils.Some;
 import io.jenkins.plugins.SignPath.TestUtils.TemporaryFileUtil;
 import org.junit.Before;
@@ -52,7 +53,7 @@ public class SignPathPowerShellFacadeTest {
     private PowerShellExecutionResult powerShellExecutionResult;
 
     @Before
-    public void setup() throws MalformedURLException {
+    public void setup() throws MalformedURLException, SignPathStepInvalidArgumentException {
         credentials = new SignPathCredentials(Some.stringNonEmpty(), Some.stringNonEmpty());
         apiConfiguration = new ApiConfiguration(new URL(Some.url()), Some.integer(), Some.integer(), Some.integer(), Some.integer());
         sut = new SignPathPowerShellFacade(powershellExecutor, credentials, apiConfiguration, logger);

@@ -17,7 +17,11 @@ public abstract class SignPathStepBase extends Step {
     private int serviceUnavailableTimeoutInSeconds = 600;
     private int uploadAndDownloadRequestTimeoutInSeconds = 300;
     private int waitForCompletionTimeoutInSeconds = 600;
-    private int waitForPowerShellTimeoutInSeconds = 60;
+    private int safetyBufferInSeconds = 300;
+    private int waitForPowerShellTimeoutInSeconds = serviceUnavailableTimeoutInSeconds +
+            uploadAndDownloadRequestTimeoutInSeconds +
+            waitForCompletionTimeoutInSeconds +
+            safetyBufferInSeconds;
     private String ciUserToken;
 
     public String getApiUrl() {
