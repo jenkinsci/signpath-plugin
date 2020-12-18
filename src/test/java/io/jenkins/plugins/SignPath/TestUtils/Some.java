@@ -1,9 +1,14 @@
 package io.jenkins.plugins.SignPath.TestUtils;
 
+import io.jenkins.plugins.SignPath.ApiIntegration.ApiConfiguration;
+import io.jenkins.plugins.SignPath.Exceptions.SignPathStepInvalidArgumentException;
 import org.apache.commons.lang.RandomStringUtils;
+import org.checkerframework.checker.units.qual.A;
 import org.junit.Assert;
 
 import java.math.BigInteger;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -72,5 +77,14 @@ public class Some {
 
     public static String stringEmptyOrNull() {
         return RANDOM.nextBoolean() ? "" : null;
+    }
+
+    public static ApiConfiguration apiConfiguration() throws MalformedURLException, SignPathStepInvalidArgumentException {
+        return new ApiConfiguration(
+                new URL(Some.url()),
+                1,
+                2,
+                3,
+                7);
     }
 }
