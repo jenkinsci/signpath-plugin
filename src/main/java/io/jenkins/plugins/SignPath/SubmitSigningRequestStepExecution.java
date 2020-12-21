@@ -78,7 +78,7 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution<
                         originModel,
                         unsignedArtifact));
 
-                logger.print(String.format( "Signing request created: %s\n", signingRequestId.toString()));
+                logger.printf("Signing request created: %s\n", signingRequestId.toString());
                 return signingRequestId.toString();
             }
         } catch (SecretNotFoundException | OriginNotRetrievableException | SignPathFacadeCallException | IOException | InterruptedException | ArtifactNotFoundException | NoSuchAlgorithmException ex) {

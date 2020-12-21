@@ -13,14 +13,25 @@ import static org.junit.Assert.*;
 public class ApiConfigurationTest {
     @Test
     public void ctor_withValidTimeouts_doesNotThrow() throws MalformedURLException, SignPathStepInvalidArgumentException {
+        int serviceUnavailableTimeoutInSeconds = 1;
+        int uploadAndDownloadRequestTimeoutInSeconds = 2;
+        int waitForCompletionTimeoutInSeconds = 3;
+        int waitForPowerShellTimeoutInSeconds = 7;
+
         // ACT & ASSERT
-        new ApiConfiguration(new URL(Some.url()), 1, 2, 3, 7);
+        new ApiConfiguration(new URL(Some.url()),
+                serviceUnavailableTimeoutInSeconds, uploadAndDownloadRequestTimeoutInSeconds, waitForCompletionTimeoutInSeconds, waitForPowerShellTimeoutInSeconds);
     }
 
     @Test
     public void ctor_withInvalidTimeouts_throws() {
+        int serviceUnavailableTimeoutInSeconds = 1;
+        int uploadAndDownloadRequestTimeoutInSeconds = 2;
+        int waitForCompletionTimeoutInSeconds = 3;
+        int waitForPowerShellTimeoutInSeconds = 6;
+
         // ACT
-        ThrowingRunnable act = () -> new ApiConfiguration(new URL(Some.url()), 1, 2, 3, 6);
+        ThrowingRunnable act = () -> new ApiConfiguration(new URL(Some.url()), serviceUnavailableTimeoutInSeconds, uploadAndDownloadRequestTimeoutInSeconds, waitForCompletionTimeoutInSeconds, waitForPowerShellTimeoutInSeconds);
 
         // ASSERT
         Throwable ex = assertThrows(SignPathStepInvalidArgumentException.class, act);

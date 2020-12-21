@@ -3,7 +3,6 @@ package io.jenkins.plugins.SignPath.TestUtils;
 import io.jenkins.plugins.SignPath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.SignPath.Exceptions.SignPathStepInvalidArgumentException;
 import org.apache.commons.lang.RandomStringUtils;
-import org.checkerframework.checker.units.qual.A;
 import org.junit.Assert;
 
 import java.math.BigInteger;
@@ -17,10 +16,6 @@ import java.util.UUID;
 
 public class Some {
     private static final Random RANDOM = new Random();
-
-    public static Integer integer() {
-        return RANDOM.nextInt();
-    }
 
     public static Integer integer(int minValue, int maxValue) {
         return minValue + RANDOM.nextInt(maxValue - minValue);
@@ -80,11 +75,15 @@ public class Some {
     }
 
     public static ApiConfiguration apiConfiguration() throws MalformedURLException, SignPathStepInvalidArgumentException {
+        int serviceUnavailableTimeoutInSeconds = 1;
+        int uploadAndDownloadRequestTimeoutInSeconds = 2;
+        int waitForCompletionTimeoutInSeconds = 3;
+        int waitForPowerShellTimeoutInSeconds = 7;
         return new ApiConfiguration(
                 new URL(Some.url()),
-                1,
-                2,
-                3,
-                7);
+                serviceUnavailableTimeoutInSeconds,
+                uploadAndDownloadRequestTimeoutInSeconds,
+                waitForCompletionTimeoutInSeconds,
+                waitForPowerShellTimeoutInSeconds);
     }
 }

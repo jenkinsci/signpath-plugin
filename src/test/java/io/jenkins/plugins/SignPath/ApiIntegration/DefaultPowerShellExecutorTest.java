@@ -3,11 +3,7 @@ package io.jenkins.plugins.SignPath.ApiIntegration;
 import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.DefaultPowerShellExecutor;
 import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.PowerShellExecutionResult;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -17,14 +13,13 @@ import static org.junit.Assert.*;
 
 public class DefaultPowerShellExecutorTest {
     private ByteArrayOutputStream outputStream;
-    private PrintStream logger;
 
     private DefaultPowerShellExecutor sut;
 
     @Before
     public void setup() {
         outputStream = new ByteArrayOutputStream();
-        logger = new PrintStream(outputStream);
+        PrintStream logger = new PrintStream(outputStream);
 
         sut = new DefaultPowerShellExecutor("pwsh", logger);
     }
@@ -35,6 +30,7 @@ public class DefaultPowerShellExecutorTest {
 
         assertFalse(executionResult.getHasError());
 
+        assertNotNull(executionResult.getOutput());
         assertContains("some string", executionResult.getOutput());
         assertContains("some string", outputStream.toString());
     }

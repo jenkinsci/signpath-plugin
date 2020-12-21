@@ -37,21 +37,19 @@ public class DefaultPowerShellExecutor implements PowerShellExecutor {
             int exitValue = process.exitValue();
 
             outputReaderThread.join();
-            String output  = lineReader.getCapturedOutput();
-
             process.destroy();
 
             if (exitValue != 0) {
                 return PowerShellExecutionResult.Error(String.format("Execution did not complete successfully (ExitCode: %d)", exitValue));
             }
 
-            return PowerShellExecutionResult.Success(output);
+            return PowerShellExecutionResult.Success(lineReader.getCapturedOutput());
         } catch (Exception e) {
             return PowerShellExecutionResult.Error(e.toString());
         }
     }
 
-    private class LineReader implements Runnable {
+    private static class LineReader implements Runnable {
         private final InputStream input;
         private final PrintStream output;
         private final StringBuilder stringBuilder;
