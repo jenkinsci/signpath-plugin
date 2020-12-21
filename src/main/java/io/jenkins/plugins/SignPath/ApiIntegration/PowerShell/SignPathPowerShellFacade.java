@@ -62,14 +62,11 @@ public class SignPathPowerShellFacade implements SignPathFacade {
     private String executePowerShellSafe(String command) throws SignPathFacadeCallException {
         PowerShellExecutionResult result = powerShellExecutor.execute(command, apiConfiguration.getWaitForPowerShellTimeoutInSeconds());
 
-        String output = result.getOutput();
-
         if (result.getHasError())
-            throw new SignPathFacadeCallException(String.format("PowerShell script exited with error: '%s'", output));
-        else
-            logger.printf("PowerShell script ran successfully with the following output:\n%s\n", output);
+            throw new SignPathFacadeCallException(String.format("PowerShell script exited with error: '%s'", result.getErrorDescription()));
 
-        return output;
+        logger.println("PowerShell script ran successfully.");
+        return result.getOutput();
     }
 
     private UUID extractSigningRequestId(String output) throws SignPathFacadeCallException {

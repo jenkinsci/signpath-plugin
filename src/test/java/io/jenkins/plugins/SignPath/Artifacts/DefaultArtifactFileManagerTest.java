@@ -26,7 +26,7 @@ import static org.junit.Assert.*;
 @RunWith(Theories.class)
 public class DefaultArtifactFileManagerTest {
     @Rule
-    public SignPathJenkinsRule j = new SignPathJenkinsRule();
+    public final SignPathJenkinsRule j = new SignPathJenkinsRule();
 
     @Theory
     public void retrieveArtifact() throws Exception {

@@ -36,10 +36,10 @@ public class SubmitSigningRequestStepEndToEndTest {
     private static final int MockServerPort = 51000;
 
     @Rule
-    public SignPathJenkinsRule j = new SignPathJenkinsRule();
+    public final SignPathJenkinsRule j = new SignPathJenkinsRule();
 
     @Rule
-    public WireMockRule wireMockRule = new WireMockRule(MockServerPort);
+    public final WireMockRule wireMockRule = new WireMockRule(MockServerPort);
 
     @Theory
     public void submitSigningRequest(@FromDataPoints("allBooleans") boolean withOptionalFields) throws Exception {

@@ -36,6 +36,6 @@ public class TemporaryFileTest {
 
         // ASSERT
         Throwable ex = assertThrows(IllegalAccessError.class, act);
-        assertEquals(ex.getMessage(), String.format("Navigating to parent is not allowed."));
+        assertEquals(ex.getMessage(), "Navigating to parent is not allowed.");
     }
 }

@@ -39,6 +39,7 @@ public class TemporaryFileUtil {
             try (FileInputStream fis = new FileInputStream(temporaryFile.getFile())) {
                 try (BufferedInputStream bis = new BufferedInputStream(fis)) {
                     try (DigestInputStream dis = new DigestInputStream(bis, md5)) {
+                        //noinspection StatementWithEmptyBody
                         while (dis.read() != -1) {
                         }
                         return Util.toHexString(md5.digest());

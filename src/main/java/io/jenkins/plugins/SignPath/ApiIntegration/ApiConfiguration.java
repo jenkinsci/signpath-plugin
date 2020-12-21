@@ -1,5 +1,7 @@
 package io.jenkins.plugins.SignPath.ApiIntegration;
 
+import io.jenkins.plugins.SignPath.Exceptions.SignPathStepInvalidArgumentException;
+
 import java.net.URL;
 
 /**
@@ -12,7 +14,14 @@ public class ApiConfiguration {
     private final int waitForCompletionTimeoutInSeconds;
     private final int waitForPowerShellTimeoutInSeconds;
 
-    public ApiConfiguration(URL apiUrl, int serviceUnavailableTimeoutInSeconds, int uploadAndDownloadRequestTimeoutInSeconds, int waitForCompletionTimeoutInSeconds, int waitForPowerShellTimeoutInSeconds) {
+    public ApiConfiguration(URL apiUrl, int serviceUnavailableTimeoutInSeconds, int uploadAndDownloadRequestTimeoutInSeconds, int waitForCompletionTimeoutInSeconds, int waitForPowerShellTimeoutInSeconds) throws SignPathStepInvalidArgumentException {
+        int combinedTimeouts = serviceUnavailableTimeoutInSeconds + uploadAndDownloadRequestTimeoutInSeconds + waitForCompletionTimeoutInSeconds;
+        if (combinedTimeouts >= waitForPowerShellTimeoutInSeconds) {
+            throw new SignPathStepInvalidArgumentException(
+                    "The 'waitForPowerShellTimeoutInSeconds' (" + waitForPowerShellTimeoutInSeconds + ") must be " +
+                            "greater than the other tree timeouts combined (" + combinedTimeouts + ")");
+        }
+
         this.apiUrl = apiUrl;
         this.serviceUnavailableTimeoutInSeconds = serviceUnavailableTimeoutInSeconds;
         this.uploadAndDownloadRequestTimeoutInSeconds = uploadAndDownloadRequestTimeoutInSeconds;
