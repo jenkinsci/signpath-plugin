@@ -26,23 +26,28 @@ public final class SigningRequestStepInputParser {
     }
 
     public static SubmitSigningRequestStepInput ParseInput(SubmitSigningRequestStep step) throws SignPathStepInvalidArgumentException {
+        boolean waitForCompletion = step.getWaitForCompletion();
+        String outputArtifactPath = waitForCompletion ? ensureNotNull(step.getOutputArtifactPath(), "outputArtifactPath") : null;
+
         return new SubmitSigningRequestStepInput(
                 ensureValidUUID(step.getOrganizationId(), "organizationId"),
-                ensureNotNull(step.getCiUserToken(), "ciUserToken"),
+                ensureNotNull(step.getTrustedBuildSystemTokenCredentialId(), "trustedBuildSystemTokenCredentialId"),
+                ensureNotNull(step.getCiUserTokenCredentialId(), "ciUserTokenCredentialId"),
                 ensureNotNull(step.getProjectSlug(), "projectSlug"),
                 step.getArtifactConfigurationSlug(),
                 ensureNotNull(step.getSigningPolicySlug(), "signingPolicySlug"),
                 ensureNotNull(step.getInputArtifactPath(), "inputArtifactPath"),
                 step.getDescription(),
-                ensureNotNull(step.getOutputArtifactPath(), "outputArtifactPath"),
-                step.getWaitForCompletion());
+                outputArtifactPath,
+                waitForCompletion);
     }
 
     public static GetSignedArtifactStepInput ParseInput(GetSignedArtifactStep step) throws SignPathStepInvalidArgumentException {
         return new GetSignedArtifactStepInput(
                 ensureValidUUID(step.getOrganizationId(), "organizationId"),
                 ensureValidUUID(step.getSigningRequestId(), "signingRequestId"),
-                ensureNotNull(step.getCiUserToken(), "ciUserToken"),
+                ensureNotNull(step.getTrustedBuildSystemTokenCredentialId(), "trustedBuildSystemTokenCredentialId"),
+                ensureNotNull(step.getCiUserTokenCredentialId(), "ciUserTokenCredentialId"),
                 ensureNotNull(step.getOutputArtifactPath(), "outputArtifactPath"));
     }
 

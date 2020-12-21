@@ -37,14 +37,17 @@ public class GetSignedArtifactStepEndToEndTest {
     @Theory
     public void getSignedArtifact() throws Exception {
         byte[] signedArtifactBytes = Some.bytes();
+        String trustedBuildSystemTokenCredentialId = Some.stringNonEmpty();
         String trustedBuildSystemToken = Some.stringNonEmpty();
+        String ciUserTokenCredentialId = Some.stringNonEmpty();
         String ciUserToken = Some.stringNonEmpty();
         String organizationId = Some.uuid().toString();
         String signingRequestId = Some.uuid().toString();
 
         CredentialsStore credentialStore = CredentialStoreUtils.getCredentialStore(j.jenkins);
         assert credentialStore != null;
-        CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, Constants.TrustedBuildSystemTokenCredentialId, trustedBuildSystemToken);
+        CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, trustedBuildSystemTokenCredentialId, trustedBuildSystemToken);
+        CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, ciUserTokenCredentialId, ciUserToken);
 
         String apiUrl = getMockUrl();
         String downloadSignedArtifact = "downloadSignedArtifact";
@@ -58,7 +61,7 @@ public class GetSignedArtifactStepEndToEndTest {
                         .withStatus(200)
                         .withBody(signedArtifactBytes)));
 
-        WorkflowJob workflowJob = createWorkflowJob(apiUrl, ciUserToken, organizationId, signingRequestId);
+        WorkflowJob workflowJob = createWorkflowJob(apiUrl, trustedBuildSystemTokenCredentialId, ciUserTokenCredentialId, organizationId, signingRequestId);
 
         String remoteUrl = Some.url();
         BuildData buildData = new BuildData(Some.stringNonEmpty());
@@ -107,13 +110,15 @@ public class GetSignedArtifactStepEndToEndTest {
     }
 
     private WorkflowJob createWorkflowJob(String apiUrl,
-                                          String ciUserToken,
+                                          String trustedBuildSystemTokenCredentialId,
+                                          String ciUserTokenCredentialId,
                                           String organizationId,
                                           String signingRequestId) throws IOException {
         return j.createWorkflow("SignPath",
                 "getSignedArtifact( apiUrl: '" + apiUrl + "', " +
                         "outputArtifactPath: 'signed.exe', " +
-                        "ciUserToken: '" + ciUserToken + "'," +
+                        "trustedBuildSystemTokenCredentialId: '" + trustedBuildSystemTokenCredentialId + "'," +
+                        "ciUserTokenCredentialId: '" + ciUserTokenCredentialId + "'," +
                         "organizationId: '" + organizationId + "'," +
                         "signingRequestId: '" + signingRequestId + "'," +
                         "serviceUnavailableTimeoutInSeconds: 10," +
