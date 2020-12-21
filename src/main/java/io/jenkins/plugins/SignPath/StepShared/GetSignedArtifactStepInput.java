@@ -10,13 +10,15 @@ import java.util.UUID;
 public class GetSignedArtifactStepInput {
     private final UUID organizationId;
     private final UUID signingRequestId;
-    private final String ciUserToken;
+    private final String trustedBuildSystemTokenCredentialId;
+    private final String ciUserTokenCredentialId;
     private final String outputArtifactPath;
 
-    public GetSignedArtifactStepInput(UUID organizationId, UUID signingRequestId, String ciUserToken, String outputArtifactPath) {
+    public GetSignedArtifactStepInput(UUID organizationId, UUID signingRequestId, String trustedBuildSystemTokenCredentialId, String ciUserTokenCredentialId, String outputArtifactPath) {
         this.organizationId = organizationId;
         this.signingRequestId = signingRequestId;
-        this.ciUserToken = ciUserToken;
+        this.trustedBuildSystemTokenCredentialId = trustedBuildSystemTokenCredentialId;
+        this.ciUserTokenCredentialId = ciUserTokenCredentialId;
         this.outputArtifactPath = outputArtifactPath;
     }
 
@@ -28,8 +30,12 @@ public class GetSignedArtifactStepInput {
         return signingRequestId;
     }
 
-    public String getCiUserToken() {
-        return ciUserToken;
+    public String getTrustedBuildSystemTokenCredentialId() {
+        return trustedBuildSystemTokenCredentialId;
+    }
+
+    public String getCiUserTokenCredentialId() {
+        return ciUserTokenCredentialId;
     }
 
     public String getOutputArtifactPath() {

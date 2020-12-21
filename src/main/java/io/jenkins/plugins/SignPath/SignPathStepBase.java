@@ -17,16 +17,21 @@ public abstract class SignPathStepBase extends Step {
     private int serviceUnavailableTimeoutInSeconds = 600;
     private int uploadAndDownloadRequestTimeoutInSeconds = 300;
     private int waitForCompletionTimeoutInSeconds = 600;
-    private int waitForPowerShellTimeoutInSeconds = 60;
-    private String ciUserToken;
+    private final int safetyBufferInSeconds = 5;
+    private int waitForPowerShellTimeoutInSeconds = serviceUnavailableTimeoutInSeconds +
+            uploadAndDownloadRequestTimeoutInSeconds +
+            waitForCompletionTimeoutInSeconds +
+            safetyBufferInSeconds;
+    private String trustedBuildSystemTokenCredentialId = "SignPath.TrustedBuildSystemToken";
+    private String ciUserTokenCredentialId = "SignPath.CIUserToken";
 
     public String getApiUrl() {
         return apiUrl;
     }
 
-    public String getCiUserToken() {
-        return ciUserToken;
-    }
+    public String getTrustedBuildSystemTokenCredentialId() { return trustedBuildSystemTokenCredentialId; }
+
+    public String getCiUserTokenCredentialId() { return ciUserTokenCredentialId; }
 
     public int getServiceUnavailableTimeoutInSeconds() {
         return serviceUnavailableTimeoutInSeconds;
@@ -50,8 +55,13 @@ public abstract class SignPathStepBase extends Step {
     }
 
     @DataBoundSetter
-    public void setCiUserToken(String ciUserToken) {
-        this.ciUserToken = ciUserToken;
+    public void setTrustedBuildSystemTokenCredentialId(String trustedBuildSystemTokenCredentialId) {
+        this.trustedBuildSystemTokenCredentialId = trustedBuildSystemTokenCredentialId;
+    }
+
+    @DataBoundSetter
+    public void setCiUserTokenCredentialId(String ciUserTokenCredentialId) {
+        this.ciUserTokenCredentialId = ciUserTokenCredentialId;
     }
 
     @DataBoundSetter

@@ -44,8 +44,9 @@ public class GetSignedArtifactStepExecution extends SynchronousStepExecution<Str
         logger.printf("Downloading signed artifact for organization: %s and signingRequest: %s\n", input.getOrganizationId(), input.getSigningRequestId());
 
         try {
-            String trustedBuildSystemToken = secretRetriever.retrieveSecret(Constants.TrustedBuildSystemTokenCredentialId);
-            SignPathCredentials credentials = new SignPathCredentials(input.getCiUserToken(), trustedBuildSystemToken);
+            String trustedBuildSystemToken = secretRetriever.retrieveSecret(input.getTrustedBuildSystemTokenCredentialId());
+            String ciUserToken = secretRetriever.retrieveSecret(input.getCiUserTokenCredentialId());
+            SignPathCredentials credentials = new SignPathCredentials(ciUserToken, trustedBuildSystemToken);
             SignPathFacade signPathFacade = signPathFacadeFactory.create(credentials);
             TemporaryFile signedArtifact = signPathFacade.getSignedArtifact(input.getOrganizationId(), input.getSigningRequestId());
 

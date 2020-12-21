@@ -8,6 +8,7 @@ import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.PowerShellExecutor;
 import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.SignPathPowerShellFacade;
 import io.jenkins.plugins.SignPath.Common.TemporaryFile;
 import io.jenkins.plugins.SignPath.Exceptions.SignPathFacadeCallException;
+import io.jenkins.plugins.SignPath.Exceptions.SignPathStepInvalidArgumentException;
 import io.jenkins.plugins.SignPath.TestUtils.Some;
 import io.jenkins.plugins.SignPath.TestUtils.TemporaryFileUtil;
 import org.junit.Before;
@@ -52,12 +53,12 @@ public class SignPathPowerShellFacadeTest {
     private PowerShellExecutionResult powerShellExecutionResult;
 
     @Before
-    public void setup() throws MalformedURLException {
+    public void setup() throws MalformedURLException, SignPathStepInvalidArgumentException {
         credentials = new SignPathCredentials(Some.stringNonEmpty(), Some.stringNonEmpty());
-        apiConfiguration = new ApiConfiguration(new URL(Some.url()), Some.integer(), Some.integer(), Some.integer(), Some.integer());
+        apiConfiguration = Some.apiConfiguration();
         sut = new SignPathPowerShellFacade(powershellExecutor, credentials, apiConfiguration, logger);
 
-        powerShellExecutionResult = new PowerShellExecutionResult(false, Some.stringNonEmpty());
+        powerShellExecutionResult = PowerShellExecutionResult.Success(Some.stringNonEmpty());
         when(powershellExecutor.execute(anyString(), anyInt())).then(a -> {
             capturedCommand = a.getArgumentAt(0, String.class);
             return powerShellExecutionResult;
@@ -89,7 +90,7 @@ public class SignPathPowerShellFacadeTest {
         UUID organizationId = signingRequestModel.getOrganizationId();
         UUID signingRequestId = Some.uuid();
 
-        powerShellExecutionResult = new PowerShellExecutionResult(false, "SHA256 hash: " + Some.sha1Hash() + "\n" +
+        powerShellExecutionResult = PowerShellExecutionResult.Success("SHA256 hash: " + Some.sha1Hash() + "\n" +
                 "Submitted signing request at 'https://app.signpath.io/api/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "'\n" +
                 signingRequestId);
 
@@ -110,7 +111,7 @@ public class SignPathPowerShellFacadeTest {
         boolean withOptionalFields = Some.bool();
         SigningRequestModel signingRequestModel = randomSigningRequest(withOptionalFields);
 
-        powerShellExecutionResult = new PowerShellExecutionResult(false, "some unexpected string");
+        powerShellExecutionResult = PowerShellExecutionResult.Success("some unexpected string");
 
         // ACT
         ThrowingRunnable act = () -> sut.submitSigningRequestAsync(signingRequestModel);
@@ -142,38 +143,38 @@ public class SignPathPowerShellFacadeTest {
 
     @Theory
     public void submitSigningRequest_powerShellError_throws() {
-        powerShellExecutionResult = new PowerShellExecutionResult(true, Some.stringNonEmpty());
+        powerShellExecutionResult = PowerShellExecutionResult.Error(Some.stringNonEmpty());
 
         // ACT
         ThrowingRunnable act = () -> sut.submitSigningRequest(randomSigningRequest(Some.bool()));
 
         // ASSERT
         Throwable ex = assertThrows(SignPathFacadeCallException.class, act);
-        assertEquals(String.format("PowerShell script exited with error: '%s'", powerShellExecutionResult.getOutput()), ex.getMessage());
+        assertEquals(String.format("PowerShell script exited with error: '%s'", powerShellExecutionResult.getErrorDescription()), ex.getMessage());
     }
 
     @Theory
     public void submitSigningRequestAsync_powerShellError_throws() {
-        powerShellExecutionResult = new PowerShellExecutionResult(true, Some.stringNonEmpty());
+        powerShellExecutionResult = PowerShellExecutionResult.Error(Some.stringNonEmpty());
 
         // ACT
         ThrowingRunnable act = () -> sut.submitSigningRequestAsync(randomSigningRequest(Some.bool()));
 
         // ASSERT
         Throwable ex = assertThrows(SignPathFacadeCallException.class, act);
-        assertEquals(String.format("PowerShell script exited with error: '%s'", powerShellExecutionResult.getOutput()), ex.getMessage());
+        assertEquals(String.format("PowerShell script exited with error: '%s'", powerShellExecutionResult.getErrorDescription()), ex.getMessage());
     }
 
     @Theory
     public void getSignedArtifact_powerShellError_throws() {
-        powerShellExecutionResult = new PowerShellExecutionResult(true, Some.stringNonEmpty());
+        powerShellExecutionResult = PowerShellExecutionResult.Error(Some.stringNonEmpty());
 
         // ACT
         ThrowingRunnable act = () -> sut.getSignedArtifact(Some.uuid(), Some.uuid());
 
         // ASSERT
         Throwable ex = assertThrows(SignPathFacadeCallException.class, act);
-        assertEquals(String.format("PowerShell script exited with error: '%s'", powerShellExecutionResult.getOutput()), ex.getMessage());
+        assertEquals(String.format("PowerShell script exited with error: '%s'", powerShellExecutionResult.getErrorDescription()), ex.getMessage());
     }
 
     private SigningRequestModel randomSigningRequest(boolean withOptionalFields) throws IOException {
