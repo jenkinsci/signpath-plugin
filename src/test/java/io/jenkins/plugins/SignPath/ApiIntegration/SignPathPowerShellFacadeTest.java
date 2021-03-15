@@ -24,6 +24,8 @@ import org.mockito.junit.MockitoRule;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
+import java.util.Arrays;
+import java.util.Optional;
 import java.util.UUID;
 
 import static io.jenkins.plugins.SignPath.TestUtils.AssertionExtensions.assertContains;
@@ -74,10 +76,12 @@ public class SignPathPowerShellFacadeTest {
         String signedArtifactPath = TemporaryFileUtil.getAbsolutePathAndDispose(signedArtifactResultFile);
         assertNotNull(capturedCommand);
 
-        assertContainsCredentials(credentials, capturedCommand.getCommand());
-        assertContainsConfiguration(apiConfiguration, capturedCommand.getCommand(), true);
-        assertContainsSigningRequestModel(signingRequestModel, capturedCommand.getCommand(), withOptionalFields);
-        assertContains(signedArtifactPath, capturedCommand.getCommand());
+        assertContainsCredentials(credentials, capturedCommand);
+        assertContainsConfiguration(apiConfiguration, capturedCommand, true);
+        assertContainsSigningRequestModel(signingRequestModel, capturedCommand, withOptionalFields);
+        assertContainsParameter("OutputArtifactPath", signedArtifactPath, capturedCommand);
+        assertContainsFlag("WaitForCompletion", capturedCommand);
+        assertContainsFlag("Force", capturedCommand);
     }
 
     @Theory
@@ -98,9 +102,9 @@ public class SignPathPowerShellFacadeTest {
         assertEquals(signingRequestId, result);
         assertNotNull(capturedCommand);
 
-        assertContainsCredentials(credentials, capturedCommand.getCommand());
-        assertContainsConfiguration(apiConfiguration, capturedCommand.getCommand(), false);
-        assertContainsSigningRequestModel(signingRequestModel, capturedCommand.getCommand(), withOptionalFields);
+        assertContainsCredentials(credentials, capturedCommand);
+        assertContainsConfiguration(apiConfiguration, capturedCommand, false);
+        assertContainsSigningRequestModel(signingRequestModel, capturedCommand, withOptionalFields);
     }
 
     @Theory
@@ -131,11 +135,12 @@ public class SignPathPowerShellFacadeTest {
         String signedArtifactPath = TemporaryFileUtil.getAbsolutePathAndDispose(signedArtifactResultFile);
             assertNotNull(capturedCommand);
 
-        assertContainsCredentials(credentials, capturedCommand.getCommand());
-        assertContainsConfiguration(apiConfiguration, capturedCommand.getCommand(), true);
-        assertContains(organizationId.toString(), capturedCommand.getCommand());
-        assertContains(signingRequestId.toString(), capturedCommand.getCommand());
-        assertContains(signedArtifactPath, capturedCommand.getCommand());
+        assertContainsCredentials(credentials, capturedCommand);
+        assertContainsConfiguration(apiConfiguration, capturedCommand, true);
+        assertContainsParameter("OrganizationId", organizationId.toString(), capturedCommand);
+        assertContainsParameter("SigningRequestId", signingRequestId.toString(), capturedCommand);
+        assertContainsParameter("OutputArtifactPath", signedArtifactPath, capturedCommand);
+        assertContainsFlag("Force", capturedCommand);
     }
 
     @Theory
@@ -195,12 +200,12 @@ public class SignPathPowerShellFacadeTest {
         return new SigningRequestModel(organizationId, projectSlug, artifactConfigurationSlug, signingPolicySlug, description, origin, unsignedArtifact);
     }
 
-    private void assertContainsSigningRequestModel(SigningRequestModel signingRequestModel, String capturedCommand, boolean withOptionalFields) {
+    private void assertContainsSigningRequestModel(SigningRequestModel signingRequestModel, PowerShellCommand capturedCommand, boolean withOptionalFields) {
         SigningRequestOriginModel origin = signingRequestModel.getOrigin();
         RepositoryMetadataModel repositoryMetadata = origin.getRepositoryMetadata();
-        assertContains(signingRequestModel.getOrganizationId().toString(), capturedCommand);
-        assertContains(signingRequestModel.getProjectSlug(), capturedCommand);
-        assertContains(signingRequestModel.getSigningPolicySlug(), capturedCommand);
+        assertContainsParameter("OrganizationId", signingRequestModel.getOrganizationId().toString(), capturedCommand);
+        assertContainsParameter("ProjectSlug", signingRequestModel.getProjectSlug(), capturedCommand);
+        assertContainsParameter("SigningPolicySlug", signingRequestModel.getSigningPolicySlug(), capturedCommand);
 
         String artifactConfigurationSlug = signingRequestModel.getArtifactConfigurationSlug();
         String description = signingRequestModel.getDescription();
@@ -208,36 +213,49 @@ public class SignPathPowerShellFacadeTest {
             assertTrue(artifactConfigurationSlug != null && !artifactConfigurationSlug.isEmpty());
             assertTrue(description != null && !description.isEmpty());
 
-            assertContains(artifactConfigurationSlug, capturedCommand);
-            assertContains(description, capturedCommand);
+            assertContainsParameter("ArtifactConfigurationSlug", artifactConfigurationSlug, capturedCommand);
+            assertContainsParameter("Description", description, capturedCommand);
         } else {
             assertTrue(artifactConfigurationSlug == null || artifactConfigurationSlug.isEmpty());
             assertTrue(description == null || description.isEmpty());
         }
 
-        assertContains(repositoryMetadata.getSourceControlManagementType(), capturedCommand);
-        assertContains(repositoryMetadata.getRepositoryUrl(), capturedCommand);
-        assertContains(repositoryMetadata.getBranchName(), capturedCommand);
-        assertContains(repositoryMetadata.getCommitId(), capturedCommand);
-        assertContains(origin.getBuildUrl(), capturedCommand);
-        assertContains(origin.getBuildSettingsFile().getAbsolutePath(), capturedCommand);
-        assertContains(signingRequestModel.getArtifact().getAbsolutePath(), capturedCommand);
+        assertContainsParameter("SourceControlManagementType", repositoryMetadata.getSourceControlManagementType(), capturedCommand);
+        assertContainsParameter("RepositoryUrl", repositoryMetadata.getRepositoryUrl(), capturedCommand);
+        assertContainsParameter("BranchName", repositoryMetadata.getBranchName(), capturedCommand);
+        assertContainsParameter("CommitId", repositoryMetadata.getCommitId(), capturedCommand);
+        assertContainsParameter("BuildUrl", origin.getBuildUrl(), capturedCommand);
+        assertContainsParameter("BuildSettingsFile",origin.getBuildSettingsFile().getAbsolutePath(), capturedCommand);
+
+        assertContainsParameter("InputArtifactPath",signingRequestModel.getArtifact().getAbsolutePath(), capturedCommand);
     }
 
-    private void assertContainsCredentials(SignPathCredentials credentials, String capturedCommand) {
-        assertContains(credentials.getCiUserToken(), capturedCommand);
-        assertContains(credentials.getTrustedBuildSystemToken(), capturedCommand);
-        assertContains(credentials.toString(), capturedCommand);
+    private void assertContainsCredentials(SignPathCredentials credentials, PowerShellCommand capturedCommand) {
+        assertContainsParameter("CIUserToken", credentials.toString(), capturedCommand);
     }
 
-    private void assertContainsConfiguration(ApiConfiguration apiConfiguration, String capturedCommand, boolean withWaitTime) {
-        assertContains(apiConfiguration.getApiUrl().toString(), capturedCommand);
-        assertContains(String.valueOf(apiConfiguration.getServiceUnavailableTimeoutInSeconds()), capturedCommand);
-        assertContains(String.valueOf(apiConfiguration.getUploadAndDownloadRequestTimeoutInSeconds()), capturedCommand);
+    private void assertContainsConfiguration(ApiConfiguration apiConfiguration, PowerShellCommand capturedCommand, boolean withWaitTime) {
+        assertContainsParameter("ApiUrl", apiConfiguration.getApiUrl().toString(), capturedCommand);
+        assertContainsParameter("ServiceUnavailableTimeoutInSeconds", String.valueOf(apiConfiguration.getServiceUnavailableTimeoutInSeconds()), capturedCommand);
+        assertContainsParameter("UploadAndDownloadRequestTimeoutInSeconds", String.valueOf(apiConfiguration.getUploadAndDownloadRequestTimeoutInSeconds()), capturedCommand);
 
         if (withWaitTime) {
-            assertContains(String.valueOf(apiConfiguration.getWaitForCompletionTimeoutInSeconds()), capturedCommand);
+            assertContainsParameter("WaitForCompletionTimeoutInSeconds", String.valueOf(apiConfiguration.getWaitForCompletionTimeoutInSeconds()), capturedCommand);
         }
+    }
+
+    private void assertContainsParameter(String name, String value, PowerShellCommand command){
+        assertContains(name, command.getCommand());
+        Optional<EnvironmentVariable> environmentVariable = Arrays.stream(command.getEnvironmentVariables())
+                .filter(e-> e.getName().equals(name))
+                .findFirst();
+
+        assertTrue(environmentVariable.isPresent());
+        assertEquals(environmentVariable.get().getValue(),value);
+    }
+
+    private void assertContainsFlag(String flag, PowerShellCommand command){
+        assertContains(String.format("-%s", flag), command.getCommand());
     }
 
     @DataPoints("allBooleans")

@@ -1,6 +1,8 @@
 package io.jenkins.plugins.SignPath.ApiIntegration.PowerShell;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public class PowerShellCommandBuilder {
     private StringBuilder commandBuilder;
@@ -11,13 +13,18 @@ public class PowerShellCommandBuilder {
         this.environmentVariables = new ArrayList<>();
     }
 
+    void appendFlag(String name){
+        commandBuilder.append(String.format(" -%s", name));
+    }
+
     void appendParameter(String name, String value){
         commandBuilder.append(String.format(" -%s '$($env:%s)'", name, name));
         environmentVariables.add(new EnvironmentVariable(name, value));
     }
 
-    void appendFlag(String name){
-        commandBuilder.append(String.format(" -%s", name));
+    void appendCustom(String commandString, EnvironmentVariable... variables) {
+        commandBuilder.append(commandString);
+        environmentVariables.addAll(Arrays.stream(variables).collect(Collectors.toCollection(ArrayList::new)));
     }
 
     PowerShellCommand build(){

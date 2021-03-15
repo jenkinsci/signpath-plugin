@@ -1,7 +1,9 @@
 package io.jenkins.plugins.SignPath.ApiIntegration.PowerShell;
 
 import io.jenkins.plugins.SignPath.ApiIntegration.ApiConfiguration;
+import io.jenkins.plugins.SignPath.ApiIntegration.Model.RepositoryMetadataModel;
 import io.jenkins.plugins.SignPath.ApiIntegration.Model.SigningRequestModel;
+import io.jenkins.plugins.SignPath.ApiIntegration.Model.SigningRequestOriginModel;
 import io.jenkins.plugins.SignPath.ApiIntegration.SignPathCredentials;
 import io.jenkins.plugins.SignPath.ApiIntegration.SignPathFacade;
 import io.jenkins.plugins.SignPath.Common.TemporaryFile;
@@ -80,53 +82,61 @@ public class SignPathPowerShellFacade implements SignPathFacade {
 
     private PowerShellCommand createSubmitSigningRequestCommand(SigningRequestModel signingRequestModel, TemporaryFile outputArtifact) {
         PowerShellCommandBuilder commandBuilder = new PowerShellCommandBuilder("Submit-SigningRequest");
-//        commandBuilder.append(String.format("-ApiUrl '%s' ", apiConfiguration.getApiUrl()));
-//        commandBuilder.append(String.format("-CIUserToken '%s' ", credentials.toString()));
-//        commandBuilder.append(String.format("-OrganizationId '%s' ", signingRequestModel.getOrganizationId()));
-//        commandBuilder.append(String.format("-InputArtifactPath '%s' ", signingRequestModel.getArtifact().getAbsolutePath()));
-//        commandBuilder.append(String.format("-ProjectSlug '%s' ", signingRequestModel.getProjectSlug()));
-//        commandBuilder.append(String.format("-SigningPolicySlug '%s' ", signingRequestModel.getSigningPolicySlug()));
-//
-//        if (signingRequestModel.getArtifactConfigurationSlug() != null)
-//            commandBuilder.append(String.format("-ArtifactConfigurationSlug '%s' ", signingRequestModel.getArtifactConfigurationSlug()));
-//
-//        if (signingRequestModel.getDescription() != null)
-//            commandBuilder.append(String.format("-Description '%s' ", signingRequestModel.getDescription()));
-//
-//        commandBuilder.append(String.format("-ServiceUnavailableTimeoutInSeconds '%s' ", apiConfiguration.getServiceUnavailableTimeoutInSeconds()));
-//        commandBuilder.append(String.format("-UploadAndDownloadRequestTimeoutInSeconds '%s' ", apiConfiguration.getUploadAndDownloadRequestTimeoutInSeconds()));
-//        SigningRequestOriginModel origin = signingRequestModel.getOrigin();
-//        RepositoryMetadataModel repositoryMetadata = origin.getRepositoryMetadata();
-//        commandBuilder.append("-Origin @{");
-//        commandBuilder.append(String.format("'BuildUrl' = '%s';", origin.getBuildUrl()));
-//        commandBuilder.append(String.format("'BuildSettingsFile' = '%s';", origin.getBuildSettingsFile().getAbsolutePath()));
-//        commandBuilder.append(String.format("'RepositoryMetadata.BranchName' = '%s';", repositoryMetadata.getBranchName()));
-//        commandBuilder.append(String.format("'RepositoryMetadata.CommitId' = '%s';", repositoryMetadata.getCommitId()));
-//        commandBuilder.append(String.format("'RepositoryMetadata.RepositoryUrl' = '%s';", repositoryMetadata.getRepositoryUrl()));
-//        commandBuilder.append(String.format("'RepositoryMetadata.SourceControlManagementType' = '%s'", repositoryMetadata.getSourceControlManagementType()));
-//        commandBuilder.append("} ");
-//
-//        if (outputArtifact != null) {
-//            commandBuilder.append("-WaitForCompletion ");
-//            commandBuilder.append(String.format("-OutputArtifactPath '%s' ", outputArtifact.getAbsolutePath()));
-//            commandBuilder.append(String.format("-WaitForCompletionTimeoutInSeconds '%s' ", apiConfiguration.getWaitForCompletionTimeoutInSeconds()));
-//            commandBuilder.append("-Force ");
-//        }
+        commandBuilder.appendParameter("ApiUrl", apiConfiguration.getApiUrl().toString());
+        commandBuilder.appendParameter("CIUserToken", credentials.toString());
+        commandBuilder.appendParameter("OrganizationId", signingRequestModel.getOrganizationId().toString());
+        commandBuilder.appendParameter("InputArtifactPath", signingRequestModel.getArtifact().getAbsolutePath());
+        commandBuilder.appendParameter("ProjectSlug", signingRequestModel.getProjectSlug());
+        commandBuilder.appendParameter("SigningPolicySlug", signingRequestModel.getSigningPolicySlug());
+
+        if (signingRequestModel.getArtifactConfigurationSlug() != null)
+            commandBuilder.appendParameter("ArtifactConfigurationSlug", signingRequestModel.getArtifactConfigurationSlug());
+
+        if (signingRequestModel.getDescription() != null)
+            commandBuilder.appendParameter("Description", signingRequestModel.getDescription());
+
+        commandBuilder.appendParameter("ServiceUnavailableTimeoutInSeconds", String.valueOf(apiConfiguration.getServiceUnavailableTimeoutInSeconds()));
+        commandBuilder.appendParameter("UploadAndDownloadRequestTimeoutInSeconds", String.valueOf(apiConfiguration.getUploadAndDownloadRequestTimeoutInSeconds()));
+
+        SigningRequestOriginModel origin = signingRequestModel.getOrigin();
+        RepositoryMetadataModel repositoryMetadata = origin.getRepositoryMetadata();
+
+        commandBuilder.appendCustom("-Origin @{" +
+                        "'BuildUrl' = '$($env:BuildUrl)';" +
+                        "'BuildSettingsFile' = '$($env:BuildSettingsFile)';" +
+                        "'RepositoryMetadata.BranchName' = '$($env:BranchName)';" +
+                        "'RepositoryMetadata.CommitId' = '$($env:CommitId)';" +
+                        "'RepositoryMetadata.RepositoryUrl' = '$($env:RepositoryUrl)';" +
+                        "'RepositoryMetadata.SourceControlManagementType' = '$($env:SourceControlManagementType)'" +
+                        "}",
+                new EnvironmentVariable("BuildUrl", origin.getBuildUrl()),
+                new EnvironmentVariable("BuildSettingsFile", origin.getBuildSettingsFile().getAbsolutePath()),
+                new EnvironmentVariable("BranchName", repositoryMetadata.getBranchName()),
+                new EnvironmentVariable("CommitId", repositoryMetadata.getCommitId()),
+                new EnvironmentVariable("RepositoryUrl", repositoryMetadata.getRepositoryUrl()),
+                new EnvironmentVariable("SourceControlManagementType", repositoryMetadata.getSourceControlManagementType()));
+
+        if (outputArtifact != null) {
+            commandBuilder.appendFlag("-WaitForCompletion");
+            commandBuilder.appendParameter("OutputArtifactPath", outputArtifact.getAbsolutePath());
+            commandBuilder.appendParameter("WaitForCompletionTimeoutInSeconds", String.valueOf(apiConfiguration.getWaitForCompletionTimeoutInSeconds()));
+            commandBuilder.appendFlag("-Force");
+        }
 
         return commandBuilder.build();
     }
 
     private PowerShellCommand createGetSignedArtifactCommand(UUID organizationId, UUID signingRequestId, TemporaryFile outputArtifact) {
         PowerShellCommandBuilder commandBuilder = new PowerShellCommandBuilder("Get-SignedArtifact");
+        commandBuilder.appendParameter("ApiUrl", apiConfiguration.getApiUrl().toString());
+        commandBuilder.appendParameter("CIUserToken", credentials.toString());
+        commandBuilder.appendParameter("OrganizationId", organizationId.toString());
+        commandBuilder.appendParameter("SigningRequestId", signingRequestId.toString());
+        commandBuilder.appendParameter("ServiceUnavailableTimeoutInSeconds", String.valueOf(apiConfiguration.getServiceUnavailableTimeoutInSeconds()));
+        commandBuilder.appendParameter("UploadAndDownloadRequestTimeoutInSeconds", String.valueOf(apiConfiguration.getUploadAndDownloadRequestTimeoutInSeconds()));
+        commandBuilder.appendParameter("OutputArtifactPath",  outputArtifact.getAbsolutePath());
+        commandBuilder.appendParameter("WaitForCompletionTimeoutInSeconds", String.valueOf(apiConfiguration.getWaitForCompletionTimeoutInSeconds()));
+        commandBuilder.appendFlag("Force");
         return commandBuilder.build();
-//        return "Get-SignedArtifact " + String.format("-ApiUrl '%s' ", apiConfiguration.getApiUrl()) +
-//                String.format("-CIUserToken '%s' ", credentials.toString()) +
-//                String.format("-OrganizationId '%s' ", organizationId) +
-//                String.format("-SigningRequestId '%s' ", signingRequestId) +
-//                String.format("-ServiceUnavailableTimeoutInSeconds '%s' ", apiConfiguration.getServiceUnavailableTimeoutInSeconds()) +
-//                String.format("-UploadAndDownloadRequestTimeoutInSeconds '%s' ", apiConfiguration.getUploadAndDownloadRequestTimeoutInSeconds()) +
-//                String.format("-OutputArtifactPath '%s' ", outputArtifact.getAbsolutePath()) +
-//                String.format("-WaitForCompletionTimeoutInSeconds '%s' ", apiConfiguration.getWaitForCompletionTimeoutInSeconds()) +
-//                "-Force ";
     }
 }
