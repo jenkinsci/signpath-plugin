@@ -1,8 +1,9 @@
 package io.jenkins.plugins.SignPath.ApiIntegration.PowerShell;
 
 import java.io.*;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class DefaultPowerShellExecutor implements PowerShellExecutor {
 
@@ -14,10 +15,17 @@ public class DefaultPowerShellExecutor implements PowerShellExecutor {
         this.logger = logger;
     }
 
-    public PowerShellExecutionResult execute(String powerShellCommand, int timeoutInSeconds) {
+    public PowerShellExecutionResult execute(String powerShellCommand,
+                                             int timeoutInSeconds,
+                                             EnvironmentVariable... environmentVariables) {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder();
             processBuilder.command(powerShellExecutableName, "-command", powerShellCommand);
+
+            Map<String, String> environmentMap =
+                    Arrays.stream(environmentVariables).collect(Collectors.toMap(e -> e.getName(), p -> p.getValue()));
+
+            processBuilder.environment().putAll(environmentMap);
 
             // redirect error stream to output stream to enable us to get one combined string of both stdout & stderr
             processBuilder.redirectErrorStream(true);

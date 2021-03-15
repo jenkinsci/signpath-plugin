@@ -1,12 +1,14 @@
 package io.jenkins.plugins.SignPath.ApiIntegration;
 
 import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.DefaultPowerShellExecutor;
+import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.EnvironmentVariable;
 import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.PowerShellExecutionResult;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.Map;
 
 import static io.jenkins.plugins.SignPath.TestUtils.AssertionExtensions.assertContains;
 import static org.junit.Assert.*;
@@ -33,6 +35,18 @@ public class DefaultPowerShellExecutorTest {
         assertNotNull(executionResult.getOutput());
         assertContains("some string", executionResult.getOutput());
         assertContains("some string", outputStream.toString());
+    }
+
+    @Test
+    public void execute_withEnvironmentVariables() {
+        PowerShellExecutionResult executionResult = sut.execute("echo $env:myvariable", Integer.MAX_VALUE,
+                new EnvironmentVariable("myvariable", "content"));
+
+        assertFalse(executionResult.getHasError());
+
+        assertNotNull(executionResult.getOutput());
+        assertContains("content", executionResult.getOutput());
+        assertContains("content", outputStream.toString());
     }
 
     @Test
