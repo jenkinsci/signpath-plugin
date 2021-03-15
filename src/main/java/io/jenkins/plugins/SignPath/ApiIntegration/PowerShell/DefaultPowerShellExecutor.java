@@ -15,15 +15,13 @@ public class DefaultPowerShellExecutor implements PowerShellExecutor {
         this.logger = logger;
     }
 
-    public PowerShellExecutionResult execute(String powerShellCommand,
-                                             int timeoutInSeconds,
-                                             EnvironmentVariable... environmentVariables) {
+    public PowerShellExecutionResult execute(PowerShellCommand powerShellCommand, int timeoutInSeconds) {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder();
-            processBuilder.command(powerShellExecutableName, "-command", powerShellCommand);
+            processBuilder.command(powerShellExecutableName, "-command", powerShellCommand.getCommand());
 
             Map<String, String> environmentMap =
-                    Arrays.stream(environmentVariables).collect(Collectors.toMap(e -> e.getName(), p -> p.getValue()));
+                    Arrays.stream(powerShellCommand.getEnvironmentVariables()).collect(Collectors.toMap(e -> e.getName(), p -> p.getValue()));
 
             processBuilder.environment().putAll(environmentMap);
 
