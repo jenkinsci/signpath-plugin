@@ -30,7 +30,8 @@ import java.util.UUID;
 
 import static io.jenkins.plugins.SignPath.TestUtils.AssertionExtensions.assertContains;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.when;
 
 @RunWith(Theories.class)
@@ -225,7 +226,7 @@ public class SignPathPowerShellFacadeTest {
         assertContainsParameter("BranchName", repositoryMetadata.getBranchName(), capturedCommand);
         assertContainsParameter("CommitId", repositoryMetadata.getCommitId(), capturedCommand);
         assertContainsParameter("BuildUrl", origin.getBuildUrl(), capturedCommand);
-        assertContainsParameter("BuildSettingsFile",origin.getBuildSettingsFile().getAbsolutePath(), capturedCommand);
+        assertContainsParameter("BuildSettingsFile", "@" + origin.getBuildSettingsFile().getAbsolutePath(), capturedCommand);
 
         assertContainsParameter("InputArtifactPath",signingRequestModel.getArtifact().getAbsolutePath(), capturedCommand);
     }
