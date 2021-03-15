@@ -3,7 +3,13 @@ package io.jenkins.plugins.SignPath.ApiIntegration.PowerShell;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.Collectors;
-
+/**
+ * A utility class that helps in building a
+ * @see PowerShellCommand
+ * similar to
+ * @see StringBuilder
+ * to avoid string injection attacks
+ */
 public class PowerShellCommandBuilder {
     private StringBuilder commandBuilder;
     private ArrayList<EnvironmentVariable> environmentVariables;
