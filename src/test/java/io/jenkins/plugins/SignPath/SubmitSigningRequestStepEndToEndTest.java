@@ -313,7 +313,7 @@ public class SubmitSigningRequestStepEndToEndTest {
     private void assertFormFiles(String unsignedArtifactString, String organizationId) {
         Request r = wireMockRule.findAll(postRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests"))).get(0);
         assertEquals(unsignedArtifactString, getMultipartFormDataFileContents(r, "Artifact"));
-        String buildSettingsFile = getMultipartFormDataFileContents(r, "Origin.BuildSettingsFile");
+        String buildSettingsFile = getMultipartFormDataFileContents(r, "Origin.BuildData.BuildSettingsFile");
         assertTrue(buildSettingsFile.contains("node {writeFile text:"));
         assertTrue(buildSettingsFile.contains(organizationId));
     }

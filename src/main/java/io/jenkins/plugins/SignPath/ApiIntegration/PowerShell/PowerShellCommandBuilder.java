@@ -29,7 +29,7 @@ public class PowerShellCommandBuilder {
     }
 
     void appendCustom(String commandString, EnvironmentVariable... variables) {
-        commandBuilder.append(commandString);
+        commandBuilder.append(String.format(" %s", commandString));
         environmentVariables.addAll(Arrays.stream(variables).collect(Collectors.toCollection(ArrayList::new)));
     }
 

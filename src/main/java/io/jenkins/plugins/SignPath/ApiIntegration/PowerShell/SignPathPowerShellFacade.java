@@ -101,16 +101,18 @@ public class SignPathPowerShellFacade implements SignPathFacade {
         SigningRequestOriginModel origin = signingRequestModel.getOrigin();
         RepositoryMetadataModel repositoryMetadata = origin.getRepositoryMetadata();
 
-        commandBuilder.appendCustom("-Origin @{" +
-                        "'BuildUrl' = \"$($env:BuildUrl)\";" +
+        commandBuilder.appendCustom("-Origin @{'BuildData' = @{" +
+                        "'Url' = \"$($env:BuildUrl)\";" +
                         "'BuildSettingsFile' = \"$($env:BuildSettingsFile)\";" +
-                        "'RepositoryMetadata.BranchName' = \"$($env:BranchName)\";" +
-                        "'RepositoryMetadata.CommitId' = \"$($env:CommitId)\";" +
-                        "'RepositoryMetadata.RepositoryUrl' = \"$($env:RepositoryUrl)\";" +
-                        "'RepositoryMetadata.SourceControlManagementType' = \"$($env:SourceControlManagementType)\"" +
-                        "}",
+                        "};" +
+                        "'RepositoryData' = @{" +
+                        "'BranchName' = \"$($env:BranchName)\";" +
+                        "'CommitId' = \"$($env:CommitId)\";" +
+                        "'Url' = \"$($env:RepositoryUrl)\";" +
+                        "'SourceControlManagementType' = \"$($env:SourceControlManagementType)\"" +
+                        "}}",
                 new EnvironmentVariable("BuildUrl", origin.getBuildUrl()),
-                new EnvironmentVariable("BuildSettingsFile", origin.getBuildSettingsFile().getAbsolutePath()),
+                new EnvironmentVariable("BuildSettingsFile", String.format("@%s", origin.getBuildSettingsFile().getAbsolutePath())),
                 new EnvironmentVariable("BranchName", repositoryMetadata.getBranchName()),
                 new EnvironmentVariable("CommitId", repositoryMetadata.getCommitId()),
                 new EnvironmentVariable("RepositoryUrl", repositoryMetadata.getRepositoryUrl()),
@@ -123,6 +125,7 @@ public class SignPathPowerShellFacade implements SignPathFacade {
             commandBuilder.appendFlag("Force");
         }
 
+        commandBuilder.appendFlag("Verbose");
         return commandBuilder.build();
     }
 
@@ -137,6 +140,7 @@ public class SignPathPowerShellFacade implements SignPathFacade {
         commandBuilder.appendParameter("OutputArtifactPath",  outputArtifact.getAbsolutePath());
         commandBuilder.appendParameter("WaitForCompletionTimeoutInSeconds", String.valueOf(apiConfiguration.getWaitForCompletionTimeoutInSeconds()));
         commandBuilder.appendFlag("Force");
+        commandBuilder.appendFlag("Verbose");
         return commandBuilder.build();
     }
 }
