@@ -24,7 +24,7 @@ public class PowerShellCommandBuilder {
     }
 
     void appendParameter(String name, String value){
-        commandBuilder.append(String.format(" -%s '$($env:%s)'", name, name));
+        commandBuilder.append(String.format(" -%s \"$($env:%s)\"", name, name));
         environmentVariables.add(new EnvironmentVariable(name, value));
     }
 

@@ -102,12 +102,12 @@ public class SignPathPowerShellFacade implements SignPathFacade {
         RepositoryMetadataModel repositoryMetadata = origin.getRepositoryMetadata();
 
         commandBuilder.appendCustom("-Origin @{" +
-                        "'BuildUrl' = '$($env:BuildUrl)';" +
-                        "'BuildSettingsFile' = '$($env:BuildSettingsFile)';" +
-                        "'RepositoryMetadata.BranchName' = '$($env:BranchName)';" +
-                        "'RepositoryMetadata.CommitId' = '$($env:CommitId)';" +
-                        "'RepositoryMetadata.RepositoryUrl' = '$($env:RepositoryUrl)';" +
-                        "'RepositoryMetadata.SourceControlManagementType' = '$($env:SourceControlManagementType)'" +
+                        "'BuildUrl' = \"$($env:BuildUrl)\";" +
+                        "'BuildSettingsFile' = \"$($env:BuildSettingsFile)\";" +
+                        "'RepositoryMetadata.BranchName' = \"$($env:BranchName)\";" +
+                        "'RepositoryMetadata.CommitId' = \"$($env:CommitId)\";" +
+                        "'RepositoryMetadata.RepositoryUrl' = \"$($env:RepositoryUrl)\";" +
+                        "'RepositoryMetadata.SourceControlManagementType' = \"$($env:SourceControlManagementType)\"" +
                         "}",
                 new EnvironmentVariable("BuildUrl", origin.getBuildUrl()),
                 new EnvironmentVariable("BuildSettingsFile", origin.getBuildSettingsFile().getAbsolutePath()),
@@ -117,10 +117,10 @@ public class SignPathPowerShellFacade implements SignPathFacade {
                 new EnvironmentVariable("SourceControlManagementType", repositoryMetadata.getSourceControlManagementType()));
 
         if (outputArtifact != null) {
-            commandBuilder.appendFlag("-WaitForCompletion");
+            commandBuilder.appendFlag("WaitForCompletion");
             commandBuilder.appendParameter("OutputArtifactPath", outputArtifact.getAbsolutePath());
             commandBuilder.appendParameter("WaitForCompletionTimeoutInSeconds", String.valueOf(apiConfiguration.getWaitForCompletionTimeoutInSeconds()));
-            commandBuilder.appendFlag("-Force");
+            commandBuilder.appendFlag("Force");
         }
 
         return commandBuilder.build();
