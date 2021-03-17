@@ -12,5 +12,5 @@ public interface PowerShellExecutor {
      * @param timeoutInSeconds the maximum time before the command will be aborted
      * @return a @see PowerShellExecutionResult indicating whether the command has succeeded or failed
      */
-    PowerShellExecutionResult execute(String powerShellCommand, int timeoutInSeconds);
+    PowerShellExecutionResult execute(PowerShellCommand powerShellCommand, int timeoutInSeconds);
 }

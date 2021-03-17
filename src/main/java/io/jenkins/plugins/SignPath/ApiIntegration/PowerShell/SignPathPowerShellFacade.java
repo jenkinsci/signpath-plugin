@@ -11,9 +11,9 @@ import io.jenkins.plugins.SignPath.Exceptions.SignPathFacadeCallException;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * An implementation of the
@@ -39,14 +39,14 @@ public class SignPathPowerShellFacade implements SignPathFacade {
     @Override
     public TemporaryFile submitSigningRequest(SigningRequestModel submitModel) throws IOException, SignPathFacadeCallException {
         TemporaryFile outputArtifact = new TemporaryFile();
-        String submitSigningRequestCommand = createSubmitSigningRequestCommand(submitModel, outputArtifact);
+        PowerShellCommand submitSigningRequestCommand = createSubmitSigningRequestCommand(submitModel, outputArtifact);
         executePowerShellSafe(submitSigningRequestCommand);
         return outputArtifact;
     }
 
     @Override
     public UUID submitSigningRequestAsync(SigningRequestModel submitModel) throws SignPathFacadeCallException {
-        String submitSigningRequestCommand = createSubmitSigningRequestCommand(submitModel, null);
+        PowerShellCommand submitSigningRequestCommand = createSubmitSigningRequestCommand(submitModel, null);
         String result = executePowerShellSafe(submitSigningRequestCommand);
         return extractSigningRequestId(result);
     }
@@ -54,12 +54,12 @@ public class SignPathPowerShellFacade implements SignPathFacade {
     @Override
     public TemporaryFile getSignedArtifact(UUID organizationId, UUID signingRequestID) throws IOException, SignPathFacadeCallException {
         TemporaryFile outputArtifact = new TemporaryFile();
-        String getSignedArtifactCommand = createGetSignedArtifactCommand(organizationId, signingRequestID, outputArtifact);
+        PowerShellCommand getSignedArtifactCommand = createGetSignedArtifactCommand(organizationId, signingRequestID, outputArtifact);
         executePowerShellSafe(getSignedArtifactCommand);
         return outputArtifact;
     }
 
-    private String executePowerShellSafe(String command) throws SignPathFacadeCallException {
+    private String executePowerShellSafe(PowerShellCommand command) throws SignPathFacadeCallException {
         PowerShellExecutionResult result = powerShellExecutor.execute(command, apiConfiguration.getWaitForPowerShellTimeoutInSeconds());
 
         if (result.getHasError())
@@ -70,63 +70,78 @@ public class SignPathPowerShellFacade implements SignPathFacade {
     }
 
     private UUID extractSigningRequestId(String output) throws SignPathFacadeCallException {
-        // Last output line = return value => we want the PowerShell script to return a GUID
-        final String guidRegex = "([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$";
-        Matcher regexResult = Pattern.compile(guidRegex, Pattern.MULTILINE).matcher(output);
-        if (!regexResult.find()) {
+        // we assume the last line is the result = uuid
+        String[] lines = output.split(System.getProperty("line.separator"));
+        String lastLine = lines[lines.length-1];
+        try {
+            return UUID.fromString(lastLine);
+        }catch (IllegalArgumentException ex) {
             throw new SignPathFacadeCallException("Unexpected output from PowerShell, did not find a valid signingRequestId.");
         }
-        String signingRequestId = regexResult.group(0);
-        return UUID.fromString(signingRequestId);
     }
 
-    private String createSubmitSigningRequestCommand(SigningRequestModel signingRequestModel, TemporaryFile outputArtifact) {
-        StringBuilder argumentsBuilder = new StringBuilder("Submit-SigningRequest ");
-        argumentsBuilder.append(String.format("-ApiUrl '%s' ", apiConfiguration.getApiUrl()));
-        argumentsBuilder.append(String.format("-CIUserToken '%s' ", credentials.toString()));
-        argumentsBuilder.append(String.format("-OrganizationId '%s' ", signingRequestModel.getOrganizationId()));
-        argumentsBuilder.append(String.format("-InputArtifactPath '%s' ", signingRequestModel.getArtifact().getAbsolutePath()));
-        argumentsBuilder.append(String.format("-ProjectSlug '%s' ", signingRequestModel.getProjectSlug()));
-        argumentsBuilder.append(String.format("-SigningPolicySlug '%s' ", signingRequestModel.getSigningPolicySlug()));
+    private PowerShellCommand createSubmitSigningRequestCommand(SigningRequestModel signingRequestModel, TemporaryFile outputArtifact) {
+        PowerShellCommandBuilder commandBuilder = new PowerShellCommandBuilder("Submit-SigningRequest");
+        commandBuilder.appendParameter("ApiUrl", apiConfiguration.getApiUrl().toString());
+        commandBuilder.appendParameter("CIUserToken", credentials.toString());
+        commandBuilder.appendParameter("OrganizationId", signingRequestModel.getOrganizationId().toString());
+        commandBuilder.appendParameter("InputArtifactPath", signingRequestModel.getArtifact().getAbsolutePath());
+        commandBuilder.appendParameter("ProjectSlug", signingRequestModel.getProjectSlug());
+        commandBuilder.appendParameter("SigningPolicySlug", signingRequestModel.getSigningPolicySlug());
 
         if (signingRequestModel.getArtifactConfigurationSlug() != null)
-            argumentsBuilder.append(String.format("-ArtifactConfigurationSlug '%s' ", signingRequestModel.getArtifactConfigurationSlug()));
+            commandBuilder.appendParameter("ArtifactConfigurationSlug", signingRequestModel.getArtifactConfigurationSlug());
 
         if (signingRequestModel.getDescription() != null)
-            argumentsBuilder.append(String.format("-Description '%s' ", signingRequestModel.getDescription()));
+            commandBuilder.appendParameter("Description", signingRequestModel.getDescription());
 
-        argumentsBuilder.append(String.format("-ServiceUnavailableTimeoutInSeconds '%s' ", apiConfiguration.getServiceUnavailableTimeoutInSeconds()));
-        argumentsBuilder.append(String.format("-UploadAndDownloadRequestTimeoutInSeconds '%s' ", apiConfiguration.getUploadAndDownloadRequestTimeoutInSeconds()));
+        commandBuilder.appendParameter("ServiceUnavailableTimeoutInSeconds", String.valueOf(apiConfiguration.getServiceUnavailableTimeoutInSeconds()));
+        commandBuilder.appendParameter("UploadAndDownloadRequestTimeoutInSeconds", String.valueOf(apiConfiguration.getUploadAndDownloadRequestTimeoutInSeconds()));
+
         SigningRequestOriginModel origin = signingRequestModel.getOrigin();
         RepositoryMetadataModel repositoryMetadata = origin.getRepositoryMetadata();
-        argumentsBuilder.append("-Origin @{");
-        argumentsBuilder.append(String.format("'BuildUrl' = '%s';", origin.getBuildUrl()));
-        argumentsBuilder.append(String.format("'BuildSettingsFile' = '%s';", origin.getBuildSettingsFile().getAbsolutePath()));
-        argumentsBuilder.append(String.format("'RepositoryMetadata.BranchName' = '%s';", repositoryMetadata.getBranchName()));
-        argumentsBuilder.append(String.format("'RepositoryMetadata.CommitId' = '%s';", repositoryMetadata.getCommitId()));
-        argumentsBuilder.append(String.format("'RepositoryMetadata.RepositoryUrl' = '%s';", repositoryMetadata.getRepositoryUrl()));
-        argumentsBuilder.append(String.format("'RepositoryMetadata.SourceControlManagementType' = '%s'", repositoryMetadata.getSourceControlManagementType()));
-        argumentsBuilder.append("} ");
+
+        Map<String, String> originParameters = new HashMap<>();
+        originParameters.put("BuildUrl", origin.getBuildUrl());
+        originParameters.put("BuildSettingsFile", String.format("@%s", origin.getBuildSettingsFile().getAbsolutePath()));
+        originParameters.put("BranchName", repositoryMetadata.getBranchName());
+        originParameters.put("CommitId", repositoryMetadata.getCommitId());
+        originParameters.put("RepositoryUrl", repositoryMetadata.getRepositoryUrl());
+        originParameters.put("SourceControlManagementType", repositoryMetadata.getSourceControlManagementType());
+        commandBuilder.appendCustom("-Origin @{'BuildData' = @{" +
+                        "'Url' = \"$($env:BuildUrl)\";" +
+                        "'BuildSettingsFile' = \"$($env:BuildSettingsFile)\";" +
+                        "};" +
+                        "'RepositoryData' = @{" +
+                        "'BranchName' = \"$($env:BranchName)\";" +
+                        "'CommitId' = \"$($env:CommitId)\";" +
+                        "'Url' = \"$($env:RepositoryUrl)\";" +
+                        "'SourceControlManagementType' = \"$($env:SourceControlManagementType)\"" +
+                        "}}", originParameters);
 
         if (outputArtifact != null) {
-            argumentsBuilder.append("-WaitForCompletion ");
-            argumentsBuilder.append(String.format("-OutputArtifactPath '%s' ", outputArtifact.getAbsolutePath()));
-            argumentsBuilder.append(String.format("-WaitForCompletionTimeoutInSeconds '%s' ", apiConfiguration.getWaitForCompletionTimeoutInSeconds()));
-            argumentsBuilder.append("-Force ");
+            commandBuilder.appendFlag("WaitForCompletion");
+            commandBuilder.appendParameter("OutputArtifactPath", outputArtifact.getAbsolutePath());
+            commandBuilder.appendParameter("WaitForCompletionTimeoutInSeconds", String.valueOf(apiConfiguration.getWaitForCompletionTimeoutInSeconds()));
+            commandBuilder.appendFlag("Force");
         }
 
-        return argumentsBuilder.toString();
+        commandBuilder.appendFlag("Verbose");
+        return commandBuilder.build();
     }
 
-    private String createGetSignedArtifactCommand(UUID organizationId, UUID signingRequestId, TemporaryFile outputArtifact) {
-        return "Get-SignedArtifact " + String.format("-ApiUrl '%s' ", apiConfiguration.getApiUrl()) +
-                String.format("-CIUserToken '%s' ", credentials.toString()) +
-                String.format("-OrganizationId '%s' ", organizationId) +
-                String.format("-SigningRequestId '%s' ", signingRequestId) +
-                String.format("-ServiceUnavailableTimeoutInSeconds '%s' ", apiConfiguration.getServiceUnavailableTimeoutInSeconds()) +
-                String.format("-UploadAndDownloadRequestTimeoutInSeconds '%s' ", apiConfiguration.getUploadAndDownloadRequestTimeoutInSeconds()) +
-                String.format("-OutputArtifactPath '%s' ", outputArtifact.getAbsolutePath()) +
-                String.format("-WaitForCompletionTimeoutInSeconds '%s' ", apiConfiguration.getWaitForCompletionTimeoutInSeconds()) +
-                "-Force ";
+    private PowerShellCommand createGetSignedArtifactCommand(UUID organizationId, UUID signingRequestId, TemporaryFile outputArtifact) {
+        PowerShellCommandBuilder commandBuilder = new PowerShellCommandBuilder("Get-SignedArtifact");
+        commandBuilder.appendParameter("ApiUrl", apiConfiguration.getApiUrl().toString());
+        commandBuilder.appendParameter("CIUserToken", credentials.toString());
+        commandBuilder.appendParameter("OrganizationId", organizationId.toString());
+        commandBuilder.appendParameter("SigningRequestId", signingRequestId.toString());
+        commandBuilder.appendParameter("ServiceUnavailableTimeoutInSeconds", String.valueOf(apiConfiguration.getServiceUnavailableTimeoutInSeconds()));
+        commandBuilder.appendParameter("UploadAndDownloadRequestTimeoutInSeconds", String.valueOf(apiConfiguration.getUploadAndDownloadRequestTimeoutInSeconds()));
+        commandBuilder.appendParameter("OutputArtifactPath",  outputArtifact.getAbsolutePath());
+        commandBuilder.appendParameter("WaitForCompletionTimeoutInSeconds", String.valueOf(apiConfiguration.getWaitForCompletionTimeoutInSeconds()));
+        commandBuilder.appendFlag("Force");
+        commandBuilder.appendFlag("Verbose");
+        return commandBuilder.build();
     }
 }

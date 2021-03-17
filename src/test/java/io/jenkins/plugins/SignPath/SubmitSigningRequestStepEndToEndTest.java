@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.Assert.*;
 
-// TODO SIGN-3326: Think of strategy to inject PowerShell Module into the Jenkins PowerShell Session
+// PLANNED SIGN-3573: Think of strategy to inject PowerShell Module into the Jenkins PowerShell Session
 @RunWith(Theories.class)
 public class SubmitSigningRequestStepEndToEndTest {
     private static final int MockServerPort = 51000;
@@ -313,7 +313,7 @@ public class SubmitSigningRequestStepEndToEndTest {
     private void assertFormFiles(String unsignedArtifactString, String organizationId) {
         Request r = wireMockRule.findAll(postRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests"))).get(0);
         assertEquals(unsignedArtifactString, getMultipartFormDataFileContents(r, "Artifact"));
-        String buildSettingsFile = getMultipartFormDataFileContents(r, "Origin.BuildSettingsFile");
+        String buildSettingsFile = getMultipartFormDataFileContents(r, "Origin.BuildData.BuildSettingsFile");
         assertTrue(buildSettingsFile.contains("node {writeFile text:"));
         assertTrue(buildSettingsFile.contains(organizationId));
     }

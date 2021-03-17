@@ -3,6 +3,7 @@ package io.jenkins.plugins.SignPath.ApiIntegration;
 import io.jenkins.plugins.SignPath.ApiIntegration.Model.RepositoryMetadataModel;
 import io.jenkins.plugins.SignPath.ApiIntegration.Model.SigningRequestModel;
 import io.jenkins.plugins.SignPath.ApiIntegration.Model.SigningRequestOriginModel;
+import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.PowerShellCommand;
 import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.PowerShellExecutionResult;
 import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.PowerShellExecutor;
 import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.SignPathPowerShellFacade;
@@ -26,12 +27,12 @@ import org.mockito.junit.MockitoRule;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.UUID;
 
 import static io.jenkins.plugins.SignPath.TestUtils.AssertionExtensions.assertContains;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.when;
 
 @RunWith(Theories.class)
@@ -49,7 +50,7 @@ public class SignPathPowerShellFacadeTest {
     private PrintStream logger;
 
     private SignPathPowerShellFacade sut;
-    private String capturedCommand;
+    private PowerShellCommand capturedCommand;
     private PowerShellExecutionResult powerShellExecutionResult;
 
     @Before
@@ -59,8 +60,8 @@ public class SignPathPowerShellFacadeTest {
         sut = new SignPathPowerShellFacade(powershellExecutor, credentials, apiConfiguration, logger);
 
         powerShellExecutionResult = PowerShellExecutionResult.Success(Some.stringNonEmpty());
-        when(powershellExecutor.execute(anyString(), anyInt())).then(a -> {
-            capturedCommand = a.getArgumentAt(0, String.class);
+        when(powershellExecutor.execute(any(PowerShellCommand.class), anyInt())).then(a -> {
+            capturedCommand = a.getArgumentAt(0, PowerShellCommand.class);
             return powerShellExecutionResult;
         });
     }
@@ -80,7 +81,9 @@ public class SignPathPowerShellFacadeTest {
         assertContainsCredentials(credentials, capturedCommand);
         assertContainsConfiguration(apiConfiguration, capturedCommand, true);
         assertContainsSigningRequestModel(signingRequestModel, capturedCommand, withOptionalFields);
-        assertContains(signedArtifactPath, capturedCommand);
+        assertContainsParameter("OutputArtifactPath", signedArtifactPath, capturedCommand);
+        assertContainsFlag("WaitForCompletion", capturedCommand);
+        assertContainsFlag("Force", capturedCommand);
     }
 
     @Theory
@@ -90,8 +93,9 @@ public class SignPathPowerShellFacadeTest {
         UUID organizationId = signingRequestModel.getOrganizationId();
         UUID signingRequestId = Some.uuid();
 
-        powerShellExecutionResult = PowerShellExecutionResult.Success("SHA256 hash: " + Some.sha1Hash() + "\n" +
-                "Submitted signing request at 'https://app.signpath.io/api/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "'\n" +
+        String separator = System.getProperty("line.separator");
+        powerShellExecutionResult = PowerShellExecutionResult.Success("SHA256 hash: " + Some.sha1Hash() + separator +
+                "Submitted signing request at 'https://app.signpath.io/api/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "'"+separator +
                 signingRequestId);
 
         // ACT
@@ -136,9 +140,10 @@ public class SignPathPowerShellFacadeTest {
 
         assertContainsCredentials(credentials, capturedCommand);
         assertContainsConfiguration(apiConfiguration, capturedCommand, true);
-        assertContains(organizationId.toString(), capturedCommand);
-        assertContains(signingRequestId.toString(), capturedCommand);
-        assertContains(signedArtifactPath, capturedCommand);
+        assertContainsParameter("OrganizationId", organizationId.toString(), capturedCommand);
+        assertContainsParameter("SigningRequestId", signingRequestId.toString(), capturedCommand);
+        assertContainsParameter("OutputArtifactPath", signedArtifactPath, capturedCommand);
+        assertContainsFlag("Force", capturedCommand);
     }
 
     @Theory
@@ -198,12 +203,12 @@ public class SignPathPowerShellFacadeTest {
         return new SigningRequestModel(organizationId, projectSlug, artifactConfigurationSlug, signingPolicySlug, description, origin, unsignedArtifact);
     }
 
-    private void assertContainsSigningRequestModel(SigningRequestModel signingRequestModel, String capturedCommand, boolean withOptionalFields) {
+    private void assertContainsSigningRequestModel(SigningRequestModel signingRequestModel, PowerShellCommand capturedCommand, boolean withOptionalFields) {
         SigningRequestOriginModel origin = signingRequestModel.getOrigin();
         RepositoryMetadataModel repositoryMetadata = origin.getRepositoryMetadata();
-        assertContains(signingRequestModel.getOrganizationId().toString(), capturedCommand);
-        assertContains(signingRequestModel.getProjectSlug(), capturedCommand);
-        assertContains(signingRequestModel.getSigningPolicySlug(), capturedCommand);
+        assertContainsParameter("OrganizationId", signingRequestModel.getOrganizationId().toString(), capturedCommand);
+        assertContainsParameter("ProjectSlug", signingRequestModel.getProjectSlug(), capturedCommand);
+        assertContainsParameter("SigningPolicySlug", signingRequestModel.getSigningPolicySlug(), capturedCommand);
 
         String artifactConfigurationSlug = signingRequestModel.getArtifactConfigurationSlug();
         String description = signingRequestModel.getDescription();
@@ -211,36 +216,46 @@ public class SignPathPowerShellFacadeTest {
             assertTrue(artifactConfigurationSlug != null && !artifactConfigurationSlug.isEmpty());
             assertTrue(description != null && !description.isEmpty());
 
-            assertContains(artifactConfigurationSlug, capturedCommand);
-            assertContains(description, capturedCommand);
+            assertContainsParameter("ArtifactConfigurationSlug", artifactConfigurationSlug, capturedCommand);
+            assertContainsParameter("Description", description, capturedCommand);
         } else {
             assertTrue(artifactConfigurationSlug == null || artifactConfigurationSlug.isEmpty());
             assertTrue(description == null || description.isEmpty());
         }
 
-        assertContains(repositoryMetadata.getSourceControlManagementType(), capturedCommand);
-        assertContains(repositoryMetadata.getRepositoryUrl(), capturedCommand);
-        assertContains(repositoryMetadata.getBranchName(), capturedCommand);
-        assertContains(repositoryMetadata.getCommitId(), capturedCommand);
-        assertContains(origin.getBuildUrl(), capturedCommand);
-        assertContains(origin.getBuildSettingsFile().getAbsolutePath(), capturedCommand);
-        assertContains(signingRequestModel.getArtifact().getAbsolutePath(), capturedCommand);
+        assertContainsParameter("SourceControlManagementType", repositoryMetadata.getSourceControlManagementType(), capturedCommand);
+        assertContainsParameter("RepositoryUrl", repositoryMetadata.getRepositoryUrl(), capturedCommand);
+        assertContainsParameter("BranchName", repositoryMetadata.getBranchName(), capturedCommand);
+        assertContainsParameter("CommitId", repositoryMetadata.getCommitId(), capturedCommand);
+        assertContainsParameter("BuildUrl", origin.getBuildUrl(), capturedCommand);
+        assertContainsParameter("BuildSettingsFile", "@" + origin.getBuildSettingsFile().getAbsolutePath(), capturedCommand);
+
+        assertContainsParameter("InputArtifactPath",signingRequestModel.getArtifact().getAbsolutePath(), capturedCommand);
     }
 
-    private void assertContainsCredentials(SignPathCredentials credentials, String capturedCommand) {
-        assertContains(credentials.getCiUserToken(), capturedCommand);
-        assertContains(credentials.getTrustedBuildSystemToken(), capturedCommand);
-        assertContains(credentials.toString(), capturedCommand);
+    private void assertContainsCredentials(SignPathCredentials credentials, PowerShellCommand capturedCommand) {
+        assertContainsParameter("CIUserToken", credentials.toString(), capturedCommand);
     }
 
-    private void assertContainsConfiguration(ApiConfiguration apiConfiguration, String capturedCommand, boolean withWaitTime) {
-        assertContains(apiConfiguration.getApiUrl().toString(), capturedCommand);
-        assertContains(String.valueOf(apiConfiguration.getServiceUnavailableTimeoutInSeconds()), capturedCommand);
-        assertContains(String.valueOf(apiConfiguration.getUploadAndDownloadRequestTimeoutInSeconds()), capturedCommand);
+    private void assertContainsConfiguration(ApiConfiguration apiConfiguration, PowerShellCommand capturedCommand, boolean withWaitTime) {
+        assertContainsParameter("ApiUrl", apiConfiguration.getApiUrl().toString(), capturedCommand);
+        assertContainsParameter("ServiceUnavailableTimeoutInSeconds", String.valueOf(apiConfiguration.getServiceUnavailableTimeoutInSeconds()), capturedCommand);
+        assertContainsParameter("UploadAndDownloadRequestTimeoutInSeconds", String.valueOf(apiConfiguration.getUploadAndDownloadRequestTimeoutInSeconds()), capturedCommand);
 
         if (withWaitTime) {
-            assertContains(String.valueOf(apiConfiguration.getWaitForCompletionTimeoutInSeconds()), capturedCommand);
+            assertContainsParameter("WaitForCompletionTimeoutInSeconds", String.valueOf(apiConfiguration.getWaitForCompletionTimeoutInSeconds()), capturedCommand);
         }
+    }
+
+    private void assertContainsParameter(String name, String value, PowerShellCommand command){
+        assertContains(name, command.getCommand());
+
+        assertTrue(command.getEnvironmentVariables().containsKey(name));
+        assertEquals(command.getEnvironmentVariables().get(name), value);
+    }
+
+    private void assertContainsFlag(String flag, PowerShellCommand command){
+        assertContains(String.format("-%s", flag), command.getCommand());
     }
 
     @DataPoints("allBooleans")
