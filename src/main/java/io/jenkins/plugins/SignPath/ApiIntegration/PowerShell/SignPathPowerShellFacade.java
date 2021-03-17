@@ -11,6 +11,7 @@ import io.jenkins.plugins.SignPath.Exceptions.SignPathFacadeCallException;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -72,14 +73,14 @@ public class SignPathPowerShellFacade implements SignPathFacade {
     }
 
     private UUID extractSigningRequestId(String output) throws SignPathFacadeCallException {
-        // Last output line = return value => we want the PowerShell script to return a GUID
-        final String guidRegex = "([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$";
-        Matcher regexResult = Pattern.compile(guidRegex, Pattern.MULTILINE).matcher(output);
-        if (!regexResult.find()) {
+        // we assume the last line is the result = uuid
+        String[] lines = output.split(System.getProperty("line.separator"));
+        String lastLine = lines[lines.length-1];
+        try {
+            return UUID.fromString(lastLine);
+        }catch (IllegalArgumentException ex) {
             throw new SignPathFacadeCallException("Unexpected output from PowerShell, did not find a valid signingRequestId.");
         }
-        String signingRequestId = regexResult.group(0);
-        return UUID.fromString(signingRequestId);
     }
 
     private PowerShellCommand createSubmitSigningRequestCommand(SigningRequestModel signingRequestModel, TemporaryFile outputArtifact) {

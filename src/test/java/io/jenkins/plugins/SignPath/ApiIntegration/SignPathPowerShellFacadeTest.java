@@ -93,8 +93,9 @@ public class SignPathPowerShellFacadeTest {
         UUID organizationId = signingRequestModel.getOrganizationId();
         UUID signingRequestId = Some.uuid();
 
-        powerShellExecutionResult = PowerShellExecutionResult.Success("SHA256 hash: " + Some.sha1Hash() + "\n" +
-                "Submitted signing request at 'https://app.signpath.io/api/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "'\n" +
+        String separator = System.getProperty("line.separator");
+        powerShellExecutionResult = PowerShellExecutionResult.Success("SHA256 hash: " + Some.sha1Hash() + separator +
+                "Submitted signing request at 'https://app.signpath.io/api/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "'"+separator +
                 signingRequestId);
 
         // ACT
