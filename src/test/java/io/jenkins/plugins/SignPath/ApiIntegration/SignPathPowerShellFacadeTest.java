@@ -3,7 +3,10 @@ package io.jenkins.plugins.SignPath.ApiIntegration;
 import io.jenkins.plugins.SignPath.ApiIntegration.Model.RepositoryMetadataModel;
 import io.jenkins.plugins.SignPath.ApiIntegration.Model.SigningRequestModel;
 import io.jenkins.plugins.SignPath.ApiIntegration.Model.SigningRequestOriginModel;
-import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.*;
+import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.PowerShellCommand;
+import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.PowerShellExecutionResult;
+import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.PowerShellExecutor;
+import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.SignPathPowerShellFacade;
 import io.jenkins.plugins.SignPath.Common.TemporaryFile;
 import io.jenkins.plugins.SignPath.Exceptions.SignPathFacadeCallException;
 import io.jenkins.plugins.SignPath.Exceptions.SignPathStepInvalidArgumentException;
@@ -24,8 +27,6 @@ import org.mockito.junit.MockitoRule;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
-import java.util.Arrays;
-import java.util.Optional;
 import java.util.UUID;
 
 import static io.jenkins.plugins.SignPath.TestUtils.AssertionExtensions.assertContains;
@@ -247,12 +248,9 @@ public class SignPathPowerShellFacadeTest {
 
     private void assertContainsParameter(String name, String value, PowerShellCommand command){
         assertContains(name, command.getCommand());
-        Optional<EnvironmentVariable> environmentVariable = Arrays.stream(command.getEnvironmentVariables())
-                .filter(e-> e.getName().equals(name))
-                .findFirst();
 
-        assertTrue(environmentVariable.isPresent());
-        assertEquals(environmentVariable.get().getValue(),value);
+        assertTrue(command.getEnvironmentVariables().containsKey(name));
+        assertEquals(command.getEnvironmentVariables().get(name), value);
     }
 
     private void assertContainsFlag(String flag, PowerShellCommand command){

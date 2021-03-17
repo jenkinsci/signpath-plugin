@@ -1,7 +1,11 @@
 package io.jenkins.plugins.SignPath.ApiIntegration.PowerShell;
 
+import com.github.fge.jsonschema.library.Dictionary;
+
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 /**
  * A utility class that helps in building a
@@ -12,11 +16,11 @@ import java.util.stream.Collectors;
  */
 public class PowerShellCommandBuilder {
     private StringBuilder commandBuilder;
-    private ArrayList<EnvironmentVariable> environmentVariables;
+    private Map<String, String> environmentVariables;
 
     public PowerShellCommandBuilder(String command){
         this.commandBuilder = new StringBuilder(command);
-        this.environmentVariables = new ArrayList<>();
+        this.environmentVariables = new HashMap<>();
     }
 
     void appendFlag(String name){
@@ -25,18 +29,15 @@ public class PowerShellCommandBuilder {
 
     void appendParameter(String name, String value){
         commandBuilder.append(String.format(" -%s \"$($env:%s)\"", name, name));
-        environmentVariables.add(new EnvironmentVariable(name, value));
+        environmentVariables.put(name, value);
     }
 
-    void appendCustom(String commandString, EnvironmentVariable... variables) {
+    void appendCustom(String commandString, Map<String, String> variables) {
         commandBuilder.append(String.format(" %s", commandString));
-        environmentVariables.addAll(Arrays.stream(variables).collect(Collectors.toCollection(ArrayList::new)));
+        environmentVariables.putAll(variables);
     }
 
     PowerShellCommand build(){
-        EnvironmentVariable[] environmentVariableArray = new EnvironmentVariable[environmentVariables.size()];
-        environmentVariables.toArray(environmentVariableArray);
-
-        return new PowerShellCommand(commandBuilder.toString(), environmentVariableArray);
+        return new PowerShellCommand(commandBuilder.toString(), environmentVariables);
     }
 }

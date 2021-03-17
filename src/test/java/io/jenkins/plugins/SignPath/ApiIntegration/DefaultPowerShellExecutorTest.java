@@ -1,7 +1,6 @@
 package io.jenkins.plugins.SignPath.ApiIntegration;
 
 import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.DefaultPowerShellExecutor;
-import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.EnvironmentVariable;
 import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.PowerShellExecutionResult;
 import io.jenkins.plugins.SignPath.ApiIntegration.PowerShell.PowerShellCommand;
 import org.junit.Before;

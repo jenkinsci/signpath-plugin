@@ -1,5 +1,7 @@
 package io.jenkins.plugins.SignPath.ApiIntegration.PowerShell;
 
+import java.util.Map;
+
 /**
  * Represents a safe version of a PowerShell command
  * To avoid string injection attacks the command should not contain any values provided by the user
@@ -7,9 +9,9 @@ package io.jenkins.plugins.SignPath.ApiIntegration.PowerShell;
  */
 public class PowerShellCommand {
     private final String command;
-    private final EnvironmentVariable[] environmentVariables;
+    private final Map<String, String> environmentVariables;
 
-    public PowerShellCommand(String command, EnvironmentVariable... environmentVariables){
+    public PowerShellCommand(String command, Map<String, String> environmentVariables){
 
         this.command = command;
         this.environmentVariables = environmentVariables;
@@ -19,7 +21,7 @@ public class PowerShellCommand {
         return command;
     }
 
-    public EnvironmentVariable[] getEnvironmentVariables() {
+    public Map<String, String> getEnvironmentVariables() {
         return environmentVariables;
     }
 }

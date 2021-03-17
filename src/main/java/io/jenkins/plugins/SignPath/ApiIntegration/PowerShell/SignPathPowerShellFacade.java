@@ -11,6 +11,8 @@ import io.jenkins.plugins.SignPath.Exceptions.SignPathFacadeCallException;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -101,6 +103,13 @@ public class SignPathPowerShellFacade implements SignPathFacade {
         SigningRequestOriginModel origin = signingRequestModel.getOrigin();
         RepositoryMetadataModel repositoryMetadata = origin.getRepositoryMetadata();
 
+        Map<String, String> originParameters = new HashMap<>();
+        originParameters.put("BuildUrl", origin.getBuildUrl());
+        originParameters.put("BuildSettingsFile", String.format("@%s", origin.getBuildSettingsFile().getAbsolutePath()));
+        originParameters.put("BranchName", repositoryMetadata.getBranchName());
+        originParameters.put("CommitId", repositoryMetadata.getCommitId());
+        originParameters.put("RepositoryUrl", repositoryMetadata.getRepositoryUrl());
+        originParameters.put("SourceControlManagementType", repositoryMetadata.getSourceControlManagementType());
         commandBuilder.appendCustom("-Origin @{'BuildData' = @{" +
                         "'Url' = \"$($env:BuildUrl)\";" +
                         "'BuildSettingsFile' = \"$($env:BuildSettingsFile)\";" +
@@ -110,13 +119,7 @@ public class SignPathPowerShellFacade implements SignPathFacade {
                         "'CommitId' = \"$($env:CommitId)\";" +
                         "'Url' = \"$($env:RepositoryUrl)\";" +
                         "'SourceControlManagementType' = \"$($env:SourceControlManagementType)\"" +
-                        "}}",
-                new EnvironmentVariable("BuildUrl", origin.getBuildUrl()),
-                new EnvironmentVariable("BuildSettingsFile", String.format("@%s", origin.getBuildSettingsFile().getAbsolutePath())),
-                new EnvironmentVariable("BranchName", repositoryMetadata.getBranchName()),
-                new EnvironmentVariable("CommitId", repositoryMetadata.getCommitId()),
-                new EnvironmentVariable("RepositoryUrl", repositoryMetadata.getRepositoryUrl()),
-                new EnvironmentVariable("SourceControlManagementType", repositoryMetadata.getSourceControlManagementType()));
+                        "}}", originParameters);
 
         if (outputArtifact != null) {
             commandBuilder.appendFlag("WaitForCompletion");
