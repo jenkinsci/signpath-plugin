@@ -8,6 +8,8 @@ import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import static io.jenkins.plugins.SignPath.TestUtils.AssertionExtensions.assertContains;
 import static org.junit.Assert.*;
@@ -27,8 +29,10 @@ public class DefaultPowerShellExecutorTest {
 
     @Test
     public void execute() {
+        // ACT
         PowerShellExecutionResult executionResult = sut.execute(new PowerShellCommand("echo 'some string'"), Integer.MAX_VALUE);
 
+        // ASSERT
         assertFalse(executionResult.getHasError());
 
         assertNotNull(executionResult.getOutput());
@@ -38,8 +42,13 @@ public class DefaultPowerShellExecutorTest {
 
     @Test
     public void execute_withEnvironmentVariables() {
-        PowerShellExecutionResult executionResult = sut.execute(new PowerShellCommand("echo $env:myvariable", new EnvironmentVariable("myvariable", "content")), Integer.MAX_VALUE);
+        Map<String, String> environmentVariables = new HashMap<>();
+        environmentVariables.put("myvariable", "content");
 
+        // ACT
+        PowerShellExecutionResult executionResult = sut.execute(new PowerShellCommand("echo $env:myvariable", environmentVariables), Integer.MAX_VALUE);
+
+        // ASSERT
         assertFalse(executionResult.getHasError());
 
         assertNotNull(executionResult.getOutput());
@@ -49,8 +58,10 @@ public class DefaultPowerShellExecutorTest {
 
     @Test
     public void execute_withError() {
+        // ACT
         PowerShellExecutionResult executionResult = sut.execute(new PowerShellCommand("echo 'some string'; exit 1"), Integer.MAX_VALUE);
 
+        // ASSERT
         assertTrue(executionResult.getHasError());
         assertEquals("Execution did not complete successfully (ExitCode: 1)", executionResult.getErrorDescription());
         assertNull(executionResult.getOutput());
@@ -60,8 +71,10 @@ public class DefaultPowerShellExecutorTest {
 
     @Test
     public void execute_withTimeout() {
+        // ACT
         PowerShellExecutionResult executionResult = sut.execute(new PowerShellCommand("Start-Sleep -Seconds 5;"), 0);
 
+        // ASSERT
         assertTrue(executionResult.getHasError());
         assertEquals("Execution did not complete within 0s", executionResult.getErrorDescription());
         assertNull(executionResult.getOutput());
