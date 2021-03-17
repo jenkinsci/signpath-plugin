@@ -11,12 +11,9 @@ import io.jenkins.plugins.SignPath.Exceptions.SignPathFacadeCallException;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * An implementation of the

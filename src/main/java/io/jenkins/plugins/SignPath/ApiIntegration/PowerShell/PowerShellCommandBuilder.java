@@ -1,12 +1,8 @@
 package io.jenkins.plugins.SignPath.ApiIntegration.PowerShell;
 
-import com.github.fge.jsonschema.library.Dictionary;
-
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
+
 /**
  * A utility class that helps in building a
  * @see PowerShellCommand
@@ -15,8 +11,8 @@ import java.util.stream.Collectors;
  * to avoid string injection attacks
  */
 public class PowerShellCommandBuilder {
-    private StringBuilder commandBuilder;
-    private Map<String, String> environmentVariables;
+    private final StringBuilder commandBuilder;
+    private final Map<String, String> environmentVariables;
 
     public PowerShellCommandBuilder(String command){
         this.commandBuilder = new StringBuilder(command);
