@@ -4,7 +4,7 @@ import org.jenkinsci.plugins.workflow.steps.Step;
 import org.kohsuke.stapler.DataBoundSetter;
 
 /**
- * A common base class for all SignPath Api / Facade related Jenkins Steps
+ * A common base class for all SignPath API / Facade related Jenkins Steps
  * It encapsulates all required configuration related parameters
  * and helps share and re-use them across multiple steps
  *
@@ -29,9 +29,13 @@ public abstract class SignPathStepBase extends Step {
         return apiUrl;
     }
 
-    public String getTrustedBuildSystemTokenCredentialId() { return trustedBuildSystemTokenCredentialId; }
+    public String getTrustedBuildSystemTokenCredentialId() {
+        return trustedBuildSystemTokenCredentialId;
+    }
 
-    public String getCiUserTokenCredentialId() { return ciUserTokenCredentialId; }
+    public String getCiUserTokenCredentialId() {
+        return ciUserTokenCredentialId;
+    }
 
     public int getServiceUnavailableTimeoutInSeconds() {
         return serviceUnavailableTimeoutInSeconds;

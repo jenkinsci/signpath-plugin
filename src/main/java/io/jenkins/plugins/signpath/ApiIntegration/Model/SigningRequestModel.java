@@ -5,7 +5,7 @@ import io.jenkins.plugins.signpath.Common.TemporaryFile;
 import java.util.UUID;
 
 /**
- * This class holds all the information that is needed to create a signing-request on SignPath
+ * This class holds all the information that is needed to create a signing request on SignPath
  */
 public class SigningRequestModel {
     private final UUID organizationId;

@@ -1,7 +1,6 @@
 package io.jenkins.plugins.signpath.Common;
 
 import hudson.util.IOUtils;
-import org.apache.commons.io.FileUtils;
 
 import java.io.Closeable;
 import java.io.File;
@@ -36,16 +35,12 @@ public class TemporaryFile implements Closeable {
         String fileName = Paths.get(newTemporaryFile.getCanonicalPath()).getFileName().toString();
         temporaryFile = new File(temporaryDirectory, fileName);
 
-
-        // this should never throw (only if file-already exists, but the temp directory should be unique)
+        // this should never throw (only if file already exists, but the temp directory should be unique)
         assert temporaryFile.createNewFile();
 
-        // we indicate that the java vm should delete the file on-exit
-        temporaryFile.deleteOnExit();
-        temporaryDirectory.deleteOnExit();
-
-        // we also add a shutdown hook as the deleteOnExit does not work for directories (because it is not empty)
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> FileUtils.deleteQuietly(temporaryDirectory)));
+        // we also add a shutdown hook as the deleteOnExit does not work for directories
+        // (because it is not empty and the order of deleteOnExit is not deterministic so we cannot use that instead)
+        Runtime.getRuntime().addShutdownHook(new Thread(this::close));
     }
 
     public File getFile() {

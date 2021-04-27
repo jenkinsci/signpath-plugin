@@ -10,7 +10,7 @@ public class SignPathJenkinsRule extends JenkinsRule {
 
     public WorkflowJob createWorkflow(String name, String script) throws IOException {
         WorkflowJob job = jenkins.createProject(WorkflowJob.class, name);
-        job.setDefinition(new CpsFlowDefinition("node {" + script + "}", true));
+        job.setDefinition(new CpsFlowDefinition(String.format("node {%s}", script), true));
         return job;
     }
 }

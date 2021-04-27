@@ -5,7 +5,7 @@ import io.jenkins.plugins.signpath.Exceptions.SignPathStepInvalidArgumentExcepti
 import java.net.URL;
 
 /**
- * Holds all general configuration values that are necessary for talking to the SignPath Api
+ * Holds all general configuration values that are necessary for talking to the SignPath API
  */
 public class ApiConfiguration {
     private final URL apiUrl;
@@ -18,8 +18,8 @@ public class ApiConfiguration {
         int combinedTimeouts = serviceUnavailableTimeoutInSeconds + uploadAndDownloadRequestTimeoutInSeconds + waitForCompletionTimeoutInSeconds;
         if (combinedTimeouts >= waitForPowerShellTimeoutInSeconds) {
             throw new SignPathStepInvalidArgumentException(
-                    "The 'waitForPowerShellTimeoutInSeconds' (" + waitForPowerShellTimeoutInSeconds + ") must be " +
-                            "greater than the other tree timeouts combined (" + combinedTimeouts + ")");
+                    String.format("The 'waitForPowerShellTimeoutInSeconds' (%d) must be greater than the other tree timeouts combined (%d)",
+                            waitForPowerShellTimeoutInSeconds, combinedTimeouts));
         }
 
         this.apiUrl = apiUrl;
@@ -45,6 +45,7 @@ public class ApiConfiguration {
         return waitForCompletionTimeoutInSeconds;
     }
 
+    // TODO SIGN-3498: Maybe remove this (and replace it with the default value that is updated when something else changes)
     public int getWaitForPowerShellTimeoutInSeconds() {
         return waitForPowerShellTimeoutInSeconds;
     }

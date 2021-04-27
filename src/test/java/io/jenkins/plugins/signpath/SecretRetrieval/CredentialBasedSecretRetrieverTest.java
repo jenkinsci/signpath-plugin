@@ -51,7 +51,7 @@ public class CredentialBasedSecretRetrieverTest {
     }
 
     @Test
-    public void retrieveSecret_differentDomain() throws IOException, SecretNotFoundException {
+    public void retrieveSecret_withDifferentDomain_works() throws IOException, SecretNotFoundException {
         String id = Some.stringNonEmpty();
         String secret = Some.stringNonEmpty();
         String domainName = Some.stringNonEmpty();
@@ -90,7 +90,7 @@ public class CredentialBasedSecretRetrieverTest {
 
         // ASSERT
         Throwable ex = assertThrows(SecretNotFoundException.class, act);
-        assertEquals(ex.getMessage(), String.format("The secret '%s' was configured with scope 'Global (Jenkins, nodes, items, all child items, etc)' but needs to be in 'System (Jenkins and nodes only)' scope.", id));
+        assertEquals(ex.getMessage(), String.format("The secret '%s' was configured with scope 'Global (Jenkins, nodes, items, all child items, etc)' but needs to be in scope 'System (Jenkins and nodes only)'.", id));
     }
 
     @Test
@@ -104,7 +104,7 @@ public class CredentialBasedSecretRetrieverTest {
 
         // ASSERT
         Throwable ex = assertThrows(SecretNotFoundException.class, act);
-        assertEquals(ex.getMessage(), String.format("The secret '%s' was configured with scope 'null' but needs to be in 'System (Jenkins and nodes only)' scope.", id));
+        assertEquals(ex.getMessage(), String.format("The secret '%s' was configured with scope '<null>' but needs to be in scope 'System (Jenkins and nodes only)'.", id));
     }
 
     @Test

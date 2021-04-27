@@ -11,6 +11,7 @@ import hudson.model.queue.QueueTaskFuture;
 import hudson.plugins.git.util.BuildData;
 import io.jenkins.plugins.signpath.Artifacts.DefaultArtifactFileManager;
 import io.jenkins.plugins.signpath.Common.TemporaryFile;
+import io.jenkins.plugins.signpath.Exceptions.ArtifactNotFoundException;
 import io.jenkins.plugins.signpath.TestUtils.*;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -51,6 +52,7 @@ public class GetSignedArtifactStepEndToEndTest {
 
         String apiUrl = getMockUrl();
         String downloadSignedArtifact = "downloadSignedArtifact";
+
         wireMockRule.stubFor(get(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -79,12 +81,7 @@ public class GetSignedArtifactStepEndToEndTest {
             fail();
         }
 
-        Launcher launcher = j.createLocalLauncher();
-        TaskListener listener = j.createTaskListener();
-        FingerprintMap fingerprintMap = j.jenkins.getFingerprintMap();
-        DefaultArtifactFileManager artifactFileManager = new DefaultArtifactFileManager(fingerprintMap, run, launcher, listener);
-        TemporaryFile signedArtifact = artifactFileManager.retrieveArtifact("signed.exe");
-        byte[] signedArtifactContent = TemporaryFileUtil.getContentAndDispose(signedArtifact);
+        byte[] signedArtifactContent = getSignedArtifactBytes(run);
         assertArrayEquals(signedArtifactBytes, signedArtifactContent);
 
         wireMockRule.verify(getRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId))
@@ -132,5 +129,15 @@ public class GetSignedArtifactStepEndToEndTest {
 
     private String getMockUrl(String postfix) {
         return String.format("http://localhost:%d/%s", MockServerPort, postfix);
+    }
+
+    private byte[] getSignedArtifactBytes(WorkflowRun run) throws IOException, ArtifactNotFoundException {
+        Launcher launcher = j.createLocalLauncher();
+        TaskListener listener = j.createTaskListener();
+        FingerprintMap fingerprintMap = j.jenkins.getFingerprintMap();
+        DefaultArtifactFileManager artifactFileManager = new DefaultArtifactFileManager(fingerprintMap, run, launcher, listener);
+        TemporaryFile signedArtifact = artifactFileManager.retrieveArtifact("signed.exe");
+        byte[] signedArtifactContent = TemporaryFileUtil.getContentAndDispose(signedArtifact);
+        return signedArtifactContent;
     }
 }

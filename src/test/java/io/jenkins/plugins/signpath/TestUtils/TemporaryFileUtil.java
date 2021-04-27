@@ -22,7 +22,7 @@ public class TemporaryFileUtil {
     }
 
     public static byte[] getContentAndDispose(TemporaryFile temporaryFile) throws IOException {
-        try (TemporaryFile t = temporaryFile) {
+        try (TemporaryFile ignored = temporaryFile) {
             return Files.readAllBytes(Paths.get(temporaryFile.getAbsolutePath()));
         }
     }
@@ -34,7 +34,7 @@ public class TemporaryFileUtil {
     }
 
     public static String getDigestAndDispose(TemporaryFile temporaryFile) throws IOException, NoSuchAlgorithmException {
-        try (TemporaryFile t = temporaryFile) {
+        try (TemporaryFile ignored = temporaryFile) {
             MessageDigest md5 = MessageDigest.getInstance("MD5");
             try (FileInputStream fis = new FileInputStream(temporaryFile.getFile())) {
                 try (BufferedInputStream bis = new BufferedInputStream(fis)) {

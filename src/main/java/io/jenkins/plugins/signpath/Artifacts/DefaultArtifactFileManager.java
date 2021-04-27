@@ -46,7 +46,7 @@ public class DefaultArtifactFileManager implements ArtifactFileManager {
 
         VirtualFile artifactFile = artifactManager.root().child(artifactPath);
         if (!artifactFile.exists()) {
-            throw new ArtifactNotFoundException(String.format("The artifact at path \"%s\" was not found.", artifactPath));
+            throw new ArtifactNotFoundException(String.format("The artifact at path '%s' was not found.", artifactPath));
         }
 
         String fileName = getFileName(artifactPath);
@@ -55,19 +55,6 @@ public class DefaultArtifactFileManager implements ArtifactFileManager {
             temporaryArtifactFile.copyFrom(in);
         }
         return temporaryArtifactFile;
-    }
-
-    private String getFileName(String artifactPath) {
-        String normalizedArtifactPath = getNormalizedPath(artifactPath);
-        if (normalizedArtifactPath.contains("/")) {
-            return normalizedArtifactPath.substring(normalizedArtifactPath.lastIndexOf("/")+1);
-        }
-
-        return normalizedArtifactPath;
-    }
-
-    private String getNormalizedPath(String artifactPath){
-        return StringUtils.strip(artifactPath.replace("\\", "/"), "/");
     }
 
     @Override
@@ -85,6 +72,19 @@ public class DefaultArtifactFileManager implements ArtifactFileManager {
                 Collections.singletonMap(normalizedArtifactPath, artifact.getFile().getName()));
 
         createFingerprint(artifact, targetArtifactPath);
+    }
+
+    private String getFileName(String artifactPath) {
+        String normalizedArtifactPath = getNormalizedPath(artifactPath);
+        if (normalizedArtifactPath.contains("/")) {
+            return normalizedArtifactPath.substring(normalizedArtifactPath.lastIndexOf("/") + 1);
+        }
+
+        return normalizedArtifactPath;
+    }
+
+    private String getNormalizedPath(String artifactPath){
+        return StringUtils.strip(artifactPath.replace("\\", "/"), "/");
     }
 
     private void createFingerprint(TemporaryFile artifact, String targetArtifactPath) throws NoSuchAlgorithmException, IOException {

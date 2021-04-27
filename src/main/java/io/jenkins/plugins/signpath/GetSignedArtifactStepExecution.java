@@ -41,20 +41,22 @@ public class GetSignedArtifactStepExecution extends SynchronousStepExecution<Str
 
     @Override
     protected String run() throws SignPathStepFailedException {
-        logger.printf("Downloading signed artifact for organization: %s and signingRequest: %s\n", input.getOrganizationId(), input.getSigningRequestId());
+        logger.printf("Downloading signed artifact for organization: %s and signingRequest: %s%n", input.getOrganizationId(), input.getSigningRequestId());
+
+        // TODO SIGN-3498: Check if we can also specify "no result" (or maybe return the output artifact path?)
 
         try {
             String trustedBuildSystemToken = secretRetriever.retrieveSecret(input.getTrustedBuildSystemTokenCredentialId());
             String ciUserToken = secretRetriever.retrieveSecret(input.getCiUserTokenCredentialId());
             SignPathCredentials credentials = new SignPathCredentials(ciUserToken, trustedBuildSystemToken);
             SignPathFacade signPathFacade = signPathFacadeFactory.create(credentials);
-            TemporaryFile signedArtifact = signPathFacade.getSignedArtifact(input.getOrganizationId(), input.getSigningRequestId());
-
-            artifactFileManager.storeArtifact(signedArtifact, input.getOutputArtifactPath());
-            logger.print("Downloading signed artifact succeeded\n");
-            return "";
+            try(TemporaryFile signedArtifact = signPathFacade.getSignedArtifact(input.getOrganizationId(), input.getSigningRequestId())) {
+                artifactFileManager.storeArtifact(signedArtifact, input.getOutputArtifactPath());
+                logger.println("Downloading signed artifact succeeded");
+                return "";
+            }
         } catch (SecretNotFoundException | SignPathFacadeCallException | IOException | InterruptedException | NoSuchAlgorithmException ex) {
-            logger.print("Downloading signed artifact failed: " + ex.getMessage() + "\n");
+            logger.printf("Downloading signed artifact failed %s%n", ex.getMessage());
             throw new SignPathStepFailedException("Downloading signed artifact failed: " + ex.getMessage(), ex);
         }
     }

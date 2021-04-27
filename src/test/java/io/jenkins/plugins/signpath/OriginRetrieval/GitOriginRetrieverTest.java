@@ -27,7 +27,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 
 @RunWith(Theories.class)
-public class OriginRetrieverTest {
+public class GitOriginRetrieverTest {
 
     private GitOriginRetriever sut;
 
@@ -60,6 +60,7 @@ public class OriginRetrieverTest {
         when(run.getUrl()).thenReturn(jobUrl);
         when(run.getNumber()).thenReturn(buildNumber);
         when(run.getAction(BuildData.class)).thenReturn(buildData);
+
         sut = new GitOriginRetriever(configFileProvider, run, jenkinsRootUrl);
     }
 
@@ -79,6 +80,7 @@ public class OriginRetrieverTest {
 
         // ACT
         SigningRequestOriginModel result = sut.retrieveOrigin();
+        // This close is important to make sure that retrieveOrigin copies the contents into a new temporary file
         jobConfigTemporaryFile.close();
 
         // ASSERT
@@ -114,8 +116,10 @@ public class OriginRetrieverTest {
         TemporaryFile jobConfigTemporaryFile = TemporaryFileUtil.create(Some.bytes());
         when(configFileProvider.retrieveBuildConfigFile()).thenReturn(jobConfigTemporaryFile.getFile());
 
+        // ACT
         SigningRequestOriginModel result = sut.retrieveOrigin();
 
+        // ASSERT
         assertEquals(expectedBranchName, result.getRepositoryMetadata().getBranchName());
     }
 
@@ -123,8 +127,10 @@ public class OriginRetrieverTest {
     public void retrieveOrigin_noMatchingBuildNumber_throws() {
         buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(buildNumber + 1));
 
+        // ACT
         ThrowingRunnable act = () -> sut.retrieveOrigin();
 
+        // ASSERT
         Throwable ex = assertThrows(OriginNotRetrievableException.class, act);
         assertEquals(ex.getMessage(), String.format("No builds with build number '%d' found.", buildNumber));
     }
@@ -134,8 +140,10 @@ public class OriginRetrieverTest {
         buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(buildNumber));
         buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(buildNumber));
 
+        // ACT
         ThrowingRunnable act = () -> sut.retrieveOrigin();
 
+        // ASSERT
         Throwable ex = assertThrows(OriginNotRetrievableException.class, act);
         assertEquals(ex.getMessage(), String.format("2 builds with build number '%d' found. This is not supported.", buildNumber));
     }
@@ -144,8 +152,10 @@ public class OriginRetrieverTest {
     public void retrieveOrigin_multipleBranches_throws() {
         buildData.saveBuild(BuildDataDomainObjectMother.createBuild(buildNumber, Some.sha1Hash(), BuildDataDomainObjectMother.createRandomBranch(), BuildDataDomainObjectMother.createRandomBranch()));
 
+        // ACT
         ThrowingRunnable act = () -> sut.retrieveOrigin();
 
+        // ASSERT
         Throwable ex = assertThrows(OriginNotRetrievableException.class, act);
         assertEquals(ex.getMessage(), String.format("2 builds with build number '%d' found. This is not supported.", buildNumber));
     }
@@ -155,8 +165,10 @@ public class OriginRetrieverTest {
         buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(buildNumber));
         buildData.remoteUrls.clear();
 
+        // ACT
         ThrowingRunnable act = () -> sut.retrieveOrigin();
 
+        // ASSERT
         Throwable ex = assertThrows(OriginNotRetrievableException.class, act);
         assertEquals(ex.getMessage(), String.format("No remote urls for build with build number '%d' found.", buildNumber));
     }
@@ -166,8 +178,10 @@ public class OriginRetrieverTest {
         buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(buildNumber));
         buildData.addRemoteUrl(Some.stringNonEmpty());
 
+        // ACT
         ThrowingRunnable act = () -> sut.retrieveOrigin();
 
+        // ASSERT
         Throwable ex = assertThrows(OriginNotRetrievableException.class, act);
         assertEquals(ex.getMessage(), String.format("2 remote urls for build with build number '%d' found. This is not supported.", buildNumber));
     }

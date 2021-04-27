@@ -40,6 +40,8 @@ public class SignPathContext {
     private final ArtifactFileManager artifactFileManager;
     private final SignPathFacadeFactory signPathFacadeFactory;
 
+    // REVIEW SIGN-3498: Find a better way to express this? SignPathContainer maybe?
+
     private SignPathContext(StepContext stepContext,
                             Run<?, ?> run,
                             PrintStream logger,

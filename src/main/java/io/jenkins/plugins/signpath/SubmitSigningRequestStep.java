@@ -30,7 +30,7 @@ import java.util.Set;
  */
 public class SubmitSigningRequestStep extends SignPathStepBase {
     private final static String FunctionName = "submitSigningRequest";
-    private final static String DisplayName = "Submit SignPath SigningRequest";
+    private final static String DisplayName = "Submit SignPath Signing Request";
 
     private String organizationId;
     private String projectSlug;

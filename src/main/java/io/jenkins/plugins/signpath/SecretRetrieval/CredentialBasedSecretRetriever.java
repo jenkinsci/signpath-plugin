@@ -14,12 +14,10 @@ import java.util.List;
 
 /**
  * Implementation of the
- *
- * @see SecretRetriever interface
- * that connects
- * @see CredentialsProvider from cloudbees
- * this plugin is installed by default on Jenkins
- * <p>
+ * @see SecretRetriever
+ * interface that uses the
+ * @see CredentialsProvider
+ * to retrieve secrets (this plugin is installed by default on Jenkins)
  * Only allows to retrieve secrets in SYSTEM scope as a security measure
  * (those cannot be retrieve from agent nodes / build scripts)
  */
@@ -43,9 +41,9 @@ public class CredentialBasedSecretRetriever implements SecretRetriever {
 
         if (credential.getScope() != CredentialsScope.SYSTEM) {
             CredentialsScope scope = credential.getScope();
-            String scopeName = scope == null ? "null" : scope.getDisplayName();
+            String scopeName = scope == null ? "<null>" : scope.getDisplayName();
             throw new SecretNotFoundException(
-                    String.format("The secret '%s' was configured with scope '%s' but needs to be in '%s' scope.",
+                    String.format("The secret '%s' was configured with scope '%s' but needs to be in scope '%s'.",
                             id, scopeName, CredentialsScope.SYSTEM.getDisplayName()));
         }
 

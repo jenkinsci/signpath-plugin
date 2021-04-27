@@ -1,7 +1,7 @@
 package io.jenkins.plugins.signpath.ApiIntegration.Model;
 
 /**
- * Holds information about the source-control repository.
+ * Holds information about the source control repository.
  * This information is submitted to SignPath as part of the
  *
  * @see SigningRequestOriginModel

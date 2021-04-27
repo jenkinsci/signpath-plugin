@@ -57,15 +57,14 @@ public class DefaultArtifactFileManagerTest {
     @DataPoints("allFileNames")
     public static String[][] allFileNames() {
         return new String[][]{
-                new String[]{"some.exe","some.exe", "some.exe"},
-                new String[]{"subfolder/my.dll","subfolder/my.dll", "my.dll"},
-                new String[]{"subfolder/my.dll","subfolder/my.dll/", "my.dll"},
-                new String[]{"subfolder/my.dll","subfolder\\my.dll", "my.dll"},
-                new String[]{"subfolder/my.dll","subfolder\\my.dll\\", "my.dll"},
-                new String[]{"subfolder/my.dll","subfolder/my.dll\\", "my.dll"},
+                new String[]{"some.exe", "some.exe", "some.exe"},
+                new String[]{"subfolder/my.dll", "subfolder/my.dll", "my.dll"},
+                new String[]{"subfolder/my.dll", "subfolder/my.dll/", "my.dll"},
+                new String[]{"subfolder/my.dll", "subfolder\\my.dll", "my.dll"},
+                new String[]{"subfolder/my.dll", "subfolder\\my.dll\\", "my.dll"},
+                new String[]{"subfolder/my.dll", "subfolder/my.dll\\", "my.dll"},
         };
     }
-
 
     @Theory
     public void retrieveArtifact_returnsCorrectFileName(@FromDataPoints("allFileNames") String[] fileNames) throws Exception {
@@ -92,7 +91,7 @@ public class DefaultArtifactFileManagerTest {
 
         // ASSERT
         Throwable ex = assertThrows(ArtifactNotFoundException.class, act);
-        assertEquals("The artifact at path \"hello.txt\" was not found.", ex.getMessage());
+        assertEquals("The artifact at path 'hello.txt' was not found.", ex.getMessage());
     }
 
     @Theory
@@ -104,7 +103,7 @@ public class DefaultArtifactFileManagerTest {
 
         // ASSERT
         Throwable ex = assertThrows(ArtifactNotFoundException.class, act);
-        assertEquals("The artifact at path \"does not exist.txt\" was not found.", ex.getMessage());
+        assertEquals("The artifact at path 'does not exist.txt' was not found.", ex.getMessage());
     }
 
     @Theory
@@ -138,11 +137,11 @@ public class DefaultArtifactFileManagerTest {
         sut.storeArtifact(artifact, fileNameToStore);
 
         // ASSERT
-        String expectedHash =  TemporaryFileUtil.getDigestAndDispose(artifact);
+        String expectedHash = TemporaryFileUtil.getDigestAndDispose(artifact);
         Fingerprint fingerprint = j.jenkins.getFingerprintMap().get(expectedHash);
         assertNotNull(fingerprint);
-        assertEquals(expectedFileName,fingerprint.getFileName());
-        assertEquals(expectedHash,fingerprint.getHashString());
+        assertEquals(expectedFileName, fingerprint.getFileName());
+        assertEquals(expectedHash, fingerprint.getHashString());
     }
 
     @Theory
@@ -161,8 +160,7 @@ public class DefaultArtifactFileManagerTest {
     }
 
     private String archiveArtifactScript(String artifactName) {
-        return "writeFile text: 'hello', file: '" + artifactName + "'; " +
-                "archiveArtifacts artifacts: '" + artifactName + "', fingerprint: true ";
+        return String.format("writeFile text: 'hello', file: '%s'; archiveArtifacts artifacts: '%s', fingerprint: true ", artifactName, artifactName);
     }
 
     private DefaultArtifactFileManager runJob(String script) throws Exception {

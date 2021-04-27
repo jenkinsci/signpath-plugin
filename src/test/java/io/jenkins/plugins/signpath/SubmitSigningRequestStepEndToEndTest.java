@@ -12,6 +12,7 @@ import hudson.model.queue.QueueTaskFuture;
 import hudson.plugins.git.util.BuildData;
 import io.jenkins.plugins.signpath.Artifacts.DefaultArtifactFileManager;
 import io.jenkins.plugins.signpath.Common.TemporaryFile;
+import io.jenkins.plugins.signpath.Exceptions.ArtifactNotFoundException;
 import io.jenkins.plugins.signpath.TestUtils.*;
 import jenkins.model.JenkinsLocationConfiguration;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -63,10 +64,12 @@ public class SubmitSigningRequestStepEndToEndTest {
         String apiUrl = getMockUrl();
         String getSigningRequestStatus = "getSigningRequestStatus";
         String downloadSignedArtifact = "downloadSignedArtifact";
+
         wireMockRule.stubFor(post(urlEqualTo("/v1/" + organizationId + "/SigningRequests"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Location", getMockUrl(getSigningRequestStatus))));
+
         wireMockRule.stubFor(get(urlEqualTo("/" + getSigningRequestStatus))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -97,19 +100,13 @@ public class SubmitSigningRequestStepEndToEndTest {
             fail();
         }
 
-        Launcher launcher = j.createLocalLauncher();
-        TaskListener listener = j.createTaskListener();
-        FingerprintMap fingerprintMap = j.jenkins.getFingerprintMap();
-        DefaultArtifactFileManager artifactFileManager = new DefaultArtifactFileManager(fingerprintMap, run, launcher, listener);
-        TemporaryFile signedArtifact = artifactFileManager.retrieveArtifact("signed.exe");
-        byte[] signedArtifactContent = TemporaryFileUtil.getContentAndDispose(signedArtifact);
+        byte[] signedArtifactContent = getSignedArtifactBytes(run);
         assertArrayEquals(signedArtifactBytes, signedArtifactContent);
 
         if (withOptionalFields)
             assertRequest(ciUserToken, trustedBuildSystemToken, unsignedArtifactString, remoteUrl, organizationId, projectSlug, signingPolicySlug, artifactConfigurationSlug, description);
         else
             assertRequest(ciUserToken, trustedBuildSystemToken, unsignedArtifactString, remoteUrl, organizationId, projectSlug, signingPolicySlug);
-
     }
 
     @Theory
@@ -334,6 +331,15 @@ public class SubmitSigningRequestStepEndToEndTest {
 
     private String getMockUrl(String postfix) {
         return String.format("http://localhost:%d/%s", MockServerPort, postfix);
+    }
+
+    private byte[] getSignedArtifactBytes(WorkflowRun run) throws IOException, ArtifactNotFoundException {
+        Launcher launcher = j.createLocalLauncher();
+        TaskListener listener = j.createTaskListener();
+        FingerprintMap fingerprintMap = j.jenkins.getFingerprintMap();
+        DefaultArtifactFileManager artifactFileManager = new DefaultArtifactFileManager(fingerprintMap, run, launcher, listener);
+        TemporaryFile signedArtifact = artifactFileManager.retrieveArtifact("signed.exe");
+        return TemporaryFileUtil.getContentAndDispose(signedArtifact);
     }
 
     @DataPoints("allBooleans")

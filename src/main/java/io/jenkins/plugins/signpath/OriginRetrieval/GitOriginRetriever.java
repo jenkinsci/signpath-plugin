@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 
 /**
  * Default implementation of the
- *
  * @see OriginRetriever interface
  * that can only handle
  * @see BuildData (from the corresponding git plugin)
@@ -52,6 +51,7 @@ public class GitOriginRetriever implements OriginRetriever {
         return new SigningRequestOriginModel(repositoryMetadata, buildUrl, buildSettingsFile);
     }
 
+    // The key looks like "refs/remotes/origin/feature/SIGN-1337" => we are only interested in "feature/SIGN-1337")
     private String parseBranchName(String key) {
         return key.replaceFirst("^refs/remotes/.*?/", "");
     }
@@ -71,20 +71,20 @@ public class GitOriginRetriever implements OriginRetriever {
     private String getSingleRemoteUrl(BuildData buildData, int buildNumber) throws OriginNotRetrievableException {
         Set<String> remoteUrls = buildData.getRemoteUrls();
         if (remoteUrls.size() == 0) {
-            throw new OriginNotRetrievableException(String.format("No remote urls for build with build number '%d' found.", buildNumber));
+            throw new OriginNotRetrievableException(String.format("No remote URLs for build with build number '%d' found.", buildNumber));
         }
 
         if (remoteUrls.size() > 1) {
-            throw new OriginNotRetrievableException(String.format("%d remote urls for build with build number '%d' found. This is not supported.", remoteUrls.size(), buildNumber));
+            throw new OriginNotRetrievableException(String.format("%d remote URLs for build with build number '%d' found. This is not supported.", remoteUrls.size(), buildNumber));
         }
 
         return remoteUrls.stream().findFirst().get();
     }
 
     /**
-     *  We don't really know a lot about the BuildData structure - i.e. why it is possible that there are multiple builds in it
-     *  PSA and PSC had a discussion in Slack about this topic: https://signpath.slack.com/archives/C9Q8FUSDR/p1601306416006800
-      */
+     * We don't really know a lot about the BuildData structure - i.e. why it is possible that there are multiple builds in it
+     * PSA and PSC had a discussion in Slack about this topic: https://signpath.slack.com/archives/C9Q8FUSDR/p1601306416006800
+     */
     private Map.Entry<String, Build> findMatchingBuild(BuildData buildData, int buildNumber) throws OriginNotRetrievableException {
         List<Map.Entry<String, Build>> matchingBuilds = buildData.getBuildsByBranchName().entrySet().stream()
                 .filter(buildByBranchName -> buildByBranchName.getValue().hudsonBuildNumber == buildNumber)

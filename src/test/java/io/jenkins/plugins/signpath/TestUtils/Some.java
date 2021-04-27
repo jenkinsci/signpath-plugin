@@ -18,7 +18,7 @@ public class Some {
     private static final Random RANDOM = new Random();
 
     public static Integer integer(int minValue, int maxValue) {
-        return minValue + RANDOM.nextInt(maxValue - minValue);
+        return minValue + RANDOM.nextInt(maxValue - minValue + 1);
     }
 
     public static boolean bool() {

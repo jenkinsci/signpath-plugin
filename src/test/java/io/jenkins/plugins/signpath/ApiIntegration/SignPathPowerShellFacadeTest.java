@@ -95,7 +95,7 @@ public class SignPathPowerShellFacadeTest {
 
         String separator = System.getProperty("line.separator");
         powerShellExecutionResult = PowerShellExecutionResult.Success("SHA256 hash: " + Some.sha1Hash() + separator +
-                "Submitted signing request at 'https://app.signpath.io/api/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "'"+separator +
+                "Submitted signing request at 'https://app.signpath.io/api/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "'" + separator +
                 signingRequestId);
 
         // ACT
@@ -136,7 +136,7 @@ public class SignPathPowerShellFacadeTest {
         // ASSERT
         assertNotNull(signedArtifactResultFile);
         String signedArtifactPath = TemporaryFileUtil.getAbsolutePathAndDispose(signedArtifactResultFile);
-            assertNotNull(capturedCommand);
+        assertNotNull(capturedCommand);
 
         assertContainsCredentials(credentials, capturedCommand);
         assertContainsConfiguration(apiConfiguration, capturedCommand, true);
@@ -230,7 +230,7 @@ public class SignPathPowerShellFacadeTest {
         assertContainsParameter("BuildUrl", origin.getBuildUrl(), capturedCommand);
         assertContainsParameter("BuildSettingsFile", "@" + origin.getBuildSettingsFile().getAbsolutePath(), capturedCommand);
 
-        assertContainsParameter("InputArtifactPath",signingRequestModel.getArtifact().getAbsolutePath(), capturedCommand);
+        assertContainsParameter("InputArtifactPath", signingRequestModel.getArtifact().getAbsolutePath(), capturedCommand);
     }
 
     private void assertContainsCredentials(SignPathCredentials credentials, PowerShellCommand capturedCommand) {
@@ -247,14 +247,14 @@ public class SignPathPowerShellFacadeTest {
         }
     }
 
-    private void assertContainsParameter(String name, String value, PowerShellCommand command){
+    private void assertContainsParameter(String name, String value, PowerShellCommand command) {
         assertContains(name, command.getCommand());
 
         assertTrue(command.getEnvironmentVariables().containsKey(name));
         assertEquals(command.getEnvironmentVariables().get(name), value);
     }
 
-    private void assertContainsFlag(String flag, PowerShellCommand command){
+    private void assertContainsFlag(String flag, PowerShellCommand command) {
         assertContains(String.format("-%s", flag), command.getCommand());
     }
 

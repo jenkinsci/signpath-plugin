@@ -21,7 +21,6 @@ import java.util.UUID;
 
 /**
  * The step-execution for the
- *
  * @see SubmitSigningRequestStep
  */
 public class SubmitSigningRequestStepExecution extends SynchronousStepExecution<String> {
@@ -35,6 +34,7 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution<
     protected SubmitSigningRequestStepExecution(SubmitSigningRequestStepInput input,
                                                 SignPathContext context) {
         super(context.getStepContext());
+        // TODO SIGN-3498: Replace context parameter with parameters for the values
         this.input = input;
         this.logger = context.getLogger();
         this.secretRetriever = context.getSecretRetriever();
@@ -46,44 +46,40 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution<
     @Override
     protected String run() throws SignPathStepFailedException {
 
-        logger.printf("Submitting signing request for organization: %s (waiting for completion: %s)\n", input.getOrganizationId(), input.getWaitForCompletion());
+        logger.printf("Submitting signing request for organization: %s (waiting for completion: %s)%n", input.getOrganizationId(), input.getWaitForCompletion());
 
         try {
             String trustedBuildSystemToken = secretRetriever.retrieveSecret(input.getTrustedBuildSystemTokenCredentialId());
             String ciUserToken = secretRetriever.retrieveSecret(input.getCiUserTokenCredentialId());
             SignPathCredentials credentials = new SignPathCredentials(ciUserToken, trustedBuildSystemToken);
             SignPathFacade signPathFacade = signPathFacadeFactory.create(credentials);
-            SigningRequestOriginModel originModel = originRetriever.retrieveOrigin();
-            TemporaryFile unsignedArtifact = artifactFileManager.retrieveArtifact(input.getInputArtifactPath());
+            try(SigningRequestOriginModel originModel = originRetriever.retrieveOrigin()) {
+                try (TemporaryFile unsignedArtifact = artifactFileManager.retrieveArtifact(input.getInputArtifactPath())) {
+                    SigningRequestModel model = new SigningRequestModel(
+                            input.getOrganizationId(),
+                            input.getProjectSlug(),
+                            input.getArtifactConfigurationSlug(),
+                            input.getSigningPolicySlug(),
+                            input.getDescription(),
+                            originModel,
+                            unsignedArtifact);
 
-            if (input.getWaitForCompletion()) {
-                TemporaryFile signedArtifact = signPathFacade.submitSigningRequest(new SigningRequestModel(
-                        input.getOrganizationId(),
-                        input.getProjectSlug(),
-                        input.getArtifactConfigurationSlug(),
-                        input.getSigningPolicySlug(),
-                        input.getDescription(),
-                        originModel,
-                        unsignedArtifact));
+                    if (input.getWaitForCompletion()) {
+                        try (TemporaryFile signedArtifact = signPathFacade.submitSigningRequest(model)) {
+                            artifactFileManager.storeArtifact(signedArtifact, input.getOutputArtifactPath());
+                            logger.println("Signing step succeeded");
+                            return ""; // TODO SIGN-3498: Also return the SR ID (symmetry with PS Module)
+                        }
+                    } else {
+                        UUID signingRequestId = signPathFacade.submitSigningRequestAsync(model);
 
-                artifactFileManager.storeArtifact(signedArtifact, input.getOutputArtifactPath());
-                logger.print("Signing step succeeded\n");
-                return "";
-            } else {
-                UUID signingRequestId = signPathFacade.submitSigningRequestAsync(new SigningRequestModel(
-                        input.getOrganizationId(),
-                        input.getProjectSlug(),
-                        input.getArtifactConfigurationSlug(),
-                        input.getSigningPolicySlug(),
-                        input.getDescription(),
-                        originModel,
-                        unsignedArtifact));
-
-                logger.printf("Signing request created: %s\n", signingRequestId.toString());
-                return signingRequestId.toString();
+                        logger.printf("Signing request created: %s%n", signingRequestId.toString());
+                        return signingRequestId.toString();
+                    }
+                }
             }
         } catch (SecretNotFoundException | OriginNotRetrievableException | SignPathFacadeCallException | IOException | InterruptedException | ArtifactNotFoundException | NoSuchAlgorithmException ex) {
-            logger.print("\nSigning step failed: " + ex.getMessage() + "\n");
+            logger.printf("%nSigning step failed: %s%n", ex.getMessage());
             throw new SignPathStepFailedException("Signing step failed: " + ex.getMessage(), ex);
         }
     }
