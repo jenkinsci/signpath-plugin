@@ -33,9 +33,5 @@ Run the tests
 
 Run the Plugin locally
 - Set up you System as Jenkins Master (as described in the Getting started section).
-- Set up a declarative Pipeline Project and configure it to use the github example: https://github.com/Inspyro/jenkinstest. [Jenkisfile or JenkinsfileAsync]
-- Set up a agent - easiest create a new agent and run it via JNLP (Java). Another option is to the provided docker agent (See dedicated section)
-
-Use the Docker-Agent
-- Use 00_Build and 01_Run
-- Configure Jenkins to use a fixed port in the Global Security Settings (50923, look it up in the .Dockerfile)
+- Set up a declarative Pipeline Project and configure it to use the github example: https://github.com/Inspyro/jenkinstest [Jenkinsfile or JenkinsfileAsync].
+- Set up an agent - create a new agent and run it via JNLP (Java). Another option is to the provided docker agent (See dedicated section)
