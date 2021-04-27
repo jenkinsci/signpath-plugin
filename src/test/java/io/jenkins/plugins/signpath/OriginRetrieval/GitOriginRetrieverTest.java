@@ -170,7 +170,7 @@ public class GitOriginRetrieverTest {
 
         // ASSERT
         Throwable ex = assertThrows(OriginNotRetrievableException.class, act);
-        assertEquals(ex.getMessage(), String.format("No remote urls for build with build number '%d' found.", buildNumber));
+        assertEquals(ex.getMessage(), String.format("No remote URLs for build with build number '%d' found.", buildNumber));
     }
 
     @Theory
@@ -183,6 +183,6 @@ public class GitOriginRetrieverTest {
 
         // ASSERT
         Throwable ex = assertThrows(OriginNotRetrievableException.class, act);
-        assertEquals(ex.getMessage(), String.format("2 remote urls for build with build number '%d' found. This is not supported.", buildNumber));
+        assertEquals(ex.getMessage(), String.format("2 remote URLs for build with build number '%d' found. This is not supported.", buildNumber));
     }
 }

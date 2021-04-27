@@ -11,12 +11,7 @@ import java.util.Arrays;
 public class BuildDataDomainObjectMother {
     public static Build createRandomBuild(int buildNumber) {
         String commitId = Some.sha1Hash();
-        int branchCount = Some.integer(1, 2);
-        Branch[] branches = new Branch[branchCount];
-        for (int i = 0; i < branchCount; i++) {
-            branches[i] = createRandomBranch();
-        }
-
+        Branch[] branches = new Branch[] { createRandomBranch() };
         return createBuild(buildNumber, commitId, branches);
     }
 
