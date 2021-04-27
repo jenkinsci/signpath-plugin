@@ -72,10 +72,10 @@ public class SignPathPowerShellFacade implements SignPathFacade {
     private UUID extractSigningRequestId(String output) throws SignPathFacadeCallException {
         // we assume the last line is the result = uuid
         String[] lines = output.split(System.getProperty("line.separator"));
-        String lastLine = lines[lines.length-1];
+        String lastLine = lines[lines.length - 1];
         try {
             return UUID.fromString(lastLine);
-        }catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException ex) {
             throw new SignPathFacadeCallException("Unexpected output from PowerShell, did not find a valid signingRequestId.");
         }
     }
@@ -109,15 +109,15 @@ public class SignPathPowerShellFacade implements SignPathFacade {
         originParameters.put("RepositoryUrl", repositoryMetadata.getRepositoryUrl());
         originParameters.put("SourceControlManagementType", repositoryMetadata.getSourceControlManagementType());
         commandBuilder.appendCustom("-Origin @{'BuildData' = @{" +
-                        "'Url' = \"$($env:BuildUrl)\";" +
-                        "'BuildSettingsFile' = \"$($env:BuildSettingsFile)\";" +
-                        "};" +
-                        "'RepositoryData' = @{" +
-                        "'BranchName' = \"$($env:BranchName)\";" +
-                        "'CommitId' = \"$($env:CommitId)\";" +
-                        "'Url' = \"$($env:RepositoryUrl)\";" +
-                        "'SourceControlManagementType' = \"$($env:SourceControlManagementType)\"" +
-                        "}}", originParameters);
+                "'Url' = \"$($env:BuildUrl)\";" +
+                "'BuildSettingsFile' = \"$($env:BuildSettingsFile)\";" +
+                "};" +
+                "'RepositoryData' = @{" +
+                "'BranchName' = \"$($env:BranchName)\";" +
+                "'CommitId' = \"$($env:CommitId)\";" +
+                "'Url' = \"$($env:RepositoryUrl)\";" +
+                "'SourceControlManagementType' = \"$($env:SourceControlManagementType)\"" +
+                "}}", originParameters);
 
         if (outputArtifact != null) {
             commandBuilder.appendFlag("WaitForCompletion");
@@ -138,7 +138,7 @@ public class SignPathPowerShellFacade implements SignPathFacade {
         commandBuilder.appendParameter("SigningRequestId", signingRequestId.toString());
         commandBuilder.appendParameter("ServiceUnavailableTimeoutInSeconds", String.valueOf(apiConfiguration.getServiceUnavailableTimeoutInSeconds()));
         commandBuilder.appendParameter("UploadAndDownloadRequestTimeoutInSeconds", String.valueOf(apiConfiguration.getUploadAndDownloadRequestTimeoutInSeconds()));
-        commandBuilder.appendParameter("OutputArtifactPath",  outputArtifact.getAbsolutePath());
+        commandBuilder.appendParameter("OutputArtifactPath", outputArtifact.getAbsolutePath());
         commandBuilder.appendParameter("WaitForCompletionTimeoutInSeconds", String.valueOf(apiConfiguration.getWaitForCompletionTimeoutInSeconds()));
         commandBuilder.appendFlag("Force");
         commandBuilder.appendFlag("Verbose");
