@@ -1,6 +1,7 @@
 package io.jenkins.plugins.signpath.ApiIntegration;
 
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestModel;
+import io.jenkins.plugins.signpath.ApiIntegration.Model.SubmitSigningRequestResult;
 import io.jenkins.plugins.signpath.Common.TemporaryFile;
 import io.jenkins.plugins.signpath.Exceptions.SignPathFacadeCallException;
 
@@ -20,7 +21,7 @@ public interface SignPathFacade {
      * @throws IOException                 occurs if any necessary intermediate file cannot be successfully created
      * @throws SignPathFacadeCallException occurs if any user error has been made (i.e. misconfiguration)
      */
-    TemporaryFile submitSigningRequest(SigningRequestModel submitModel) throws IOException, SignPathFacadeCallException;
+    SubmitSigningRequestResult submitSigningRequest(SigningRequestModel submitModel) throws IOException, SignPathFacadeCallException;
 
     /**
      * Similar to the submitSigningRequest method, but does not wait for the signing request to complete

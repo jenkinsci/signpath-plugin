@@ -2,6 +2,7 @@ package io.jenkins.plugins.signpath;
 
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestModel;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestOriginModel;
+import io.jenkins.plugins.signpath.ApiIntegration.Model.SubmitSigningRequestResult;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathCredentials;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathFacade;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathFacadeFactory;
@@ -68,10 +69,10 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution<
                             unsignedArtifact);
 
                     if (input.getWaitForCompletion()) {
-                        try (TemporaryFile signedArtifact = signPathFacade.submitSigningRequest(model)) {
-                            artifactFileManager.storeArtifact(signedArtifact, input.getOutputArtifactPath());
+                        try (SubmitSigningRequestResult result = signPathFacade.submitSigningRequest(model)) {
+                            artifactFileManager.storeArtifact(result.getSignedArtifact(), input.getOutputArtifactPath());
                             logger.println("Signing step succeeded");
-                            return ""; // TODO SIGN-3498: Also return the SR ID (symmetry with PS Module)
+                            return result.getSigningRequestId().toString();
                         }
                     } else {
                         UUID signingRequestId = signPathFacade.submitSigningRequestAsync(model);

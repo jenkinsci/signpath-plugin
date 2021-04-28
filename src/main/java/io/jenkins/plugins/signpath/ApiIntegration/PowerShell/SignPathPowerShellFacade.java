@@ -4,6 +4,7 @@ import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.RepositoryMetadataModel;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestModel;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestOriginModel;
+import io.jenkins.plugins.signpath.ApiIntegration.Model.SubmitSigningRequestResult;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathCredentials;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathFacade;
 import io.jenkins.plugins.signpath.Common.TemporaryFile;
@@ -37,11 +38,11 @@ public class SignPathPowerShellFacade implements SignPathFacade {
     }
 
     @Override
-    public TemporaryFile submitSigningRequest(SigningRequestModel submitModel) throws IOException, SignPathFacadeCallException {
+    public SubmitSigningRequestResult submitSigningRequest(SigningRequestModel submitModel) throws IOException, SignPathFacadeCallException {
         TemporaryFile outputArtifact = new TemporaryFile();
         PowerShellCommand submitSigningRequestCommand = createSubmitSigningRequestCommand(submitModel, outputArtifact);
-        executePowerShellSafe(submitSigningRequestCommand);
-        return outputArtifact;
+        String result = executePowerShellSafe(submitSigningRequestCommand);
+        return new SubmitSigningRequestResult(outputArtifact, extractSigningRequestId(result));
     }
 
     @Override

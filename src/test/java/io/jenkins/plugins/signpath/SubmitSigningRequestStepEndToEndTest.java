@@ -55,6 +55,7 @@ public class SubmitSigningRequestStepEndToEndTest {
         String organizationId = Some.uuid().toString();
         String artifactConfigurationSlug = Some.stringNonEmpty();
         String description = Some.stringNonEmpty();
+        String signingRequestId = Some.uuid().toString();
 
         CredentialsStore credentialStore = CredentialStoreUtils.getCredentialStore(j.jenkins);
         assert credentialStore != null;
@@ -62,15 +63,14 @@ public class SubmitSigningRequestStepEndToEndTest {
         CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, ciUserTokenCredentialId, ciUserToken);
 
         String apiUrl = getMockUrl();
-        String getSigningRequestStatus = "getSigningRequestStatus";
         String downloadSignedArtifact = "downloadSignedArtifact";
 
         wireMockRule.stubFor(post(urlEqualTo("/v1/" + organizationId + "/SigningRequests"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Location", getMockUrl(getSigningRequestStatus))));
+                        .withHeader("Location", getMockUrl("v1/" + organizationId + "/SigningRequests/" + signingRequestId))));
 
-        wireMockRule.stubFor(get(urlEqualTo("/" + getSigningRequestStatus))
+        wireMockRule.stubFor(get(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody("{status: 'Completed', isFinalStatus: true, signedArtifactLink: '" + getMockUrl(downloadSignedArtifact) + "'}")));
@@ -102,6 +102,8 @@ public class SubmitSigningRequestStepEndToEndTest {
 
         byte[] signedArtifactContent = getSignedArtifactBytes(run);
         assertArrayEquals(signedArtifactBytes, signedArtifactContent);
+
+        assertTrue(run.getLog().contains("<returnValue>:\"" + signingRequestId + "\""));
 
         if (withOptionalFields)
             assertRequest(ciUserToken, trustedBuildSystemToken, unsignedArtifactString, remoteUrl, organizationId, projectSlug, signingPolicySlug, artifactConfigurationSlug, description);

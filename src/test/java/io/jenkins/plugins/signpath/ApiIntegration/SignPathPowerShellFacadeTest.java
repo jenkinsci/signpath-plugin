@@ -3,6 +3,7 @@ package io.jenkins.plugins.signpath.ApiIntegration;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.RepositoryMetadataModel;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestModel;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestOriginModel;
+import io.jenkins.plugins.signpath.ApiIntegration.Model.SubmitSigningRequestResult;
 import io.jenkins.plugins.signpath.ApiIntegration.PowerShell.PowerShellCommand;
 import io.jenkins.plugins.signpath.ApiIntegration.PowerShell.PowerShellExecutionResult;
 import io.jenkins.plugins.signpath.ApiIntegration.PowerShell.PowerShellExecutor;
@@ -69,13 +70,21 @@ public class SignPathPowerShellFacadeTest {
     @Theory
     public void submitSigningRequest(@FromDataPoints("allBooleans") boolean withOptionalFields) throws IOException, SignPathFacadeCallException {
         SigningRequestModel signingRequestModel = randomSigningRequest(withOptionalFields);
+        UUID organizationId = signingRequestModel.getOrganizationId();
+        UUID signingRequestId = Some.uuid();
+
+        String separator = System.getProperty("line.separator");
+        powerShellExecutionResult = PowerShellExecutionResult.Success("SHA256 hash: " + Some.sha1Hash() + separator +
+                "Submitted signing request at 'https://app.signpath.io/api/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "'" + separator +
+                signingRequestId);
 
         // ACT
-        TemporaryFile signedArtifactResultFile = sut.submitSigningRequest(signingRequestModel);
+        SubmitSigningRequestResult result = sut.submitSigningRequest(signingRequestModel);
 
         // ASSERT
-        assertNotNull(signedArtifactResultFile);
-        String signedArtifactPath = TemporaryFileUtil.getAbsolutePathAndDispose(signedArtifactResultFile);
+        assertNotNull(result);
+        assertEquals(signingRequestId ,result.getSigningRequestId());
+        String signedArtifactPath = TemporaryFileUtil.getAbsolutePathAndDispose(result.getSignedArtifact());
         assertNotNull(capturedCommand);
 
         assertContainsCredentials(credentials, capturedCommand);
