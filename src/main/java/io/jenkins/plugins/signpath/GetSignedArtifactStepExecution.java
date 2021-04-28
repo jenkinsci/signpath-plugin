@@ -21,7 +21,7 @@ import java.security.NoSuchAlgorithmException;
  *
  * @see GetSignedArtifactStep
  */
-public class GetSignedArtifactStepExecution extends SynchronousStepExecution<String> {
+public class GetSignedArtifactStepExecution extends SynchronousStepExecution<Void> {
     private final PrintStream logger;
     private final SecretRetriever secretRetriever;
     private final ArtifactFileManager artifactFileManager;
@@ -43,24 +43,23 @@ public class GetSignedArtifactStepExecution extends SynchronousStepExecution<Str
     }
 
     @Override
-    protected String run() throws SignPathStepFailedException {
+    protected Void run() throws SignPathStepFailedException {
         logger.printf("Downloading signed artifact for organization: %s and signingRequest: %s%n", input.getOrganizationId(), input.getSigningRequestId());
-
-        // TODO SIGN-3498: Check if we can also specify "no result" (or maybe return the output artifact path?)
 
         try {
             String trustedBuildSystemToken = secretRetriever.retrieveSecret(input.getTrustedBuildSystemTokenCredentialId());
             String ciUserToken = secretRetriever.retrieveSecret(input.getCiUserTokenCredentialId());
             SignPathCredentials credentials = new SignPathCredentials(ciUserToken, trustedBuildSystemToken);
             SignPathFacade signPathFacade = signPathFacadeFactory.create(credentials);
-            try(TemporaryFile signedArtifact = signPathFacade.getSignedArtifact(input.getOrganizationId(), input.getSigningRequestId())) {
+            try (TemporaryFile signedArtifact = signPathFacade.getSignedArtifact(input.getOrganizationId(), input.getSigningRequestId())) {
                 artifactFileManager.storeArtifact(signedArtifact, input.getOutputArtifactPath());
                 logger.println("Downloading signed artifact succeeded");
-                return "";
             }
         } catch (SecretNotFoundException | SignPathFacadeCallException | IOException | InterruptedException | NoSuchAlgorithmException ex) {
             logger.printf("Downloading signed artifact failed %s%n", ex.getMessage());
             throw new SignPathStepFailedException("Downloading signed artifact failed: " + ex.getMessage(), ex);
         }
+
+        return null; // Void in java is just a placeholder-class for generics where we don't want a return
     }
 }
