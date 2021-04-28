@@ -8,26 +8,31 @@ import org.kohsuke.stapler.DataBoundSetter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A common base class for all SignPath API / Facade related Jenkins Steps
  * It encapsulates all required configuration related parameters
  * and helps share and re-use them across multiple steps
- *
- * @see io.jenkins.plugins.signpath.StepShared.SigningRequestStepInputParser
- * how the common configuration is translated into a
  * @see io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration
  */
 public abstract class SignPathStepBase extends Step {
     private String apiUrl = "https://app.signpath.io/api/";
-    private int serviceUnavailableTimeoutInSeconds = 600;
-    private int uploadAndDownloadRequestTimeoutInSeconds = 300;
-    private int waitForCompletionTimeoutInSeconds = 600;
-    private final int safetyBufferInSeconds = 5;
-    private int waitForPowerShellTimeoutInSeconds = serviceUnavailableTimeoutInSeconds +
-            uploadAndDownloadRequestTimeoutInSeconds +
-            waitForCompletionTimeoutInSeconds +
-            safetyBufferInSeconds;
+
+    // we set some sensible defaults for various timeouts, note that the
+    // serviceUnavailableTimeoutInSeconds is used for upload, download and wait operations
+    private int serviceUnavailableTimeoutInSeconds = (int) TimeUnit.MINUTES.toSeconds(10);
+    private int uploadAndDownloadRequestTimeoutInSeconds = (int) TimeUnit.MINUTES.toSeconds(5);
+    private int waitForCompletionTimeoutInSeconds = (int) TimeUnit.MINUTES.toSeconds(10);
+
+    // we set a sane default for the PowerShell call - 30min is pretty long for most customers already
+    // if the customer ever runs into the problem that it is too short he will clearly see the exception
+    // and can raise it accordingly (or improve his infrastructure to reduce necessary timeouts)
+    // we explicitly decided together with PSA that it is not helpful to automatically calculate this overall timeout
+    // because it is very hard to say what the correct overall timeout is (due to multiple factors playing a role)
+    // also a timeout that is too high is not useful anymore
+    private int waitForPowerShellTimeoutInSeconds = (int) TimeUnit.MINUTES.toSeconds(30);
+
     private String trustedBuildSystemTokenCredentialId = "SignPath.TrustedBuildSystemToken";
     private String ciUserTokenCredentialId = "SignPath.CIUserToken";
 
