@@ -10,7 +10,6 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.signpath.Exceptions.SignPathStepInvalidArgumentException;
-import io.jenkins.plugins.signpath.StepShared.SigningRequestStepInputParser;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
@@ -39,8 +38,14 @@ public class GetSignedArtifactStep extends SignPathStepBase {
 
     @Override
     public StepExecution start(StepContext context) throws IOException, InterruptedException, SignPathStepInvalidArgumentException {
-        GetSignedArtifactStepInput input = SigningRequestStepInputParser.ParseInput(this);
-        ApiConfiguration apiConfiguration = SigningRequestStepInputParser.ParseApiConfiguration(this);
+        GetSignedArtifactStepInput input =  new GetSignedArtifactStepInput(
+                ensureValidUUID(getOrganizationId(), "organizationId"),
+                ensureValidUUID(getSigningRequestId(), "signingRequestId"),
+                ensureNotNull(getTrustedBuildSystemTokenCredentialId(), "trustedBuildSystemTokenCredentialId"),
+                ensureNotNull(getCiUserTokenCredentialId(), "ciUserTokenCredentialId"),
+                ensureNotNull(getOutputArtifactPath(), "outputArtifactPath"));
+
+        ApiConfiguration apiConfiguration = GetAndValidateApiConfiguration();
         SignPathContainer container = SignPathContainer.Build(context, apiConfiguration);
         return new GetSignedArtifactStepExecution(input,
                 container.getSecretRetriever(),

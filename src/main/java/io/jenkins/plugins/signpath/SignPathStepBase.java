@@ -1,7 +1,13 @@
 package io.jenkins.plugins.signpath;
 
+import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
+import io.jenkins.plugins.signpath.Exceptions.SignPathStepInvalidArgumentException;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.kohsuke.stapler.DataBoundSetter;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.UUID;
 
 /**
  * A common base class for all SignPath API / Facade related Jenkins Steps
@@ -86,5 +92,37 @@ public abstract class SignPathStepBase extends Step {
     @DataBoundSetter
     public void setWaitForPowerShellTimeoutInSeconds(int waitForPowerShellTimeoutInSeconds) {
         this.waitForPowerShellTimeoutInSeconds = waitForPowerShellTimeoutInSeconds;
+    }
+
+    public ApiConfiguration GetAndValidateApiConfiguration() throws SignPathStepInvalidArgumentException {
+        return new ApiConfiguration(
+                ensureValidURL(getApiUrl()),
+                getServiceUnavailableTimeoutInSeconds(),
+                getUploadAndDownloadRequestTimeoutInSeconds(),
+                getWaitForCompletionTimeoutInSeconds(),
+                getWaitForPowerShellTimeoutInSeconds());
+    }
+
+    protected URL ensureValidURL(String apiUrl) throws SignPathStepInvalidArgumentException {
+        try {
+            return new URL(apiUrl);
+        } catch (MalformedURLException e) {
+            throw new SignPathStepInvalidArgumentException(apiUrl + " must be a valid url");
+        }
+    }
+
+    protected UUID ensureValidUUID(String input, String name) throws SignPathStepInvalidArgumentException {
+        try {
+            return UUID.fromString(ensureNotNull(input, name));
+        } catch (IllegalArgumentException ex) {
+            throw new SignPathStepInvalidArgumentException(name + " must be a valid uuid");
+        }
+    }
+
+    protected String ensureNotNull(String input, String name) throws SignPathStepInvalidArgumentException {
+        if (input == null)
+            throw new SignPathStepInvalidArgumentException(name + " must be set");
+
+        return input;
     }
 }

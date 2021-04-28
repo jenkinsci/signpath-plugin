@@ -10,7 +10,6 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.signpath.Exceptions.SignPathStepInvalidArgumentException;
-import io.jenkins.plugins.signpath.StepShared.SigningRequestStepInputParser;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
@@ -46,8 +45,21 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
 
     @Override
     public StepExecution start(StepContext context) throws IOException, InterruptedException, SignPathStepInvalidArgumentException {
-        SubmitSigningRequestStepInput input = SigningRequestStepInputParser.ParseInput(this);
-        ApiConfiguration apiConfiguration = SigningRequestStepInputParser.ParseApiConfiguration(this);
+        boolean waitForCompletion = getWaitForCompletion();
+        String outputArtifactPath = waitForCompletion ? ensureNotNull(getOutputArtifactPath(), "outputArtifactPath") : null;
+        SubmitSigningRequestStepInput input = new SubmitSigningRequestStepInput(
+                ensureValidUUID(getOrganizationId(), "organizationId"),
+                ensureNotNull(getTrustedBuildSystemTokenCredentialId(), "trustedBuildSystemTokenCredentialId"),
+                ensureNotNull(getCiUserTokenCredentialId(), "ciUserTokenCredentialId"),
+                ensureNotNull(getProjectSlug(), "projectSlug"),
+                getArtifactConfigurationSlug(),
+                ensureNotNull(getSigningPolicySlug(), "signingPolicySlug"),
+                ensureNotNull(getInputArtifactPath(), "inputArtifactPath"),
+                getDescription(),
+                outputArtifactPath,
+                waitForCompletion);
+
+        ApiConfiguration apiConfiguration = GetAndValidateApiConfiguration();
         SignPathContainer container = SignPathContainer.Build(context, apiConfiguration);
 
         return new SubmitSigningRequestStepExecution(input,
