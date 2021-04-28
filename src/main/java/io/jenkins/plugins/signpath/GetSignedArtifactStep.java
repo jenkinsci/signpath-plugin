@@ -11,7 +11,6 @@ import hudson.model.TaskListener;
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.signpath.Exceptions.SignPathStepInvalidArgumentException;
 import io.jenkins.plugins.signpath.StepShared.GetSignedArtifactStepInput;
-import io.jenkins.plugins.signpath.StepShared.SignPathContext;
 import io.jenkins.plugins.signpath.StepShared.SigningRequestStepInputParser;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
@@ -43,8 +42,13 @@ public class GetSignedArtifactStep extends SignPathStepBase {
     public StepExecution start(StepContext context) throws IOException, InterruptedException, SignPathStepInvalidArgumentException {
         GetSignedArtifactStepInput input = SigningRequestStepInputParser.ParseInput(this);
         ApiConfiguration apiConfiguration = SigningRequestStepInputParser.ParseApiConfiguration(this);
-        SignPathContext signPathContext = SignPathContext.CreateForStep(context, apiConfiguration);
-        return new GetSignedArtifactStepExecution(input, signPathContext);
+        SignPathContainer container = SignPathContainer.Build(context, apiConfiguration);
+        return new GetSignedArtifactStepExecution(input,
+                container.getSecretRetriever(),
+                container.getArtifactFileManager(),
+                container.getSignPathFacadeFactory(),
+                container.getLogger(),
+                container.getStepContext());
     }
 
     @Override

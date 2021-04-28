@@ -10,7 +10,6 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.signpath.Exceptions.SignPathStepInvalidArgumentException;
-import io.jenkins.plugins.signpath.StepShared.SignPathContext;
 import io.jenkins.plugins.signpath.StepShared.SigningRequestStepInputParser;
 import io.jenkins.plugins.signpath.StepShared.SubmitSigningRequestStepInput;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
@@ -50,9 +49,15 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
     public StepExecution start(StepContext context) throws IOException, InterruptedException, SignPathStepInvalidArgumentException {
         SubmitSigningRequestStepInput input = SigningRequestStepInputParser.ParseInput(this);
         ApiConfiguration apiConfiguration = SigningRequestStepInputParser.ParseApiConfiguration(this);
-        SignPathContext signPathContext = SignPathContext.CreateForStep(context, apiConfiguration);
+        SignPathContainer container = SignPathContainer.Build(context, apiConfiguration);
 
-        return new SubmitSigningRequestStepExecution(input, signPathContext);
+        return new SubmitSigningRequestStepExecution(input,
+                container.getSecretRetriever(),
+                container.getOriginRetriever(),
+                container.getArtifactFileManager(),
+                container.getSignPathFacadeFactory(),
+                container.getLogger(),
+                container.getStepContext());
     }
 
     @Override

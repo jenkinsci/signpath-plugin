@@ -10,8 +10,8 @@ import io.jenkins.plugins.signpath.Common.TemporaryFile;
 import io.jenkins.plugins.signpath.Exceptions.*;
 import io.jenkins.plugins.signpath.OriginRetrieval.OriginRetriever;
 import io.jenkins.plugins.signpath.SecretRetrieval.SecretRetriever;
-import io.jenkins.plugins.signpath.StepShared.SignPathContext;
 import io.jenkins.plugins.signpath.StepShared.SubmitSigningRequestStepInput;
+import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.SynchronousStepExecution;
 
 import java.io.IOException;
@@ -32,15 +32,19 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution<
     private final SubmitSigningRequestStepInput input;
 
     protected SubmitSigningRequestStepExecution(SubmitSigningRequestStepInput input,
-                                                SignPathContext context) {
-        super(context.getStepContext());
-        // TODO SIGN-3498: Replace context parameter with parameters for the values
+                                                SecretRetriever secretRetriever,
+                                                OriginRetriever originRetriever,
+                                                ArtifactFileManager artifactFileManager,
+                                                SignPathFacadeFactory signPathFacadeFactory,
+                                                PrintStream logger,
+                                                StepContext stepContext) {
+        super(stepContext);
         this.input = input;
-        this.logger = context.getLogger();
-        this.secretRetriever = context.getSecretRetriever();
-        this.originRetriever = context.getOriginRetriever();
-        this.artifactFileManager = context.getArtifactFileManager();
-        this.signPathFacadeFactory = context.getSignPathFacadeFactory();
+        this.logger = logger;
+        this.secretRetriever = secretRetriever;
+        this.originRetriever = originRetriever;
+        this.artifactFileManager = artifactFileManager;
+        this.signPathFacadeFactory = signPathFacadeFactory;
     }
 
     @Override

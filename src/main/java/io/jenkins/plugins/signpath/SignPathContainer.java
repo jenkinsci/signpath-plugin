@@ -1,4 +1,4 @@
-package io.jenkins.plugins.signpath.StepShared;
+package io.jenkins.plugins.signpath;
 
 import hudson.Launcher;
 import hudson.model.FingerprintMap;
@@ -30,7 +30,7 @@ import java.io.PrintStream;
  * @see io.jenkins.plugins.signpath.SignPathStepBase
  * implementations
  */
-public class SignPathContext {
+public class SignPathContainer {
     private final StepContext stepContext;
     private final Run<?, ?> run;
     private final PrintStream logger;
@@ -40,16 +40,14 @@ public class SignPathContext {
     private final ArtifactFileManager artifactFileManager;
     private final SignPathFacadeFactory signPathFacadeFactory;
 
-    // TODO SIGN-3498: Find a better way to express this? SignPathContainer maybe?
-
-    private SignPathContext(StepContext stepContext,
-                            Run<?, ?> run,
-                            PrintStream logger,
-                            String jenkinsRootUrl,
-                            SecretRetriever secretRetriever,
-                            OriginRetriever originRetriever,
-                            ArtifactFileManager artifactFileManager,
-                            SignPathFacadeFactory signPathFacadeFactory) {
+    private SignPathContainer(StepContext stepContext,
+                              Run<?, ?> run,
+                              PrintStream logger,
+                              String jenkinsRootUrl,
+                              SecretRetriever secretRetriever,
+                              OriginRetriever originRetriever,
+                              ArtifactFileManager artifactFileManager,
+                              SignPathFacadeFactory signPathFacadeFactory) {
         this.stepContext = stepContext;
         this.run = run;
         this.logger = logger;
@@ -92,7 +90,7 @@ public class SignPathContext {
         return signPathFacadeFactory;
     }
 
-    public static SignPathContext CreateForStep(StepContext context, ApiConfiguration apiConfiguration)
+    public static SignPathContainer Build(StepContext context, ApiConfiguration apiConfiguration)
             throws IOException, InterruptedException, SignPathStepInvalidArgumentException {
         TaskListener listener = context.get(TaskListener.class);
         assert listener != null;
@@ -115,6 +113,6 @@ public class SignPathContext {
         PowerShellExecutor pwsh = new DefaultPowerShellExecutor("pwsh", logger);
         SignPathFacadeFactory signPathFacadeFactory = new SignPathPowerShellFacadeFactory(pwsh, apiConfiguration, logger);
 
-        return new SignPathContext(context, run, logger, jenkinsRootUrl, secretRetriever, originRetriever, artifactFileManager, signPathFacadeFactory);
+        return new SignPathContainer(context, run, logger, jenkinsRootUrl, secretRetriever, originRetriever, artifactFileManager, signPathFacadeFactory);
     }
 }

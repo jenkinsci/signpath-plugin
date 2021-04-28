@@ -10,7 +10,7 @@ import io.jenkins.plugins.signpath.Exceptions.SignPathFacadeCallException;
 import io.jenkins.plugins.signpath.Exceptions.SignPathStepFailedException;
 import io.jenkins.plugins.signpath.SecretRetrieval.SecretRetriever;
 import io.jenkins.plugins.signpath.StepShared.GetSignedArtifactStepInput;
-import io.jenkins.plugins.signpath.StepShared.SignPathContext;
+import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.SynchronousStepExecution;
 
 import java.io.IOException;
@@ -30,13 +30,17 @@ public class GetSignedArtifactStepExecution extends SynchronousStepExecution<Str
     private final GetSignedArtifactStepInput input;
 
     protected GetSignedArtifactStepExecution(GetSignedArtifactStepInput input,
-                                             SignPathContext signPathContext) {
-        super(signPathContext.getStepContext());
+                                             SecretRetriever secretRetriever,
+                                             ArtifactFileManager artifactFileManager,
+                                             SignPathFacadeFactory signPathFacadeFactory,
+                                             PrintStream logger,
+                                             StepContext stepContext) {
+        super(stepContext);
         this.input = input;
-        this.logger = signPathContext.getLogger();
-        this.secretRetriever = signPathContext.getSecretRetriever();
-        this.artifactFileManager = signPathContext.getArtifactFileManager();
-        this.signPathFacadeFactory = signPathContext.getSignPathFacadeFactory();
+        this.logger = logger;
+        this.secretRetriever = secretRetriever;
+        this.artifactFileManager = artifactFileManager;
+        this.signPathFacadeFactory = signPathFacadeFactory;
     }
 
     @Override
