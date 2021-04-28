@@ -22,9 +22,7 @@ public class SignPathCredentials {
         return trustedBuildSystemToken;
     }
 
-    // TODO SIGN-3498: Rename to toCredentialString (to avoid being used by the framework)
-    @Override
-    public String toString() {
+    public String toCredentialString() {
         return String.format("%s:%s", ciUserToken, trustedBuildSystemToken);
     }
 }

@@ -234,7 +234,7 @@ public class SignPathPowerShellFacadeTest {
     }
 
     private void assertContainsCredentials(SignPathCredentials credentials, PowerShellCommand capturedCommand) {
-        assertContainsParameter("CIUserToken", credentials.toString(), capturedCommand);
+        assertContainsParameter("CIUserToken", credentials.toCredentialString(), capturedCommand);
     }
 
     private void assertContainsConfiguration(ApiConfiguration apiConfiguration, PowerShellCommand capturedCommand, boolean withWaitTime) {
