@@ -1,10 +1,8 @@
 package io.jenkins.plugins.signpath.StepShared;
 
+import io.jenkins.plugins.signpath.*;
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.signpath.Exceptions.SignPathStepInvalidArgumentException;
-import io.jenkins.plugins.signpath.GetSignedArtifactStep;
-import io.jenkins.plugins.signpath.SignPathStepBase;
-import io.jenkins.plugins.signpath.SubmitSigningRequestStep;
 
 import java.net.MalformedURLException;
 import java.net.URL;

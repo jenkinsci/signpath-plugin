@@ -9,7 +9,6 @@ import io.jenkins.plugins.signpath.Exceptions.SecretNotFoundException;
 import io.jenkins.plugins.signpath.Exceptions.SignPathFacadeCallException;
 import io.jenkins.plugins.signpath.Exceptions.SignPathStepFailedException;
 import io.jenkins.plugins.signpath.SecretRetrieval.SecretRetriever;
-import io.jenkins.plugins.signpath.StepShared.GetSignedArtifactStepInput;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.SynchronousStepExecution;
 

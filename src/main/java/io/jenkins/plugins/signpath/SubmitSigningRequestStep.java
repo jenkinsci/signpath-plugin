@@ -11,7 +11,6 @@ import hudson.model.TaskListener;
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.signpath.Exceptions.SignPathStepInvalidArgumentException;
 import io.jenkins.plugins.signpath.StepShared.SigningRequestStepInputParser;
-import io.jenkins.plugins.signpath.StepShared.SubmitSigningRequestStepInput;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;

@@ -10,7 +10,6 @@ import io.jenkins.plugins.signpath.Common.TemporaryFile;
 import io.jenkins.plugins.signpath.Exceptions.*;
 import io.jenkins.plugins.signpath.OriginRetrieval.OriginRetriever;
 import io.jenkins.plugins.signpath.SecretRetrieval.SecretRetriever;
-import io.jenkins.plugins.signpath.StepShared.SubmitSigningRequestStepInput;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.SynchronousStepExecution;
 
