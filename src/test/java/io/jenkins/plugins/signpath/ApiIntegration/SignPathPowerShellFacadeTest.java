@@ -83,7 +83,7 @@ public class SignPathPowerShellFacadeTest {
 
         // ASSERT
         assertNotNull(result);
-        assertEquals(signingRequestId ,result.getSigningRequestId());
+        assertEquals(signingRequestId, result.getSigningRequestId());
         String signedArtifactPath = TemporaryFileUtil.getAbsolutePathAndDispose(result.getSignedArtifact());
         assertNotNull(capturedCommand);
 
