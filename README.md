@@ -125,33 +125,3 @@ Please refer to the support available in your respective [SignPath edition](http
 Copyright by SignPath GmbH
 
 The SignPath Jenkins Plugin is being developed by [SignPath](https://about.signpath.io) and licensed under the **GNU General Public License v3 (GPL-3)**
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## Contributing
-
-Setup your machine
-- Install Intellij Idea (recommended)
-- Setup Build and run: **hpi:run** (Maven with the repo as working directory)
-- Setup Package build: **package** (Maven with the repo as working directory)
-
-Run the tests
-- Install the correct version of the SignPath PowerShell Module (latest version from the PowerShell Gallery)
-
-Run the Plugin locally
-- Set up you System as Jenkins Master (as described in the Getting started section).
-- Set up a declarative Pipeline Project and configure it to use the github example: https://github.com/Inspyro/jenkinstest [Jenkinsfile or JenkinsfileAsync].
-- Set up an agent - create a new agent and run it via JNLP (Java). Another option is to the provided docker agent (See dedicated section)
