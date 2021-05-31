@@ -34,7 +34,6 @@ public class SignPathContainer {
     private final StepContext stepContext;
     private final Run<?, ?> run;
     private final PrintStream logger;
-    private final String jenkinsRootUrl;
     private final SecretRetriever secretRetriever;
     private final OriginRetriever originRetriever;
     private final ArtifactFileManager artifactFileManager;
@@ -43,7 +42,6 @@ public class SignPathContainer {
     private SignPathContainer(StepContext stepContext,
                               Run<?, ?> run,
                               PrintStream logger,
-                              String jenkinsRootUrl,
                               SecretRetriever secretRetriever,
                               OriginRetriever originRetriever,
                               ArtifactFileManager artifactFileManager,
@@ -51,7 +49,6 @@ public class SignPathContainer {
         this.stepContext = stepContext;
         this.run = run;
         this.logger = logger;
-        this.jenkinsRootUrl = jenkinsRootUrl;
         this.secretRetriever = secretRetriever;
         this.originRetriever = originRetriever;
         this.artifactFileManager = artifactFileManager;
@@ -68,10 +65,6 @@ public class SignPathContainer {
 
     public PrintStream getLogger() {
         return logger;
-    }
-
-    public String getJenkinsRootUrl() {
-        return jenkinsRootUrl;
     }
 
     public SecretRetriever getSecretRetriever() {
@@ -113,6 +106,6 @@ public class SignPathContainer {
         PowerShellExecutor pwsh = new DefaultPowerShellExecutor("pwsh", logger);
         SignPathFacadeFactory signPathFacadeFactory = new SignPathPowerShellFacadeFactory(pwsh, apiConfiguration, logger);
 
-        return new SignPathContainer(context, run, logger, jenkinsRootUrl, secretRetriever, originRetriever, artifactFileManager, signPathFacadeFactory);
+        return new SignPathContainer(context, run, logger, secretRetriever, originRetriever, artifactFileManager, signPathFacadeFactory);
     }
 }
