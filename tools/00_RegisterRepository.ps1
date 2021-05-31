@@ -1,1 +1,0 @@
-Register-PSRepository -Name 'LocalPowershellRepository' -SourceLocation C:\Tools\LocalPowershellRepository\ -InstallationPolicy Trusted
