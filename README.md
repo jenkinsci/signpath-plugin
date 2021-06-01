@@ -125,3 +125,5 @@ Please refer to the support available in your respective [SignPath edition](http
 Copyright by SignPath GmbH
 
 The SignPath Jenkins Plugin is being developed by [SignPath](https://about.signpath.io) and licensed under the **GNU General Public License v3 (GPL-3)**
+
+[![build](https://github.com/SignPath/signpath-jenkins-plugin/actions/workflows/maven.yml/badge.svg)](https://github.com/SignPath/signpath-jenkins-plugin/actions/workflows/maven.yml)
