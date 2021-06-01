@@ -8,7 +8,7 @@
         <relativePath />
     </parent>
     <groupId>io.jenkins.plugins</groupId>
-    <artifactId>signpath.jenkinsplugin</artifactId>
+    <artifactId>signpath</artifactId>
     <version>${revision}${changelist}</version>
     <packaging>hpi</packaging>
     <properties>
@@ -21,7 +21,7 @@
         <host>0.0.0.0</host>
         <port>8080</port>
     </properties>
-    <name>SignPath Code-Signing Plugin</name>
+    <name>SignPath</name>
     <description>Use SignPath to sign your build artifacts</description>
     <developers>
         <developer>
@@ -32,8 +32,9 @@
     </developers>
     <licenses>
         <license>
-            <name>Copyright by SignPath GmbH</name>
-            <url>https://about.signpath.io</url>
+            <name>GNU GPLv3</name>
+            <url>https://opensource.org/licenses/GPL-3.0</url>
+            <distribution>repo</distribution>
         </license>
     </licenses>
     <dependencies>
