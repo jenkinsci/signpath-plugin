@@ -10,6 +10,16 @@ on:
     branches: [ main ]
 
 jobs:
+  install-dependencies:
+    name: Install dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install SignPath from PSGallery
+        shell: pwsh
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module SignPath
   build:
 
     runs-on: ubuntu-latest
