@@ -28,7 +28,7 @@ public class TemporaryFile implements Closeable {
         temporaryDirectory = Files.createTempDirectory("SignPathJenkinsPluginTemp").toFile();
         File newTemporaryFile = new File(temporaryDirectory, name);
 
-        if(!newTemporaryFile.getCanonicalPath().contains(temporaryDirectory.getCanonicalPath()))
+        if(!newTemporaryFile.getCanonicalPath().startsWith(temporaryDirectory.getCanonicalPath()))
             throw new IllegalAccessError("Navigating to parent is not allowed.");
 
         // we only allow 1 nesting level and strip the rest to avoid problems with long paths
