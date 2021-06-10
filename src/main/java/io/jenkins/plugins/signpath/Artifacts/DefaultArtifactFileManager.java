@@ -62,7 +62,7 @@ public class DefaultArtifactFileManager implements ArtifactFileManager {
         if(targetArtifactPath.contains(".."))
             throw new IllegalAccessError("targetArtifactPath cannot be in parent directory.");
 
-        ArtifactManager artifactManager = run.getArtifactManager();
+        ArtifactManager artifactManager = run.pickArtifactManager();
 
         String normalizedArtifactPath = getNormalizedPath(targetArtifactPath);
         artifactManager.archive(
