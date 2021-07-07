@@ -84,7 +84,7 @@ public class SignPathPowerShellFacade implements SignPathFacade {
     private PowerShellCommand createSubmitSigningRequestCommand(SigningRequestModel signingRequestModel, TemporaryFile outputArtifact) {
         PowerShellCommandBuilder commandBuilder = new PowerShellCommandBuilder("Submit-SigningRequest");
         commandBuilder.appendParameter("ApiUrl", apiConfiguration.getApiUrl().toString());
-        commandBuilder.appendParameter("CIUserToken", credentials.toCredentialString());
+        commandBuilder.appendParameter("CIUserToken", credentials.toCredentialString().getPlainText());
         commandBuilder.appendParameter("OrganizationId", signingRequestModel.getOrganizationId().toString());
         commandBuilder.appendParameter("InputArtifactPath", signingRequestModel.getArtifact().getAbsolutePath());
         commandBuilder.appendParameter("ProjectSlug", signingRequestModel.getProjectSlug());
@@ -134,7 +134,7 @@ public class SignPathPowerShellFacade implements SignPathFacade {
     private PowerShellCommand createGetSignedArtifactCommand(UUID organizationId, UUID signingRequestId, TemporaryFile outputArtifact) {
         PowerShellCommandBuilder commandBuilder = new PowerShellCommandBuilder("Get-SignedArtifact");
         commandBuilder.appendParameter("ApiUrl", apiConfiguration.getApiUrl().toString());
-        commandBuilder.appendParameter("CIUserToken", credentials.toCredentialString());
+        commandBuilder.appendParameter("CIUserToken", credentials.toCredentialString().getPlainText());
         commandBuilder.appendParameter("OrganizationId", organizationId.toString());
         commandBuilder.appendParameter("SigningRequestId", signingRequestId.toString());
         commandBuilder.appendParameter("ServiceUnavailableTimeoutInSeconds", String.valueOf(apiConfiguration.getServiceUnavailableTimeoutInSeconds()));
