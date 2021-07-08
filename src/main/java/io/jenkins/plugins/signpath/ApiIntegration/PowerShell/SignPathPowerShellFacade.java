@@ -134,7 +134,7 @@ public class SignPathPowerShellFacade implements SignPathFacade {
     private PowerShellCommand createGetSignedArtifactCommand(UUID organizationId, UUID signingRequestId, TemporaryFile outputArtifact) {
         PowerShellCommandBuilder commandBuilder = new PowerShellCommandBuilder("Get-SignedArtifact");
         commandBuilder.appendParameter("ApiUrl", apiConfiguration.getApiUrl().toString());
-        commandBuilder.appendParameter("CIUserToken", credentials.toCredentialString().getPlainText());
+        commandBuilder.appendParameter("CIUserToken", credentials.toCredentialString());
         commandBuilder.appendParameter("OrganizationId", organizationId.toString());
         commandBuilder.appendParameter("SigningRequestId", signingRequestId.toString());
         commandBuilder.appendParameter("ServiceUnavailableTimeoutInSeconds", String.valueOf(apiConfiguration.getServiceUnavailableTimeoutInSeconds()));
