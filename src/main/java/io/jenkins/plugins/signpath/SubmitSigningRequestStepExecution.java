@@ -1,5 +1,6 @@
 package io.jenkins.plugins.signpath;
 
+import hudson.util.Secret;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestModel;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestOriginModel;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SubmitSigningRequestResult;
@@ -53,8 +54,8 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution<
         logger.printf("Submitting signing request for organization: %s (waiting for completion: %s)%n", input.getOrganizationId(), input.getWaitForCompletion());
 
         try {
-            String trustedBuildSystemToken = secretRetriever.retrieveSecret(input.getTrustedBuildSystemTokenCredentialId());
-            String ciUserToken = secretRetriever.retrieveSecret(input.getCiUserTokenCredentialId());
+            Secret trustedBuildSystemToken = secretRetriever.retrieveSecret(input.getTrustedBuildSystemTokenCredentialId());
+            Secret ciUserToken = secretRetriever.retrieveSecret(input.getCiUserTokenCredentialId());
             SignPathCredentials credentials = new SignPathCredentials(ciUserToken, trustedBuildSystemToken);
             SignPathFacade signPathFacade = signPathFacadeFactory.create(credentials);
             try(SigningRequestOriginModel originModel = originRetriever.retrieveOrigin()) {

@@ -1,5 +1,6 @@
 package io.jenkins.plugins.signpath.ApiIntegration;
 
+import hudson.util.Secret;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.RepositoryMetadataModel;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestModel;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestOriginModel;
@@ -56,7 +57,7 @@ public class SignPathPowerShellFacadeTest {
 
     @Before
     public void setup() throws MalformedURLException, SignPathStepInvalidArgumentException {
-        credentials = new SignPathCredentials(Some.stringNonEmpty(), Some.stringNonEmpty());
+        credentials = new SignPathCredentials(Secret.fromString(Some.stringNonEmpty()), Secret.fromString(Some.stringNonEmpty()));
         apiConfiguration = Some.apiConfiguration();
         sut = new SignPathPowerShellFacade(powershellExecutor, credentials, apiConfiguration, logger);
 
@@ -243,7 +244,7 @@ public class SignPathPowerShellFacadeTest {
     }
 
     private void assertContainsCredentials(SignPathCredentials credentials, PowerShellCommand capturedCommand) {
-        assertContainsParameter("CIUserToken", credentials.toCredentialString(), capturedCommand);
+        assertContainsParameter("CIUserToken", credentials.toCredentialString().getPlainText(), capturedCommand);
     }
 
     private void assertContainsConfiguration(ApiConfiguration apiConfiguration, PowerShellCommand capturedCommand, boolean withWaitTime) {

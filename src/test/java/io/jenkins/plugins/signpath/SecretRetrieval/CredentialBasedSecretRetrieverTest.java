@@ -44,10 +44,10 @@ public class CredentialBasedSecretRetrieverTest {
         CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, id, secret);
 
         // ACT
-        String result = sut.retrieveSecret(id);
+        Secret result = sut.retrieveSecret(id);
 
         // ASSERT
-        assertEquals(secret, result);
+        assertEquals(secret, result.getPlainText());
     }
 
     @Test
@@ -61,10 +61,10 @@ public class CredentialBasedSecretRetrieverTest {
         credentialStore.addCredentials(domain, new StringCredentialsImpl(CredentialsScope.SYSTEM, id, Some.stringNonEmpty(), Secret.fromString(secret)));
 
         // ACT
-        String result = sut.retrieveSecret(id);
+        Secret result = sut.retrieveSecret(id);
 
         // ASSERT
-        assertEquals(secret, result);
+        assertEquals(secret, result.getPlainText());
     }
 
     @Test

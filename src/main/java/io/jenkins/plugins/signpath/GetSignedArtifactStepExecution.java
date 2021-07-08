@@ -1,5 +1,6 @@
 package io.jenkins.plugins.signpath;
 
+import hudson.util.Secret;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathCredentials;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathFacade;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathFacadeFactory;
@@ -47,8 +48,8 @@ public class GetSignedArtifactStepExecution extends SynchronousStepExecution<Voi
         logger.printf("Downloading signed artifact for organization: %s and signingRequest: %s%n", input.getOrganizationId(), input.getSigningRequestId());
 
         try {
-            String trustedBuildSystemToken = secretRetriever.retrieveSecret(input.getTrustedBuildSystemTokenCredentialId());
-            String ciUserToken = secretRetriever.retrieveSecret(input.getCiUserTokenCredentialId());
+            Secret trustedBuildSystemToken = secretRetriever.retrieveSecret(input.getTrustedBuildSystemTokenCredentialId());
+            Secret ciUserToken = secretRetriever.retrieveSecret(input.getCiUserTokenCredentialId());
             SignPathCredentials credentials = new SignPathCredentials(ciUserToken, trustedBuildSystemToken);
             SignPathFacade signPathFacade = signPathFacadeFactory.create(credentials);
             try (TemporaryFile signedArtifact = signPathFacade.getSignedArtifact(input.getOrganizationId(), input.getSigningRequestId())) {

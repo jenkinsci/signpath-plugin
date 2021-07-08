@@ -5,6 +5,7 @@ import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import hudson.security.ACL;
+import hudson.util.Secret;
 import io.jenkins.plugins.signpath.Exceptions.SecretNotFoundException;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
@@ -29,7 +30,7 @@ public class CredentialBasedSecretRetriever implements SecretRetriever {
     }
 
     @Override
-    public String retrieveSecret(String id) throws SecretNotFoundException {
+    public Secret retrieveSecret(String id) throws SecretNotFoundException {
         List<StringCredentials> credentials =
                 CredentialsProvider.lookupCredentials(StringCredentials.class, jenkins, ACL.SYSTEM, Collections.emptyList());
         CredentialsMatcher matcher = CredentialsMatchers.withId(id);
@@ -47,6 +48,6 @@ public class CredentialBasedSecretRetriever implements SecretRetriever {
                             id, scopeName, CredentialsScope.SYSTEM.getDisplayName()));
         }
 
-        return credential.getSecret().getPlainText();
+        return credential.getSecret();
     }
 }

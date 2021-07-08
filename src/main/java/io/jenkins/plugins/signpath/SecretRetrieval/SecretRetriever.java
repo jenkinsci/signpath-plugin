@@ -1,5 +1,6 @@
 package io.jenkins.plugins.signpath.SecretRetrieval;
 
+import hudson.util.Secret;
 import io.jenkins.plugins.signpath.Exceptions.SecretNotFoundException;
 
 /**
@@ -12,5 +13,5 @@ public interface SecretRetriever {
      * @param id the secret ID (as configured in the UI)
      * @throws SecretNotFoundException occurs if the secret is not found
      */
-    String retrieveSecret(String id) throws SecretNotFoundException;
+    Secret retrieveSecret(String id) throws SecretNotFoundException;
 }

@@ -1,5 +1,6 @@
 package io.jenkins.plugins.signpath.ApiIntegration;
 
+import hudson.util.Secret;
 import io.jenkins.plugins.signpath.ApiIntegration.PowerShell.DefaultPowerShellExecutor;
 import io.jenkins.plugins.signpath.ApiIntegration.PowerShell.PowerShellExecutionResult;
 import io.jenkins.plugins.signpath.ApiIntegration.PowerShell.PowerShellCommand;
@@ -43,10 +44,14 @@ public class DefaultPowerShellExecutorTest {
     @Test
     public void execute_withEnvironmentVariables() {
         Map<String, String> environmentVariables = new HashMap<>();
-        environmentVariables.put("myvariable", "content");
+        environmentVariables.put("variable", "content");
+
+        Map<String, Secret> secretEnvironmentVariables = new HashMap<>();
+        secretEnvironmentVariables.put("secret", Secret.fromString("secretcontent"));
 
         // ACT
-        PowerShellExecutionResult executionResult = sut.execute(new PowerShellCommand("echo $env:myvariable", environmentVariables), Integer.MAX_VALUE);
+        PowerShellExecutionResult executionResult =
+                sut.execute(new PowerShellCommand("echo $env:variable $env:secret", environmentVariables, secretEnvironmentVariables), Integer.MAX_VALUE);
 
         // ASSERT
         assertFalse(executionResult.getHasError());
@@ -54,6 +59,9 @@ public class DefaultPowerShellExecutorTest {
         assertNotNull(executionResult.getOutput());
         assertContains("content", executionResult.getOutput());
         assertContains("content", outputStream.toString());
+
+        assertContains("secretcontent", executionResult.getOutput());
+        assertContains("secretcontent", outputStream.toString());
     }
 
     @Test
