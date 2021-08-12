@@ -10,6 +10,7 @@ import java.io.IOException;
  */
 public interface OriginRetriever {
     /**
+     * @return The origin data from the current build
      * @throws IOException                   occurs if the build settings file is not readable
      * @throws OriginNotRetrievableException occurs if the origin is not retrievable
      */

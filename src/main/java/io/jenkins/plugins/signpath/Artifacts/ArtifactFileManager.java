@@ -30,6 +30,7 @@ public interface ArtifactFileManager {
      * @param targetArtifactPath the target path of the artifact
      * @throws IOException          occurs if something goes wrong with storing the artifact on Jenkins
      * @throws InterruptedException occurs if something goes wrong with storing the artifact on Jenkins
+     * @throws NoSuchAlgorithmException occurs if something goes wrong with storing the artifact on Jenkins
      */
     void storeArtifact(TemporaryFile artifact, String targetArtifactPath) throws IOException, InterruptedException, NoSuchAlgorithmException;
 }
