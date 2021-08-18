@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public class PortablePowerShell implements Closeable {
 
@@ -87,18 +88,18 @@ public class PortablePowerShell implements Closeable {
     }
 
     public void installSignPathModule() throws IOException, InterruptedException {
-        runPowerShellCommand("Install-Module SignPath -Scope CurrentUser -Repository PSGallery");
+        runPowerShellCommand("Install-Module SignPath -Scope CurrentUser -Repository PSGallery", 20);
     }
 
     public void uninstallSignPathModule () throws IOException, InterruptedException {
-        runPowerShellCommand("Uninstall-Module SignPath");
+        runPowerShellCommand("Uninstall-Module SignPath -Force", 10);
     }
 
-    private void runPowerShellCommand(String command) throws IOException, InterruptedException {
+    private void runPowerShellCommand(String command, long timeoutInSeconds) throws IOException, InterruptedException {
         ProcessBuilder processBuilder = new ProcessBuilder();
         processBuilder.command(powerShellExecutable, "-command", command);
         Process process = processBuilder.start();
-        process.waitFor();
+        process.waitFor(10, TimeUnit.SECONDS);
         process.destroy();
     }
 
