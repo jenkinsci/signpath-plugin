@@ -2,6 +2,9 @@ package io.jenkins.plugins.signpath.TestUtils;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Functions;
+import io.jenkins.plugins.signpath.ApiIntegration.PowerShell.DefaultPowerShellExecutor;
+import io.jenkins.plugins.signpath.ApiIntegration.PowerShell.PowerShellCommand;
+import io.jenkins.plugins.signpath.ApiIntegration.PowerShell.PowerShellExecutionResult;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveException;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
@@ -9,14 +12,13 @@ import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.compress.utils.IOUtils;
+import org.junit.Assert;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 public class PortablePowerShell implements Closeable {
 
@@ -87,20 +89,18 @@ public class PortablePowerShell implements Closeable {
         this.powerShellExecutable = new File(directory, executableName).toString();
     }
 
-    public void installSignPathModule() throws IOException, InterruptedException {
+    public void installSignPathModule() {
         runPowerShellCommand("Install-Module SignPath -Scope CurrentUser -Repository PSGallery", 20);
     }
 
-    public void uninstallSignPathModule () throws IOException, InterruptedException {
+    public void uninstallSignPathModule () {
         runPowerShellCommand("Uninstall-Module SignPath -Force", 10);
     }
 
-    private void runPowerShellCommand(String command, long timeoutInSeconds) throws IOException, InterruptedException {
-        ProcessBuilder processBuilder = new ProcessBuilder();
-        processBuilder.command(powerShellExecutable, "-command", command);
-        Process process = processBuilder.start();
-        process.waitFor(10, TimeUnit.SECONDS);
-        process.destroy();
+    private void runPowerShellCommand(String command, int timeoutInSeconds) {
+        DefaultPowerShellExecutor executor = new DefaultPowerShellExecutor(powerShellExecutable, System.out);
+        PowerShellExecutionResult result = executor.execute(new PowerShellCommand(command), timeoutInSeconds);
+        Assert.assertFalse(result.getHasError());
     }
 
     @Override
