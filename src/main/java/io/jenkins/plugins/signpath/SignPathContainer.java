@@ -1,9 +1,12 @@
 package io.jenkins.plugins.signpath;
 
+import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.model.FingerprintMap;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.slaves.EnvironmentVariablesNodeProperty;
+import hudson.slaves.NodeProperty;
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.signpath.ApiIntegration.PowerShell.DefaultPowerShellExecutor;
 import io.jenkins.plugins.signpath.ApiIntegration.PowerShell.PowerShellExecutor;
@@ -31,6 +34,8 @@ import java.io.PrintStream;
  * implementations
  */
 public class SignPathContainer {
+    public static final String POWERSHELL_EXECUTABLE_NAME = "SignPath_PowerShellExecutableName";
+
     private final StepContext stepContext;
     private final Run<?, ?> run;
     private final TaskListener taskListener;
@@ -103,7 +108,20 @@ public class SignPathContainer {
         SecretRetriever secretRetriever = new CredentialBasedSecretRetriever(jenkins);
         OriginRetriever originRetriever = new GitOriginRetriever(new DefaultConfigFileProvider(run), run, jenkinsRootUrl);
         ArtifactFileManager artifactFileManager = new DefaultArtifactFileManager(fingerprintMap, run, launcher, listener);
-        PowerShellExecutor pwsh = new DefaultPowerShellExecutor("pwsh", logger);
+
+        String powerShellExecutableName = "pwsh";
+        for(NodeProperty<?> nodeProperty : jenkins.getGlobalNodeProperties()) {
+            if(nodeProperty instanceof EnvironmentVariablesNodeProperty) {
+                EnvironmentVariablesNodeProperty variablesNodeProperty = (EnvironmentVariablesNodeProperty) nodeProperty;
+                EnvVars envVars = variablesNodeProperty.getEnvVars();
+                if(envVars.containsKey(POWERSHELL_EXECUTABLE_NAME))
+                {
+                    powerShellExecutableName = envVars.get(POWERSHELL_EXECUTABLE_NAME);
+                }
+            }
+        }
+
+        PowerShellExecutor pwsh = new DefaultPowerShellExecutor(powerShellExecutableName, logger);
         SignPathFacadeFactory signPathFacadeFactory = new SignPathPowerShellFacadeFactory(pwsh, apiConfiguration, logger);
 
         return new SignPathContainer(context, run, listener, secretRetriever, originRetriever, artifactFileManager, signPathFacadeFactory);

@@ -9,12 +9,17 @@ import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.plugins.git.util.BuildData;
+import hudson.slaves.EnvironmentVariablesNodeProperty;
 import io.jenkins.plugins.signpath.Artifacts.DefaultArtifactFileManager;
 import io.jenkins.plugins.signpath.Common.TemporaryFile;
 import io.jenkins.plugins.signpath.Exceptions.ArtifactNotFoundException;
 import io.jenkins.plugins.signpath.TestUtils.*;
+import org.apache.commons.compress.archivers.ArchiveException;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.experimental.theories.Theories;
 import org.junit.experimental.theories.Theory;
@@ -28,12 +33,32 @@ import static org.junit.Assert.*;
 @RunWith(Theories.class)
 public class GetSignedArtifactStepEndToEndTest {
     private static final int MockServerPort = 51000;
+    private static PortablePowerShell portablePowerShell;
 
     @Rule
     public final SignPathJenkinsRule j = new SignPathJenkinsRule();
 
     @Rule
     public final WireMockRule wireMockRule = new WireMockRule(MockServerPort);
+
+    @BeforeClass
+    public static void setupOnce() throws IOException, ArchiveException, InterruptedException {
+        portablePowerShell = PortablePowerShell.setup();
+        portablePowerShell.installSignPathModule();
+    }
+
+    @AfterClass
+    public static void tearDownOnce() throws IOException, InterruptedException {
+        portablePowerShell.uninstallSignPathModule();
+        portablePowerShell.close();
+    }
+
+    @Before
+    public void setup() {
+        EnvironmentVariablesNodeProperty prop = new EnvironmentVariablesNodeProperty();
+        prop.getEnvVars().put(SignPathContainer.POWERSHELL_EXECUTABLE_NAME, portablePowerShell.getPowerShellExecutable());
+        j.jenkins.getGlobalNodeProperties().add(prop);
+    }
 
     @Theory
     public void getSignedArtifact() throws Exception {
@@ -137,7 +162,6 @@ public class GetSignedArtifactStepEndToEndTest {
         FingerprintMap fingerprintMap = j.jenkins.getFingerprintMap();
         DefaultArtifactFileManager artifactFileManager = new DefaultArtifactFileManager(fingerprintMap, run, launcher, listener);
         TemporaryFile signedArtifact = artifactFileManager.retrieveArtifact("signed.exe");
-        byte[] signedArtifactContent = TemporaryFileUtil.getContentAndDispose(signedArtifact);
-        return signedArtifactContent;
+        return TemporaryFileUtil.getContentAndDispose(signedArtifact);
     }
 }
