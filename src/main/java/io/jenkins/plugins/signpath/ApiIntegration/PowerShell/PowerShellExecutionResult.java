@@ -19,11 +19,11 @@ public class PowerShellExecutionResult {
         this.output = output;
     }
 
-    public static PowerShellExecutionResult Success(String output) {
+    public static PowerShellExecutionResult success(String output) {
         return new PowerShellExecutionResult(false, null, output);
     }
 
-    public static PowerShellExecutionResult Error(String errorDescription) {
+    public static PowerShellExecutionResult error(String errorDescription) {
         return new PowerShellExecutionResult(true, errorDescription, null);
     }
 

@@ -33,7 +33,7 @@ import java.io.PrintStream;
 public class SignPathContainer {
     private final StepContext stepContext;
     private final Run<?, ?> run;
-    private final PrintStream logger;
+    private final TaskListener taskListener;
     private final SecretRetriever secretRetriever;
     private final OriginRetriever originRetriever;
     private final ArtifactFileManager artifactFileManager;
@@ -41,14 +41,14 @@ public class SignPathContainer {
 
     private SignPathContainer(StepContext stepContext,
                               Run<?, ?> run,
-                              PrintStream logger,
+                              TaskListener taskListener,
                               SecretRetriever secretRetriever,
                               OriginRetriever originRetriever,
                               ArtifactFileManager artifactFileManager,
                               SignPathFacadeFactory signPathFacadeFactory) {
         this.stepContext = stepContext;
         this.run = run;
-        this.logger = logger;
+        this.taskListener = taskListener;
         this.secretRetriever = secretRetriever;
         this.originRetriever = originRetriever;
         this.artifactFileManager = artifactFileManager;
@@ -63,8 +63,8 @@ public class SignPathContainer {
         return run;
     }
 
-    public PrintStream getLogger() {
-        return logger;
+    public TaskListener getTaskListener() {
+        return taskListener;
     }
 
     public SecretRetriever getSecretRetriever() {
@@ -83,7 +83,7 @@ public class SignPathContainer {
         return signPathFacadeFactory;
     }
 
-    public static SignPathContainer Build(StepContext context, ApiConfiguration apiConfiguration)
+    public static SignPathContainer build(StepContext context, ApiConfiguration apiConfiguration)
             throws IOException, InterruptedException, SignPathStepInvalidArgumentException {
         TaskListener listener = context.get(TaskListener.class);
         assert listener != null;
@@ -106,6 +106,6 @@ public class SignPathContainer {
         PowerShellExecutor pwsh = new DefaultPowerShellExecutor("pwsh", logger);
         SignPathFacadeFactory signPathFacadeFactory = new SignPathPowerShellFacadeFactory(pwsh, apiConfiguration, logger);
 
-        return new SignPathContainer(context, run, logger, secretRetriever, originRetriever, artifactFileManager, signPathFacadeFactory);
+        return new SignPathContainer(context, run, listener, secretRetriever, originRetriever, artifactFileManager, signPathFacadeFactory);
     }
 }

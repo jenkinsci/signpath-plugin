@@ -31,7 +31,7 @@ public class DefaultPowerShellExecutor implements PowerShellExecutor {
             boolean hasCompletedWithoutTimeout = process.waitFor(timeoutInSeconds, TimeUnit.SECONDS);
 
             if (!hasCompletedWithoutTimeout) {
-                return PowerShellExecutionResult.Error(String.format("Execution did not complete within %ds", timeoutInSeconds));
+                return PowerShellExecutionResult.error(String.format("Execution did not complete within %ds", timeoutInSeconds));
             }
 
             int exitValue = process.exitValue();
@@ -40,12 +40,12 @@ public class DefaultPowerShellExecutor implements PowerShellExecutor {
             process.destroy();
 
             if (exitValue != 0) {
-                return PowerShellExecutionResult.Error(String.format("Execution did not complete successfully (ExitCode: %d)", exitValue));
+                return PowerShellExecutionResult.error(String.format("Execution did not complete successfully (ExitCode: %d)", exitValue));
             }
 
-            return PowerShellExecutionResult.Success(lineReader.getCapturedOutput());
+            return PowerShellExecutionResult.success(lineReader.getCapturedOutput());
         } catch (Exception e) {
-            return PowerShellExecutionResult.Error(e.toString());
+            return PowerShellExecutionResult.error(e.toString());
         }
     }
 
@@ -68,7 +68,7 @@ public class DefaultPowerShellExecutor implements PowerShellExecutor {
         public void run() {
             String lineSeparator = System.getProperty("line.separator");
 
-            try(BufferedReader reader = new BufferedReader(new InputStreamReader(input))) {
+            try(BufferedReader reader = new BufferedReader(new InputStreamReader(input, "UTF-8"))) {
                 String line;
                 while((line = reader.readLine()) != null) {
                     output.println(line);

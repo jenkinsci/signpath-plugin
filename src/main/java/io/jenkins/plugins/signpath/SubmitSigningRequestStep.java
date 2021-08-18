@@ -59,15 +59,15 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
                 outputArtifactPath,
                 waitForCompletion);
 
-        ApiConfiguration apiConfiguration = GetAndValidateApiConfiguration();
-        SignPathContainer container = SignPathContainer.Build(context, apiConfiguration);
+        ApiConfiguration apiConfiguration = getAndValidateApiConfiguration();
+        SignPathContainer container = SignPathContainer.build(context, apiConfiguration);
 
         return new SubmitSigningRequestStepExecution(input,
                 container.getSecretRetriever(),
                 container.getOriginRetriever(),
                 container.getArtifactFileManager(),
                 container.getSignPathFacadeFactory(),
-                container.getLogger(),
+                container.getTaskListener(),
                 container.getStepContext());
     }
 

@@ -1,12 +1,15 @@
 package io.jenkins.plugins.signpath.Common;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.util.IOUtils;
+import org.springframework.util.Assert;
 
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
@@ -31,8 +34,11 @@ public class TemporaryFile implements Closeable {
         if(!newTemporaryFile.getCanonicalPath().startsWith(temporaryDirectory.getCanonicalPath()))
             throw new IllegalAccessError("Navigating to parent is not allowed.");
 
+        Path fileNamePath = Paths.get(newTemporaryFile.getCanonicalPath()).getFileName();
+        Assert.notNull(fileNamePath, "We expect a valid path with a file name.");
+
         // we only allow 1 nesting level and strip the rest to avoid problems with long paths
-        String fileName = Paths.get(newTemporaryFile.getCanonicalPath()).getFileName().toString();
+        String fileName = fileNamePath.toString();
         temporaryFile = new File(temporaryDirectory, fileName);
 
         // this should never throw (only if file already exists, but the temp directory should be unique)
@@ -56,6 +62,7 @@ public class TemporaryFile implements Closeable {
     }
 
     @Override
+    @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_BAD_PRACTICE")
     public void close() {
         //noinspection ResultOfMethodCallIgnored
         temporaryFile.delete();

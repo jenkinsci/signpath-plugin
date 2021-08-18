@@ -1,5 +1,6 @@
 package io.jenkins.plugins.signpath;
 
+import hudson.model.TaskListener;
 import hudson.util.Secret;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestModel;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestOriginModel;
@@ -25,7 +26,7 @@ import java.util.UUID;
  * @see SubmitSigningRequestStep
  */
 public class SubmitSigningRequestStepExecution extends SynchronousStepExecution<String> {
-    private final PrintStream logger;
+    private final TaskListener taskListener;
     private final SecretRetriever secretRetriever;
     private final OriginRetriever originRetriever;
     private final ArtifactFileManager artifactFileManager;
@@ -37,11 +38,11 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution<
                                                 OriginRetriever originRetriever,
                                                 ArtifactFileManager artifactFileManager,
                                                 SignPathFacadeFactory signPathFacadeFactory,
-                                                PrintStream logger,
+                                                TaskListener taskListener,
                                                 StepContext stepContext) {
         super(stepContext);
         this.input = input;
-        this.logger = logger;
+        this.taskListener = taskListener;
         this.secretRetriever = secretRetriever;
         this.originRetriever = originRetriever;
         this.artifactFileManager = artifactFileManager;
@@ -50,6 +51,8 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution<
 
     @Override
     protected String run() throws SignPathStepFailedException {
+
+        PrintStream logger = taskListener.getLogger();
 
         logger.printf("Submitting signing request for organization: %s (waiting for completion: %s)%n", input.getOrganizationId(), input.getWaitForCompletion());
 
