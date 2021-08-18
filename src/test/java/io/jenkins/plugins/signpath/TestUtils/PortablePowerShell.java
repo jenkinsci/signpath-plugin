@@ -90,7 +90,7 @@ public class PortablePowerShell implements Closeable {
     }
 
     public void installSignPathModule() {
-        runPowerShellCommand("Install-Module SignPath -Scope CurrentUser -Repository PSGallery", 20);
+        runPowerShellCommand("Install-Module SignPath -Scope CurrentUser -Repository PSGallery -Force", 20);
     }
 
     public void uninstallSignPathModule () {
