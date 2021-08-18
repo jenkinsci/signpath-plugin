@@ -42,13 +42,13 @@ public class GetSignedArtifactStepEndToEndTest {
     public final WireMockRule wireMockRule = new WireMockRule(MockServerPort);
 
     @BeforeClass
-    public static void setupOnce() throws IOException, ArchiveException, InterruptedException {
+    public static void setupOnce() throws IOException, ArchiveException {
         portablePowerShell = PortablePowerShell.setup();
         portablePowerShell.installSignPathModule();
     }
 
     @AfterClass
-    public static void tearDownOnce() throws IOException, InterruptedException {
+    public static void tearDownOnce() {
         portablePowerShell.uninstallSignPathModule();
         portablePowerShell.close();
     }
