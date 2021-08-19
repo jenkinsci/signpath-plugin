@@ -19,10 +19,7 @@ import jenkins.model.JenkinsLocationConfiguration;
 import org.apache.commons.compress.archivers.ArchiveException;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
+import org.junit.*;
 import org.junit.experimental.theories.DataPoints;
 import org.junit.experimental.theories.FromDataPoints;
 import org.junit.experimental.theories.Theories;
@@ -40,32 +37,15 @@ import static org.junit.Assert.*;
 @RunWith(Theories.class)
 public class SubmitSigningRequestStepEndToEndTest {
     private static final int MockServerPort = 51000;
-    private static PortablePowerShell portablePowerShell;
+
+    @ClassRule
+    public static final PortablePowerShellRule ps = new PortablePowerShellRule(true);
 
     @Rule
-    public final SignPathJenkinsRule j = new SignPathJenkinsRule();
+    public final SignPathJenkinsRule j = new SignPathJenkinsRule(ps.getPowerShellExecutable());
 
     @Rule
     public final WireMockRule wireMockRule = new WireMockRule(MockServerPort);
-
-    @BeforeClass
-    public static void setupOnce() throws IOException, ArchiveException {
-        portablePowerShell = PortablePowerShell.setup();
-        portablePowerShell.installSignPathModule();
-    }
-
-    @AfterClass
-    public static void tearDownOnce() {
-        portablePowerShell.uninstallSignPathModule();
-        portablePowerShell.close();
-    }
-
-    @Before
-    public void setup() {
-        EnvironmentVariablesNodeProperty prop = new EnvironmentVariablesNodeProperty();
-        prop.getEnvVars().put(SignPathContainer.POWERSHELL_EXECUTABLE_NAME, portablePowerShell.getPowerShellExecutable());
-        j.jenkins.getGlobalNodeProperties().add(prop);
-    }
 
     @Theory
     public void submitSigningRequest(@FromDataPoints("allBooleans") boolean withOptionalFields) throws Exception {

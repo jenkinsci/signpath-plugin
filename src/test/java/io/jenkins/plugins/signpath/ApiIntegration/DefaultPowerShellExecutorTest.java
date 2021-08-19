@@ -6,6 +6,7 @@ import io.jenkins.plugins.signpath.ApiIntegration.PowerShell.PowerShellExecution
 import io.jenkins.plugins.signpath.ApiIntegration.PowerShell.PowerShellCommand;
 import io.jenkins.plugins.signpath.Common.TemporaryFile;
 import io.jenkins.plugins.signpath.TestUtils.PortablePowerShell;
+import io.jenkins.plugins.signpath.TestUtils.PortablePowerShellRule;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveException;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
@@ -13,10 +14,7 @@ import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.tools.zip.ZipEntry;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -30,27 +28,19 @@ import static io.jenkins.plugins.signpath.TestUtils.AssertionExtensions.assertCo
 import static org.junit.Assert.*;
 
 public class DefaultPowerShellExecutorTest {
-    private static PortablePowerShell portablePowerShell;
-
     private ByteArrayOutputStream outputStream;
 
     private DefaultPowerShellExecutor sut;
 
-    @BeforeClass
-    public static void setupOnce() throws IOException, ArchiveException {
-        portablePowerShell = PortablePowerShell.setup();    }
-
-    @AfterClass
-    public static void tearDownOnce() {
-        portablePowerShell.close();
-    }
+    @ClassRule
+    public static PortablePowerShellRule ps = new PortablePowerShellRule(false);
 
     @Before
     public void setup() {
         outputStream = new ByteArrayOutputStream();
         PrintStream logger = new PrintStream(outputStream);
 
-        sut = new DefaultPowerShellExecutor(portablePowerShell.getPowerShellExecutable(), logger);
+        sut = new DefaultPowerShellExecutor(ps.getPowerShellExecutable(), logger);
     }
 
     @Test
