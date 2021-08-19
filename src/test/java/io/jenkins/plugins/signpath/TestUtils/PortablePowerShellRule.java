@@ -19,8 +19,7 @@ public class PortablePowerShellRule extends ExternalResource {
 
     @Override
     protected void after() {
-        if(installSignPathModule)
-            portablePowerShell.uninstallSignPathModule();
+        // no need to uninstall the PowerShell module since it is installed in the directory that is removed in close
         portablePowerShell.close();
     }
 

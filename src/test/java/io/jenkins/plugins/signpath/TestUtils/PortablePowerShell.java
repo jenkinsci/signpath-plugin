@@ -1,6 +1,5 @@
 package io.jenkins.plugins.signpath.TestUtils;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Functions;
 import io.jenkins.plugins.signpath.ApiIntegration.PowerShell.DefaultPowerShellExecutor;
 import io.jenkins.plugins.signpath.ApiIntegration.PowerShell.PowerShellCommand;
@@ -12,6 +11,7 @@ import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.compress.utils.IOUtils;
+import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 
 import java.io.*;
@@ -22,7 +22,8 @@ import java.util.Set;
 
 public class PortablePowerShell implements Closeable {
 
-    private final File directory;
+    private final File extractionDirectory;
+    private final String moduleDirectory;
     private final String powerShellExecutable;
 
     public static PortablePowerShell setup() throws IOException, ArchiveException {
@@ -63,8 +64,6 @@ public class PortablePowerShell implements Closeable {
     private static PortablePowerShell setup(ArchiveInputStream input, String executableName) throws IOException {
         File extractionDirectory = Files.createTempDirectory(PortablePowerShell.class.getName()).toFile();
 
-        System.out.println(extractionDirectory.toString());
-
         ArchiveEntry entry = input.getNextEntry();
 
         while(entry != null) {
@@ -84,17 +83,14 @@ public class PortablePowerShell implements Closeable {
         return new PortablePowerShell(extractionDirectory, executableName);
     }
 
-    private PortablePowerShell(File directory, String executableName) {
-        this.directory = directory;
-        this.powerShellExecutable = new File(directory, executableName).toString();
+    private PortablePowerShell(File directory, String executableName) throws IOException {
+        this.extractionDirectory = directory;
+        this.powerShellExecutable = new File(directory, executableName).getCanonicalPath();
+        this.moduleDirectory = new File(directory, "Modules").getCanonicalPath();
     }
 
     public void installSignPathModule() {
-        runPowerShellCommand("Install-Module SignPath -Scope CurrentUser -Repository PSGallery -Force", 20);
-    }
-
-    public void uninstallSignPathModule () {
-        runPowerShellCommand("Uninstall-Module SignPath -Force", 10);
+        runPowerShellCommand("Find-Module SignPath -Repository PSGallery | Save-Module -Path '" + moduleDirectory + "'", 20);
     }
 
     private void runPowerShellCommand(String command, int timeoutInSeconds) {
@@ -104,10 +100,12 @@ public class PortablePowerShell implements Closeable {
     }
 
     @Override
-    @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_BAD_PRACTICE")
     public void close() {
-        //noinspection ResultOfMethodCallIgnored
-        directory.delete();
+        try {
+            FileUtils.deleteDirectory(extractionDirectory);
+        } catch (IOException e) {
+            System.err.format("Could not delete temporary directory '%s'.%n", extractionDirectory.toString());
+        }
     }
 
     public String getPowerShellExecutable() {
