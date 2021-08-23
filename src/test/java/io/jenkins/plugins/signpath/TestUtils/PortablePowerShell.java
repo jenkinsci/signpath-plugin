@@ -69,8 +69,10 @@ public class PortablePowerShell implements Closeable {
         while(entry != null) {
             File entryDestination = new File(extractionDirectory, entry.getName());
             if (entry.isDirectory()) {
+                //noinspection ResultOfMethodCallIgnored
                 entryDestination.mkdirs();
             } else {
+                //noinspection ResultOfMethodCallIgnored
                 entryDestination.getParentFile().mkdirs();
                 try (OutputStream out = new FileOutputStream(entryDestination)) {
                     IOUtils.copy(input, out);
@@ -90,12 +92,10 @@ public class PortablePowerShell implements Closeable {
     }
 
     public void installSignPathModule() {
-        runPowerShellCommand("Find-Module SignPath -Repository PSGallery | Save-Module -Path '" + moduleDirectory + "'", 20);
-    }
-
-    private void runPowerShellCommand(String command, int timeoutInSeconds) {
         DefaultPowerShellExecutor executor = new DefaultPowerShellExecutor(powerShellExecutable, System.out);
-        PowerShellExecutionResult result = executor.execute(new PowerShellCommand(command), timeoutInSeconds);
+        PowerShellCommand command = new PowerShellCommand(
+                "Find-Module SignPath -Repository PSGallery | Save-Module -Path '" + moduleDirectory + "'");
+        PowerShellExecutionResult result = executor.execute(command, 20);
         Assert.assertFalse(result.getHasError());
     }
 

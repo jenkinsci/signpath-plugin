@@ -30,9 +30,7 @@ public class PowerShellCommand {
     }
 
     public Map<String, String> getEnvironmentVariables() {
-        Map<String, String> result = new HashMap<>();
-
-        result.putAll(environmentVariables);
+        Map<String, String> result = new HashMap<>(environmentVariables);
 
         for(Map.Entry<String, Secret> entry : secretEnvironmentVariables.entrySet()) {
             result.put(entry.getKey(), entry.getValue().getPlainText());

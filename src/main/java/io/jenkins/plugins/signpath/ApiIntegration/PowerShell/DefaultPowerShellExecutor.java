@@ -1,6 +1,7 @@
 package io.jenkins.plugins.signpath.ApiIntegration.PowerShell;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 public class DefaultPowerShellExecutor implements PowerShellExecutor {
@@ -68,7 +69,7 @@ public class DefaultPowerShellExecutor implements PowerShellExecutor {
         public void run() {
             String lineSeparator = System.getProperty("line.separator");
 
-            try(BufferedReader reader = new BufferedReader(new InputStreamReader(input, "UTF-8"))) {
+            try(BufferedReader reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8))) {
                 String line;
                 while((line = reader.readLine()) != null) {
                     output.println(line);

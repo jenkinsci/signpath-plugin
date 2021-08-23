@@ -1,7 +1,5 @@
 package io.jenkins.plugins.signpath.ApiIntegration;
 
-import io.jenkins.plugins.signpath.Exceptions.SignPathStepInvalidArgumentException;
-
 import java.net.URL;
 
 /**

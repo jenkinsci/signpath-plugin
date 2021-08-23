@@ -2,11 +2,7 @@ package io.jenkins.plugins.signpath;
 
 import hudson.EnvVars;
 import hudson.Launcher;
-import hudson.model.FingerprintMap;
-import hudson.model.Run;
-import hudson.model.TaskListener;
-import hudson.slaves.EnvironmentVariablesNodeProperty;
-import hudson.slaves.NodeProperty;
+import hudson.model.*;
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.signpath.ApiIntegration.PowerShell.DefaultPowerShellExecutor;
 import io.jenkins.plugins.signpath.ApiIntegration.PowerShell.PowerShellExecutor;
@@ -24,6 +20,7 @@ import jenkins.model.Jenkins;
 import jenkins.model.JenkinsLocationConfiguration;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.PrintStream;
 
@@ -99,6 +96,7 @@ public class SignPathContainer {
         FingerprintMap fingerprintMap = jenkins.getFingerprintMap();
         JenkinsLocationConfiguration config = JenkinsLocationConfiguration.get();
         String jenkinsRootUrl = config.getUrl();
+        EnvVars envVars = context.get(EnvVars.class);
 
         // non-valid urls result in null value here
         if (jenkinsRootUrl == null || jenkinsRootUrl.isEmpty()) {
@@ -109,21 +107,15 @@ public class SignPathContainer {
         OriginRetriever originRetriever = new GitOriginRetriever(new DefaultConfigFileProvider(run), run, jenkinsRootUrl);
         ArtifactFileManager artifactFileManager = new DefaultArtifactFileManager(fingerprintMap, run, launcher, listener);
 
-        String powerShellExecutableName = "pwsh";
-        for(NodeProperty<?> nodeProperty : jenkins.getGlobalNodeProperties()) {
-            if(nodeProperty instanceof EnvironmentVariablesNodeProperty) {
-                EnvironmentVariablesNodeProperty variablesNodeProperty = (EnvironmentVariablesNodeProperty) nodeProperty;
-                EnvVars envVars = variablesNodeProperty.getEnvVars();
-                if(envVars.containsKey(POWERSHELL_EXECUTABLE_NAME))
-                {
-                    powerShellExecutableName = envVars.get(POWERSHELL_EXECUTABLE_NAME);
-                }
-            }
-        }
-
-        PowerShellExecutor pwsh = new DefaultPowerShellExecutor(powerShellExecutableName, logger);
+        PowerShellExecutor pwsh = new DefaultPowerShellExecutor(getPowerShellExecutablePath(envVars), logger);
         SignPathFacadeFactory signPathFacadeFactory = new SignPathPowerShellFacadeFactory(pwsh, apiConfiguration, logger);
 
         return new SignPathContainer(context, run, listener, secretRetriever, originRetriever, artifactFileManager, signPathFacadeFactory);
+    }
+
+    private static String getPowerShellExecutablePath(@Nullable EnvVars envVars) {
+        // This is currently only used to replace the real PowerShell executable with a portable one in the tests,
+        // but might become a user feature in the future.
+        return envVars != null && envVars.containsKey(POWERSHELL_EXECUTABLE_NAME) ? envVars.get(POWERSHELL_EXECUTABLE_NAME) : "pwsh";
     }
 }
