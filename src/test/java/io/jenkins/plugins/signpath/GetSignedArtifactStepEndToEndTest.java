@@ -15,6 +15,7 @@ import io.jenkins.plugins.signpath.Exceptions.ArtifactNotFoundException;
 import io.jenkins.plugins.signpath.TestUtils.*;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.experimental.theories.Theories;
 import org.junit.experimental.theories.Theory;
@@ -29,8 +30,11 @@ import static org.junit.Assert.*;
 public class GetSignedArtifactStepEndToEndTest {
     private static final int MockServerPort = 51000;
 
+    @ClassRule
+    public static final PortablePowerShellRule ps = new PortablePowerShellRule(true);
+
     @Rule
-    public final SignPathJenkinsRule j = new SignPathJenkinsRule();
+    public final SignPathJenkinsRule j = new SignPathJenkinsRule(ps.getPowerShellExecutable());
 
     @Rule
     public final WireMockRule wireMockRule = new WireMockRule(MockServerPort);
@@ -137,7 +141,6 @@ public class GetSignedArtifactStepEndToEndTest {
         FingerprintMap fingerprintMap = j.jenkins.getFingerprintMap();
         DefaultArtifactFileManager artifactFileManager = new DefaultArtifactFileManager(fingerprintMap, run, launcher, listener);
         TemporaryFile signedArtifact = artifactFileManager.retrieveArtifact("signed.exe");
-        byte[] signedArtifactContent = TemporaryFileUtil.getContentAndDispose(signedArtifact);
-        return signedArtifactContent;
+        return TemporaryFileUtil.getContentAndDispose(signedArtifact);
     }
 }

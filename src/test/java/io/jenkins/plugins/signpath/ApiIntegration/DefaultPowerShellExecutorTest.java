@@ -2,9 +2,11 @@ package io.jenkins.plugins.signpath.ApiIntegration;
 
 import hudson.util.Secret;
 import io.jenkins.plugins.signpath.ApiIntegration.PowerShell.DefaultPowerShellExecutor;
-import io.jenkins.plugins.signpath.ApiIntegration.PowerShell.PowerShellExecutionResult;
 import io.jenkins.plugins.signpath.ApiIntegration.PowerShell.PowerShellCommand;
+import io.jenkins.plugins.signpath.ApiIntegration.PowerShell.PowerShellExecutionResult;
+import io.jenkins.plugins.signpath.TestUtils.PortablePowerShellRule;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -20,12 +22,15 @@ public class DefaultPowerShellExecutorTest {
 
     private DefaultPowerShellExecutor sut;
 
+    @ClassRule
+    public static final PortablePowerShellRule ps = new PortablePowerShellRule(false);
+
     @Before
     public void setup() {
         outputStream = new ByteArrayOutputStream();
         PrintStream logger = new PrintStream(outputStream);
 
-        sut = new DefaultPowerShellExecutor("pwsh", logger);
+        sut = new DefaultPowerShellExecutor(ps.getPowerShellExecutable(), logger);
     }
 
     @Test

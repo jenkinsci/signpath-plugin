@@ -45,13 +45,13 @@ public class GetSignedArtifactStep extends SignPathStepBase {
                 ensureNotNull(getCiUserTokenCredentialId(), "ciUserTokenCredentialId"),
                 ensureNotNull(getOutputArtifactPath(), "outputArtifactPath"));
 
-        ApiConfiguration apiConfiguration = GetAndValidateApiConfiguration();
-        SignPathContainer container = SignPathContainer.Build(context, apiConfiguration);
+        ApiConfiguration apiConfiguration = getAndValidateApiConfiguration();
+        SignPathContainer container = SignPathContainer.build(context, apiConfiguration);
         return new GetSignedArtifactStepExecution(input,
                 container.getSecretRetriever(),
                 container.getArtifactFileManager(),
                 container.getSignPathFacadeFactory(),
-                container.getLogger(),
+                container.getTaskListener(),
                 container.getStepContext());
     }
 

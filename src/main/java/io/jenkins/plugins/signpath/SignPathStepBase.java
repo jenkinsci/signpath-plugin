@@ -99,7 +99,7 @@ public abstract class SignPathStepBase extends Step {
         this.waitForPowerShellTimeoutInSeconds = waitForPowerShellTimeoutInSeconds;
     }
 
-    public ApiConfiguration GetAndValidateApiConfiguration() throws SignPathStepInvalidArgumentException {
+    public ApiConfiguration getAndValidateApiConfiguration() throws SignPathStepInvalidArgumentException {
         return new ApiConfiguration(
                 ensureValidURL(getApiUrl()),
                 getServiceUnavailableTimeoutInSeconds(),

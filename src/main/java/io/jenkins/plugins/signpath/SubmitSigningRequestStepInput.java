@@ -1,5 +1,6 @@
 package io.jenkins.plugins.signpath;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 /**
@@ -7,7 +8,9 @@ import java.util.UUID;
  *
  * @see io.jenkins.plugins.signpath.SubmitSigningRequestStep
  */
-public class SubmitSigningRequestStepInput {
+public class SubmitSigningRequestStepInput implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private final UUID organizationId;
     private final String trustedBuildSystemTokenCredentialId;
     private final String ciUserTokenCredentialId;

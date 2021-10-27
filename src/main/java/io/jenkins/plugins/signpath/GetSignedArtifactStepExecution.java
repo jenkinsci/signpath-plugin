@@ -1,5 +1,6 @@
 package io.jenkins.plugins.signpath;
 
+import hudson.model.TaskListener;
 import hudson.util.Secret;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathCredentials;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathFacade;
@@ -23,21 +24,21 @@ import java.security.NoSuchAlgorithmException;
  * @see GetSignedArtifactStep
  */
 public class GetSignedArtifactStepExecution extends SynchronousStepExecution<Void> {
-    private final PrintStream logger;
+    private final GetSignedArtifactStepInput input;
+    private final TaskListener taskListener;
     private final SecretRetriever secretRetriever;
     private final ArtifactFileManager artifactFileManager;
     private final SignPathFacadeFactory signPathFacadeFactory;
-    private final GetSignedArtifactStepInput input;
 
     protected GetSignedArtifactStepExecution(GetSignedArtifactStepInput input,
                                              SecretRetriever secretRetriever,
                                              ArtifactFileManager artifactFileManager,
                                              SignPathFacadeFactory signPathFacadeFactory,
-                                             PrintStream logger,
+                                             TaskListener taskListener,
                                              StepContext stepContext) {
         super(stepContext);
         this.input = input;
-        this.logger = logger;
+        this.taskListener = taskListener;
         this.secretRetriever = secretRetriever;
         this.artifactFileManager = artifactFileManager;
         this.signPathFacadeFactory = signPathFacadeFactory;
@@ -45,6 +46,8 @@ public class GetSignedArtifactStepExecution extends SynchronousStepExecution<Voi
 
     @Override
     protected Void run() throws SignPathStepFailedException {
+        PrintStream logger = taskListener.getLogger();
+
         logger.printf("Downloading signed artifact for organization: %s and signingRequest: %s%n", input.getOrganizationId(), input.getSigningRequestId());
 
         try {

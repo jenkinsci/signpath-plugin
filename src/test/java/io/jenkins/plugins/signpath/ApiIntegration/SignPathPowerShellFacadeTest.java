@@ -11,7 +11,6 @@ import io.jenkins.plugins.signpath.ApiIntegration.PowerShell.PowerShellExecutor;
 import io.jenkins.plugins.signpath.ApiIntegration.PowerShell.SignPathPowerShellFacade;
 import io.jenkins.plugins.signpath.Common.TemporaryFile;
 import io.jenkins.plugins.signpath.Exceptions.SignPathFacadeCallException;
-import io.jenkins.plugins.signpath.Exceptions.SignPathStepInvalidArgumentException;
 import io.jenkins.plugins.signpath.TestUtils.Some;
 import io.jenkins.plugins.signpath.TestUtils.TemporaryFileUtil;
 import org.junit.Before;
@@ -56,12 +55,12 @@ public class SignPathPowerShellFacadeTest {
     private PowerShellExecutionResult powerShellExecutionResult;
 
     @Before
-    public void setup() throws MalformedURLException, SignPathStepInvalidArgumentException {
+    public void setup() throws MalformedURLException {
         credentials = new SignPathCredentials(Secret.fromString(Some.stringNonEmpty()), Secret.fromString(Some.stringNonEmpty()));
         apiConfiguration = Some.apiConfiguration();
         sut = new SignPathPowerShellFacade(powershellExecutor, credentials, apiConfiguration, logger);
 
-        powerShellExecutionResult = PowerShellExecutionResult.Success(Some.stringNonEmpty());
+        powerShellExecutionResult = PowerShellExecutionResult.success(Some.stringNonEmpty());
         when(powershellExecutor.execute(any(PowerShellCommand.class), anyInt())).then(a -> {
             capturedCommand = a.getArgumentAt(0, PowerShellCommand.class);
             return powerShellExecutionResult;
@@ -75,7 +74,7 @@ public class SignPathPowerShellFacadeTest {
         UUID signingRequestId = Some.uuid();
 
         String separator = System.getProperty("line.separator");
-        powerShellExecutionResult = PowerShellExecutionResult.Success("SHA256 hash: " + Some.sha1Hash() + separator +
+        powerShellExecutionResult = PowerShellExecutionResult.success("SHA256 hash: " + Some.sha1Hash() + separator +
                 "Submitted signing request at 'https://app.signpath.io/api/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "'" + separator +
                 signingRequestId);
 
@@ -104,7 +103,7 @@ public class SignPathPowerShellFacadeTest {
         UUID signingRequestId = Some.uuid();
 
         String separator = System.getProperty("line.separator");
-        powerShellExecutionResult = PowerShellExecutionResult.Success("SHA256 hash: " + Some.sha1Hash() + separator +
+        powerShellExecutionResult = PowerShellExecutionResult.success("SHA256 hash: " + Some.sha1Hash() + separator +
                 "Submitted signing request at 'https://app.signpath.io/api/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "'" + separator +
                 signingRequestId);
 
@@ -125,7 +124,7 @@ public class SignPathPowerShellFacadeTest {
         boolean withOptionalFields = Some.bool();
         SigningRequestModel signingRequestModel = randomSigningRequest(withOptionalFields);
 
-        powerShellExecutionResult = PowerShellExecutionResult.Success("some unexpected string");
+        powerShellExecutionResult = PowerShellExecutionResult.success("some unexpected string");
 
         // ACT
         ThrowingRunnable act = () -> sut.submitSigningRequestAsync(signingRequestModel);
@@ -158,7 +157,7 @@ public class SignPathPowerShellFacadeTest {
 
     @Theory
     public void submitSigningRequest_powerShellError_throws() {
-        powerShellExecutionResult = PowerShellExecutionResult.Error(Some.stringNonEmpty());
+        powerShellExecutionResult = PowerShellExecutionResult.error(Some.stringNonEmpty());
 
         // ACT
         ThrowingRunnable act = () -> sut.submitSigningRequest(randomSigningRequest(Some.bool()));
@@ -170,7 +169,7 @@ public class SignPathPowerShellFacadeTest {
 
     @Theory
     public void submitSigningRequestAsync_powerShellError_throws() {
-        powerShellExecutionResult = PowerShellExecutionResult.Error(Some.stringNonEmpty());
+        powerShellExecutionResult = PowerShellExecutionResult.error(Some.stringNonEmpty());
 
         // ACT
         ThrowingRunnable act = () -> sut.submitSigningRequestAsync(randomSigningRequest(Some.bool()));
@@ -182,7 +181,7 @@ public class SignPathPowerShellFacadeTest {
 
     @Theory
     public void getSignedArtifact_powerShellError_throws() {
-        powerShellExecutionResult = PowerShellExecutionResult.Error(Some.stringNonEmpty());
+        powerShellExecutionResult = PowerShellExecutionResult.error(Some.stringNonEmpty());
 
         // ACT
         ThrowingRunnable act = () -> sut.getSignedArtifact(Some.uuid(), Some.uuid());

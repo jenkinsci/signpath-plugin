@@ -1,9 +1,8 @@
 package io.jenkins.plugins.signpath;
 
+import hudson.EnvVars;
 import hudson.Launcher;
-import hudson.model.FingerprintMap;
-import hudson.model.Run;
-import hudson.model.TaskListener;
+import hudson.model.*;
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.signpath.ApiIntegration.PowerShell.DefaultPowerShellExecutor;
 import io.jenkins.plugins.signpath.ApiIntegration.PowerShell.PowerShellExecutor;
@@ -21,6 +20,7 @@ import jenkins.model.Jenkins;
 import jenkins.model.JenkinsLocationConfiguration;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.PrintStream;
 
@@ -31,9 +31,11 @@ import java.io.PrintStream;
  * implementations
  */
 public class SignPathContainer {
+    public static final String POWERSHELL_EXECUTABLE_NAME = "SignPath_PowerShellExecutableName";
+
     private final StepContext stepContext;
     private final Run<?, ?> run;
-    private final PrintStream logger;
+    private final TaskListener taskListener;
     private final SecretRetriever secretRetriever;
     private final OriginRetriever originRetriever;
     private final ArtifactFileManager artifactFileManager;
@@ -41,14 +43,14 @@ public class SignPathContainer {
 
     private SignPathContainer(StepContext stepContext,
                               Run<?, ?> run,
-                              PrintStream logger,
+                              TaskListener taskListener,
                               SecretRetriever secretRetriever,
                               OriginRetriever originRetriever,
                               ArtifactFileManager artifactFileManager,
                               SignPathFacadeFactory signPathFacadeFactory) {
         this.stepContext = stepContext;
         this.run = run;
-        this.logger = logger;
+        this.taskListener = taskListener;
         this.secretRetriever = secretRetriever;
         this.originRetriever = originRetriever;
         this.artifactFileManager = artifactFileManager;
@@ -63,8 +65,8 @@ public class SignPathContainer {
         return run;
     }
 
-    public PrintStream getLogger() {
-        return logger;
+    public TaskListener getTaskListener() {
+        return taskListener;
     }
 
     public SecretRetriever getSecretRetriever() {
@@ -83,7 +85,7 @@ public class SignPathContainer {
         return signPathFacadeFactory;
     }
 
-    public static SignPathContainer Build(StepContext context, ApiConfiguration apiConfiguration)
+    public static SignPathContainer build(StepContext context, ApiConfiguration apiConfiguration)
             throws IOException, InterruptedException, SignPathStepInvalidArgumentException {
         TaskListener listener = context.get(TaskListener.class);
         assert listener != null;
@@ -94,6 +96,7 @@ public class SignPathContainer {
         FingerprintMap fingerprintMap = jenkins.getFingerprintMap();
         JenkinsLocationConfiguration config = JenkinsLocationConfiguration.get();
         String jenkinsRootUrl = config.getUrl();
+        EnvVars envVars = context.get(EnvVars.class);
 
         // non-valid urls result in null value here
         if (jenkinsRootUrl == null || jenkinsRootUrl.isEmpty()) {
@@ -103,9 +106,16 @@ public class SignPathContainer {
         SecretRetriever secretRetriever = new CredentialBasedSecretRetriever(jenkins);
         OriginRetriever originRetriever = new GitOriginRetriever(new DefaultConfigFileProvider(run), run, jenkinsRootUrl);
         ArtifactFileManager artifactFileManager = new DefaultArtifactFileManager(fingerprintMap, run, launcher, listener);
-        PowerShellExecutor pwsh = new DefaultPowerShellExecutor("pwsh", logger);
+
+        PowerShellExecutor pwsh = new DefaultPowerShellExecutor(getPowerShellExecutablePath(envVars), logger);
         SignPathFacadeFactory signPathFacadeFactory = new SignPathPowerShellFacadeFactory(pwsh, apiConfiguration, logger);
 
-        return new SignPathContainer(context, run, logger, secretRetriever, originRetriever, artifactFileManager, signPathFacadeFactory);
+        return new SignPathContainer(context, run, listener, secretRetriever, originRetriever, artifactFileManager, signPathFacadeFactory);
+    }
+
+    private static String getPowerShellExecutablePath(@Nullable EnvVars envVars) {
+        // This is currently only used to replace the real PowerShell executable with a portable one in the tests,
+        // but might become a user feature in the future.
+        return envVars != null && envVars.containsKey(POWERSHELL_EXECUTABLE_NAME) ? envVars.get(POWERSHELL_EXECUTABLE_NAME) : "pwsh";
     }
 }
