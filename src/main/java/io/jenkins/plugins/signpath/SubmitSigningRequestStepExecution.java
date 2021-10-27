@@ -14,7 +14,7 @@ import io.jenkins.plugins.signpath.Exceptions.*;
 import io.jenkins.plugins.signpath.OriginRetrieval.OriginRetriever;
 import io.jenkins.plugins.signpath.SecretRetrieval.SecretRetriever;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
-import org.jenkinsci.plugins.workflow.steps.SynchronousStepExecution;
+import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -25,13 +25,15 @@ import java.util.UUID;
  * The step-execution for the
  * @see SubmitSigningRequestStep
  */
-public class SubmitSigningRequestStepExecution extends SynchronousStepExecution<String> {
-    private final TaskListener taskListener;
-    private final SecretRetriever secretRetriever;
-    private final OriginRetriever originRetriever;
-    private final ArtifactFileManager artifactFileManager;
-    private final SignPathFacadeFactory signPathFacadeFactory;
-    private final SubmitSigningRequestStepInput input;
+public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingStepExecution<String> {
+    // We do not support resuming execution and therefore can mark our fields as transient (=> not serialized)
+    // If we want to support resuming, we need to remove 'transient' and make sure everything is serializable
+    private transient final SubmitSigningRequestStepInput input;
+    private transient final SecretRetriever secretRetriever;
+    private transient final OriginRetriever originRetriever;
+    private transient final ArtifactFileManager artifactFileManager;
+    private transient final SignPathFacadeFactory signPathFacadeFactory;
+    private transient final TaskListener taskListener;
 
     protected SubmitSigningRequestStepExecution(SubmitSigningRequestStepInput input,
                                                 SecretRetriever secretRetriever,
@@ -42,11 +44,11 @@ public class SubmitSigningRequestStepExecution extends SynchronousStepExecution<
                                                 StepContext stepContext) {
         super(stepContext);
         this.input = input;
-        this.taskListener = taskListener;
         this.secretRetriever = secretRetriever;
         this.originRetriever = originRetriever;
         this.artifactFileManager = artifactFileManager;
         this.signPathFacadeFactory = signPathFacadeFactory;
+        this.taskListener = taskListener;
     }
 
     @Override

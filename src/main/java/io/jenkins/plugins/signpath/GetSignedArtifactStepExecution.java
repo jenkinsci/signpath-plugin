@@ -12,7 +12,7 @@ import io.jenkins.plugins.signpath.Exceptions.SignPathFacadeCallException;
 import io.jenkins.plugins.signpath.Exceptions.SignPathStepFailedException;
 import io.jenkins.plugins.signpath.SecretRetrieval.SecretRetriever;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
-import org.jenkinsci.plugins.workflow.steps.SynchronousStepExecution;
+import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -23,12 +23,14 @@ import java.security.NoSuchAlgorithmException;
  *
  * @see GetSignedArtifactStep
  */
-public class GetSignedArtifactStepExecution extends SynchronousStepExecution<Void> {
-    private final GetSignedArtifactStepInput input;
-    private final TaskListener taskListener;
-    private final SecretRetriever secretRetriever;
-    private final ArtifactFileManager artifactFileManager;
-    private final SignPathFacadeFactory signPathFacadeFactory;
+public class GetSignedArtifactStepExecution extends SynchronousNonBlockingStepExecution<Void> {
+    // We do not support resuming execution and therefore can mark our fields as transient (=> not serialized)
+    // If we want to support resuming, we need to remove 'transient' and make sure everything is serializable
+    private transient final GetSignedArtifactStepInput input;
+    private transient final SecretRetriever secretRetriever;
+    private transient final ArtifactFileManager artifactFileManager;
+    private transient final SignPathFacadeFactory signPathFacadeFactory;
+    private transient final TaskListener taskListener;
 
     protected GetSignedArtifactStepExecution(GetSignedArtifactStepInput input,
                                              SecretRetriever secretRetriever,
@@ -38,10 +40,10 @@ public class GetSignedArtifactStepExecution extends SynchronousStepExecution<Voi
                                              StepContext stepContext) {
         super(stepContext);
         this.input = input;
-        this.taskListener = taskListener;
         this.secretRetriever = secretRetriever;
         this.artifactFileManager = artifactFileManager;
         this.signPathFacadeFactory = signPathFacadeFactory;
+        this.taskListener = taskListener;
     }
 
     @Override
