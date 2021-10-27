@@ -24,6 +24,8 @@ import java.security.NoSuchAlgorithmException;
  * @see GetSignedArtifactStep
  */
 public class GetSignedArtifactStepExecution extends SynchronousNonBlockingStepExecution<Void> {
+    // We do not support resuming execution and therefore can mark our fields as transient (=> not serialized)
+    // If we want to support resuming, we need to remove 'transient' and make sure everything is serializable
     private transient final GetSignedArtifactStepInput input;
     private transient final SecretRetriever secretRetriever;
     private transient final ArtifactFileManager artifactFileManager;

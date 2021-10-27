@@ -26,6 +26,8 @@ import java.util.UUID;
  * @see SubmitSigningRequestStep
  */
 public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingStepExecution<String> {
+    // We do not support resuming execution and therefore can mark our fields as transient (=> not serialized)
+    // If we want to support resuming, we need to remove 'transient' and make sure everything is serializable
     private transient final SubmitSigningRequestStepInput input;
     private transient final SecretRetriever secretRetriever;
     private transient final OriginRetriever originRetriever;
