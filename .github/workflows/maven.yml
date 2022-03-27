@@ -23,9 +23,9 @@ jobs:
           Set-PSRepository PSGallery -InstallationPolicy Trusted
           Install-Module SignPath
       - name: Set up JDK 11
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3.0.0
         with:
          java-version: '11'
-         distribution: 'adopt'
+         distribution: 'temurin'
       - name: Build with Maven
         run: mvn -B package --file pom.xml
