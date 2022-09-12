@@ -89,6 +89,7 @@ public class SignPathPowerShellFacade implements SignPathFacade {
         commandBuilder.appendParameter("InputArtifactPath", signingRequestModel.getArtifact().getAbsolutePath());
         commandBuilder.appendParameter("ProjectSlug", signingRequestModel.getProjectSlug());
         commandBuilder.appendParameter("SigningPolicySlug", signingRequestModel.getSigningPolicySlug());
+        commandBuilder.appendParameter("ErrorAction", "Stop");
 
         if (signingRequestModel.getArtifactConfigurationSlug() != null)
             commandBuilder.appendParameter("ArtifactConfigurationSlug", signingRequestModel.getArtifactConfigurationSlug());
@@ -141,6 +142,7 @@ public class SignPathPowerShellFacade implements SignPathFacade {
         commandBuilder.appendParameter("UploadAndDownloadRequestTimeoutInSeconds", String.valueOf(apiConfiguration.getUploadAndDownloadRequestTimeoutInSeconds()));
         commandBuilder.appendParameter("OutputArtifactPath", outputArtifact.getAbsolutePath());
         commandBuilder.appendParameter("WaitForCompletionTimeoutInSeconds", String.valueOf(apiConfiguration.getWaitForCompletionTimeoutInSeconds()));
+        commandBuilder.appendParameter("ErrorAction", "Stop");
         commandBuilder.appendFlag("Force");
         commandBuilder.appendFlag("Verbose");
         return commandBuilder.build();
