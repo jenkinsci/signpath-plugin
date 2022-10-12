@@ -290,10 +290,10 @@ public class SubmitSigningRequestStepEndToEndTest {
             String signingPolicySlug) {
 
         wireMockRule.verify(postRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests"))
-                .withHeader("Authorization", equalTo("Bearer " + ciUserToken + ":" + trustedBuildSystemToken)));
-                //.withRequestBodyPart(aMultipart().withBody(equalTo(projectSlug)).build())
-                //.withRequestBodyPart(aMultipart().withBody(equalTo(signingPolicySlug)).build())
-                //.withRequestBodyPart(aMultipart().withBody(equalTo(remoteUrl)).build()));
+                .withHeader("Authorization", equalTo("Bearer " + ciUserToken + ":" + trustedBuildSystemToken))
+                .withRequestBodyPart(aMultipart().withBody(equalTo(projectSlug)).build())
+                .withRequestBodyPart(aMultipart().withBody(equalTo(signingPolicySlug)).build())
+                .withRequestBodyPart(aMultipart().withBody(equalTo(remoteUrl)).build()));
 
         assertFormFiles(unsignedArtifactString, organizationId);
     }
@@ -310,12 +310,12 @@ public class SubmitSigningRequestStepEndToEndTest {
             String description) {
 
         wireMockRule.verify(postRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests"))
-                .withHeader("Authorization", equalTo("Bearer " + ciUserToken + ":" + trustedBuildSystemToken)));
-                //.withRequestBodyPart(aMultipart().withBody(equalTo(projectSlug)).build())
-                //.withRequestBodyPart(aMultipart().withBody(equalTo(signingPolicySlug)).build())
-                //.withRequestBodyPart(aMultipart().withBody(equalTo(remoteUrl)).build())
-                //.withRequestBodyPart(aMultipart().withBody(equalTo(description)).build())
-                //.withRequestBodyPart(aMultipart().withBody(equalTo(artifactConfigurationSlug)).build())
+                .withHeader("Authorization", equalTo("Bearer " + ciUserToken + ":" + trustedBuildSystemToken))
+                .withRequestBodyPart(aMultipart().withBody(equalTo(projectSlug)).build())
+                .withRequestBodyPart(aMultipart().withBody(equalTo(signingPolicySlug)).build())
+                .withRequestBodyPart(aMultipart().withBody(equalTo(remoteUrl)).build())
+                .withRequestBodyPart(aMultipart().withBody(equalTo(description)).build())
+                .withRequestBodyPart(aMultipart().withBody(equalTo(artifactConfigurationSlug)).build()));
 
         assertFormFiles(unsignedArtifactString, organizationId);
     }
