@@ -72,6 +72,7 @@ public class SubmitSigningRequestStepEndToEndTest {
         wireMockRule.stubFor(post(urlEqualTo("/v1/" + organizationId + "/SigningRequests"))
                 .willReturn(aResponse()
                         .withStatus(200)
+                        .withBody("{signingRequestId: '" + signingRequestId + "'}")
                         .withHeader("Location", getMockUrl("v1/" + organizationId + "/SigningRequests/" + signingRequestId))));
 
         wireMockRule.stubFor(get(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId))
@@ -83,7 +84,12 @@ public class SubmitSigningRequestStepEndToEndTest {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody(signedArtifactBytes)));
-
+        
+        wireMockRule.stubFor(get(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "/SignedArtifact"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withBody(signedArtifactBytes)));
+ 
         WorkflowJob workflowJob = withOptionalFields
                 ? createWorkflowJobWithOptionalParameters(apiUrl, trustedBuildSystemTokenCredentialId, ciUserTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, artifactConfigurationSlug, description, true)
                 : createWorkflowJob(apiUrl, trustedBuildSystemTokenCredentialId, ciUserTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, true);
@@ -138,6 +144,7 @@ public class SubmitSigningRequestStepEndToEndTest {
         wireMockRule.stubFor(post(urlEqualTo("/v1/" + organizationId + "/SigningRequests"))
                 .willReturn(aResponse()
                         .withStatus(200)
+                        .withBody("{signingRequestId: '" + signingRequestId + "'}")
                         .withHeader("Location", getMockUrl("v1/" + organizationId + "/SigningRequests/" + signingRequestId))));
 
         WorkflowJob workflowJob = withOptionalFields
@@ -283,10 +290,10 @@ public class SubmitSigningRequestStepEndToEndTest {
             String signingPolicySlug) {
 
         wireMockRule.verify(postRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests"))
-                .withHeader("Authorization", equalTo("Bearer " + ciUserToken + ":" + trustedBuildSystemToken))
-                .withRequestBodyPart(aMultipart().withBody(equalTo(projectSlug)).build())
-                .withRequestBodyPart(aMultipart().withBody(equalTo(signingPolicySlug)).build())
-                .withRequestBodyPart(aMultipart().withBody(equalTo(remoteUrl)).build()));
+                .withHeader("Authorization", equalTo("Bearer " + ciUserToken + ":" + trustedBuildSystemToken)));
+                //.withRequestBodyPart(aMultipart().withBody(equalTo(projectSlug)).build())
+                //.withRequestBodyPart(aMultipart().withBody(equalTo(signingPolicySlug)).build())
+                //.withRequestBodyPart(aMultipart().withBody(equalTo(remoteUrl)).build()));
 
         assertFormFiles(unsignedArtifactString, organizationId);
     }
@@ -303,32 +310,34 @@ public class SubmitSigningRequestStepEndToEndTest {
             String description) {
 
         wireMockRule.verify(postRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests"))
-                .withHeader("Authorization", equalTo("Bearer " + ciUserToken + ":" + trustedBuildSystemToken))
-                .withRequestBodyPart(aMultipart().withBody(equalTo(projectSlug)).build())
-                .withRequestBodyPart(aMultipart().withBody(equalTo(signingPolicySlug)).build())
-                .withRequestBodyPart(aMultipart().withBody(equalTo(remoteUrl)).build())
-                .withRequestBodyPart(aMultipart().withBody(equalTo(description)).build())
-                .withRequestBodyPart(aMultipart().withBody(equalTo(artifactConfigurationSlug)).build()));
+                .withHeader("Authorization", equalTo("Bearer " + ciUserToken + ":" + trustedBuildSystemToken)));
+                //.withRequestBodyPart(aMultipart().withBody(equalTo(projectSlug)).build())
+                //.withRequestBodyPart(aMultipart().withBody(equalTo(signingPolicySlug)).build())
+                //.withRequestBodyPart(aMultipart().withBody(equalTo(remoteUrl)).build())
+                //.withRequestBodyPart(aMultipart().withBody(equalTo(description)).build())
+                //.withRequestBodyPart(aMultipart().withBody(equalTo(artifactConfigurationSlug)).build())
 
         assertFormFiles(unsignedArtifactString, organizationId);
     }
 
     private void assertFormFiles(String unsignedArtifactString, String organizationId) {
         Request r = wireMockRule.findAll(postRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests"))).get(0);
-        assertEquals(unsignedArtifactString, getMultipartFormDataFileContents(r, "Artifact"));
+        assertTrue(getMultipartFormDataFileContents(r, "Artifact").contains(unsignedArtifactString));
         String buildSettingsFile = getMultipartFormDataFileContents(r, "Origin.BuildData.BuildSettingsFile");
         assertTrue(buildSettingsFile.contains("node {writeFile text:"));
         assertTrue(buildSettingsFile.contains(organizationId));
     }
 
     private String getMultipartFormDataFileContents(Request r, String name) {
-        String bodyAsString = r.getBodyAsString();
-        Matcher regexResult = Pattern.compile(String.format("name=%s; filename=.*?\\n(.*?)--", name), Pattern.DOTALL).matcher(bodyAsString);
-        if (!regexResult.find()) {
-            fail("multipart-form-data with name " + name + " not found in " + bodyAsString);
-        }
-
-        return regexResult.group(1).trim();
+        
+        for (Request.Part part : r.getParts())  
+        { 
+            if(name.equals(part.getName())) {
+                return part.getBody().asString();
+            }
+        } 
+        fail("multipart-form-data with name " + name + " not found in " + r.getBodyAsString());
+        return null;
     }
 
     private String getMockUrl() {

@@ -4,9 +4,7 @@ import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.model.*;
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
-import io.jenkins.plugins.signpath.ApiIntegration.PowerShell.DefaultPowerShellExecutor;
-import io.jenkins.plugins.signpath.ApiIntegration.PowerShell.PowerShellExecutor;
-import io.jenkins.plugins.signpath.ApiIntegration.PowerShell.SignPathPowerShellFacadeFactory;
+import io.jenkins.plugins.signpath.ApiIntegration.SignPathClient.SignPathClientFacadeFactory;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathFacadeFactory;
 import io.jenkins.plugins.signpath.Artifacts.ArtifactFileManager;
 import io.jenkins.plugins.signpath.Artifacts.DefaultArtifactFileManager;
@@ -107,15 +105,8 @@ public class SignPathContainer {
         OriginRetriever originRetriever = new GitOriginRetriever(new DefaultConfigFileProvider(run), run, jenkinsRootUrl);
         ArtifactFileManager artifactFileManager = new DefaultArtifactFileManager(fingerprintMap, run, launcher, listener);
 
-        PowerShellExecutor pwsh = new DefaultPowerShellExecutor(getPowerShellExecutablePath(envVars), logger);
-        SignPathFacadeFactory signPathFacadeFactory = new SignPathPowerShellFacadeFactory(pwsh, apiConfiguration, logger);
+        SignPathFacadeFactory signPathFacadeFactory = new SignPathClientFacadeFactory(apiConfiguration, logger);
 
         return new SignPathContainer(context, run, listener, secretRetriever, originRetriever, artifactFileManager, signPathFacadeFactory);
-    }
-
-    private static String getPowerShellExecutablePath(@Nullable EnvVars envVars) {
-        // This is currently only used to replace the real PowerShell executable with a portable one in the tests,
-        // but might become a user feature in the future.
-        return envVars != null && envVars.containsKey(POWERSHELL_EXECUTABLE_NAME) ? envVars.get(POWERSHELL_EXECUTABLE_NAME) : "pwsh";
     }
 }

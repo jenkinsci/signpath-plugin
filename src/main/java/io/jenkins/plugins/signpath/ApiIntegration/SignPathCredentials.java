@@ -15,6 +15,14 @@ public class SignPathCredentials {
         this.ciUserToken = ciUserToken;
         this.trustedBuildSystemToken = trustedBuildSystemToken;
     }
+    
+    public Secret getCiUserToken() {
+        return ciUserToken;
+    }
+    
+    public Secret getTrustedBuildSystemToken() {
+        return trustedBuildSystemToken;
+    }
 
     public Secret toCredentialString() {
         return Secret.fromString(String.format("%s:%s", ciUserToken.getPlainText(), trustedBuildSystemToken.getPlainText()));

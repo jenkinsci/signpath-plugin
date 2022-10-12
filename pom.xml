@@ -43,6 +43,11 @@
             <artifactId>workflow-support</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.signpath.signpathclient</groupId>
+            <artifactId>SignpathClient</artifactId>
+            <version>1.0.1</version>
+        </dependency>
+        <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
             <artifactId>workflow-step-api</artifactId>
         </dependency>
@@ -127,4 +132,28 @@
             <url>https://repo.jenkins-ci.org/public/</url>
         </pluginRepository>
     </pluginRepositories>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>enforce-ban-deprecated</id>
+                        <configuration>
+                            <rules>
+                              <bannedDependencies>
+                                <excludes>
+                                  <exclude>io.signpath.signpathclient</exclude>
+                                </excludes>
+                                <searchTransitive>false</searchTransitive>
+                              </bannedDependencies>
+                            </rules>
+                            <fail>false</fail>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
