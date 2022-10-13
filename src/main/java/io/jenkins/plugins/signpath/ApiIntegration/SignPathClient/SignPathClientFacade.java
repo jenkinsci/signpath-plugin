@@ -8,6 +8,7 @@ import io.jenkins.plugins.signpath.ApiIntegration.SignPathCredentials;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathFacade;
 import io.jenkins.plugins.signpath.Common.TemporaryFile;
 import io.jenkins.plugins.signpath.Exceptions.SignPathFacadeCallException;
+import io.signpath.signpathclient.ClientSettings;
 import io.signpath.signpathclient.SignPathClient;
 import io.signpath.signpathclient.SignPathClientException;
 import io.signpath.signpathclient.api.model.SigningRequest;
@@ -35,7 +36,13 @@ public class SignPathClientFacade implements SignPathFacade {
         if(!baseUrl.endsWith("/")) {
             baseUrl = baseUrl + "/";
         }
-        this.client = new SignPathClient(baseUrl, logger);
+        this.client = new SignPathClient(baseUrl, logger,
+            new ClientSettings(
+                apiConfiguration.getServiceUnavailableTimeoutInSeconds(),
+                apiConfiguration.getUploadAndDownloadRequestTimeoutInSeconds(),
+                apiConfiguration.getWaitForCompletionTimeoutInSeconds(),
+                apiConfiguration.getWaitBetwenReadinnesChecksInSeconds()
+            ));
     }
 
     /**
@@ -112,10 +119,7 @@ public class SignPathClientFacade implements SignPathFacade {
                 credentials.getCiUserToken().getPlainText(),
                 credentials.getTrustedBuildSystemToken().getPlainText(),
                 organizationId.toString(),
-                signingRequestID.toString(),
-                5, // TODO looks like it is hardcoded in the PS script
-                apiConfiguration.getWaitForCompletionTimeoutInSeconds()
-                );
+                signingRequestID.toString());
         
             if(!request.isFinalStatus()) {
                 throw new SignPathFacadeCallException("Timeout expired while waiting for signing request to complete");
