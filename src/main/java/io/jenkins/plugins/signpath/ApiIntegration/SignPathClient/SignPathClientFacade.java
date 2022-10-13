@@ -31,7 +31,11 @@ public class SignPathClientFacade implements SignPathFacade {
         this.credentials = credentials;
         this.apiConfiguration = apiConfiguration;
         this.logger = logger;
-        this.client = new SignPathClient(apiConfiguration.getApiUrl().toString());
+        String baseUrl = apiConfiguration.getApiUrl().toString();
+        if(!baseUrl.endsWith("/")) {
+            baseUrl = baseUrl + "/";
+        }
+        this.client = new SignPathClient(baseUrl);
     }
 
     /**
@@ -45,6 +49,8 @@ public class SignPathClientFacade implements SignPathFacade {
     public SubmitSigningRequestResult submitSigningRequest(SigningRequestModel submitModel) throws IOException, SignPathFacadeCallException {
         try {
             TemporaryFile outputArtifact = new TemporaryFile();
+            
+            logger.println(String.format("Submitting signing request for organisation %s.", submitModel.getOrganizationId()));
             
             String requestId = this.client.submitSigningRequestAndWaitForSignedArtifact(
                     credentials.getCiUserToken().getPlainText(),
@@ -78,6 +84,7 @@ public class SignPathClientFacade implements SignPathFacade {
     @Override
     public UUID submitSigningRequestAsync(SigningRequestModel submitModel) throws SignPathFacadeCallException {
         
+        logger.println(String.format("Submitting signing request for organisation %s.", submitModel.getOrganizationId()));
         String requestId = this.client.submitSigningRequest(
                 credentials.getCiUserToken().getPlainText(),
                 credentials.getTrustedBuildSystemToken().getPlainText(),
