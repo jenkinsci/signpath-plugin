@@ -1,6 +1,5 @@
 package io.jenkins.plugins.signpath;
 
-import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.model.*;
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
@@ -18,7 +17,6 @@ import jenkins.model.Jenkins;
 import jenkins.model.JenkinsLocationConfiguration;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.PrintStream;
 
@@ -94,7 +92,6 @@ public class SignPathContainer {
         FingerprintMap fingerprintMap = jenkins.getFingerprintMap();
         JenkinsLocationConfiguration config = JenkinsLocationConfiguration.get();
         String jenkinsRootUrl = config.getUrl();
-        EnvVars envVars = context.get(EnvVars.class);
 
         // non-valid urls result in null value here
         if (jenkinsRootUrl == null || jenkinsRootUrl.isEmpty()) {
