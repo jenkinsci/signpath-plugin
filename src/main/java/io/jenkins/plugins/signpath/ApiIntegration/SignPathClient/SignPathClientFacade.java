@@ -41,7 +41,7 @@ public class SignPathClientFacade implements SignPathFacade {
                 apiConfiguration.getServiceUnavailableTimeoutInSeconds(),
                 apiConfiguration.getUploadAndDownloadRequestTimeoutInSeconds(),
                 apiConfiguration.getWaitForCompletionTimeoutInSeconds(),
-                apiConfiguration.getWaitBetwenReadinnesChecksInSeconds()
+                apiConfiguration.getWaitBetweenReadinessChecksInSeconds()
             ));
     }
 
