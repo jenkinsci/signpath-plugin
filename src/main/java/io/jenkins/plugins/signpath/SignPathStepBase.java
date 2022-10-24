@@ -24,6 +24,7 @@ public abstract class SignPathStepBase extends Step {
     private int serviceUnavailableTimeoutInSeconds = (int) TimeUnit.MINUTES.toSeconds(10);
     private int uploadAndDownloadRequestTimeoutInSeconds = (int) TimeUnit.MINUTES.toSeconds(5);
     private int waitForCompletionTimeoutInSeconds = (int) TimeUnit.MINUTES.toSeconds(10);
+    private int waitBetweenReadinessChecksInSeconds = (int) TimeUnit.SECONDS.toSeconds(30);
 
     // we set a sane default for the PowerShell call - 30min is pretty long for most customers already
     // if the customer ever runs into the problem that it is too short he will clearly see the exception
@@ -62,6 +63,10 @@ public abstract class SignPathStepBase extends Step {
 
     public int getWaitForPowerShellTimeoutInSeconds() {
         return waitForPowerShellTimeoutInSeconds;
+    }
+    
+    public int getWaitBetweenReadinessChecksInSeconds() {
+        return waitBetweenReadinessChecksInSeconds;
     }
 
     @DataBoundSetter
@@ -105,7 +110,8 @@ public abstract class SignPathStepBase extends Step {
                 getServiceUnavailableTimeoutInSeconds(),
                 getUploadAndDownloadRequestTimeoutInSeconds(),
                 getWaitForCompletionTimeoutInSeconds(),
-                getWaitForPowerShellTimeoutInSeconds());
+                getWaitForPowerShellTimeoutInSeconds(),
+                getWaitBetweenReadinessChecksInSeconds());
     }
 
     protected URL ensureValidURL(String apiUrl) throws SignPathStepInvalidArgumentException {
