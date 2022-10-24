@@ -9,8 +9,6 @@ import java.io.PrintStream;
 
 /**
  * @see SignPathFacadeFactory
- * that produces a
- * @see SignPathPowerShellFacade
  */
 public class SignPathClientFacadeFactory implements SignPathFacadeFactory {
     private final ApiConfiguration apiConfiguration;

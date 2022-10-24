@@ -45,13 +45,6 @@ public class SignPathClientFacade implements SignPathFacade {
             ));
     }
 
-    /**
-     *
-     * @param submitModel
-     * @return
-     * @throws IOException
-     * @throws SignPathFacadeCallException
-     */
     @Override
     public SubmitSigningRequestResult submitSigningRequest(SigningRequestModel submitModel) throws IOException, SignPathFacadeCallException {
         try {
@@ -80,12 +73,6 @@ public class SignPathClientFacade implements SignPathFacade {
         }
     }
 
-    /**
-     *
-     * @param submitModel
-     * @return
-     * @throws SignPathFacadeCallException
-     */
     @Override
     public UUID submitSigningRequestAsync(SigningRequestModel submitModel) throws SignPathFacadeCallException {
         
@@ -102,14 +89,6 @@ public class SignPathClientFacade implements SignPathFacade {
         return UUID.fromString(requestId);
     }
     
-    /**
-     *
-     * @param organizationId
-     * @param signingRequestID
-     * @return
-     * @throws IOException
-     * @throws SignPathFacadeCallException
-     */
     @Override
     public TemporaryFile getSignedArtifact(UUID organizationId, UUID signingRequestID) throws IOException, SignPathFacadeCallException {
         TemporaryFile outputArtifact = new TemporaryFile();
