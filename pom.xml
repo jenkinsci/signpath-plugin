@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>4.6</version>
+        <version>4.48</version>
         <relativePath />
     </parent>
     <groupId>io.jenkins.plugins</groupId>
@@ -14,7 +14,7 @@
     <properties>
         <revision>1.0.11-pre</revision>
         <changelist></changelist>
-        <jenkins.version>2.277.1</jenkins.version>
+        <jenkins.version>2.359</jenkins.version>
         <java.level>8</java.level>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -62,7 +62,7 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
             <artifactId>workflow-aggregator</artifactId>
-            <version>2.6</version>
+            <version>2.7</version>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
@@ -109,8 +109,8 @@
             <dependency>
                 <!-- Pick up common dependencies for the selected LTS line: https://github.com/jenkinsci/bom#usage -->
                 <groupId>io.jenkins.tools.bom</groupId>
-                <artifactId>bom-2.277.x</artifactId>
-                <version>26</version>
+                <artifactId>bom-2.361.x</artifactId>
+                <version>1595.v8c71c13cc3a_9</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
