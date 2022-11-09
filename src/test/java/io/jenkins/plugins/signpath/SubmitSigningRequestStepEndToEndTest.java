@@ -37,11 +37,8 @@ import static org.junit.Assert.*;
 public class SubmitSigningRequestStepEndToEndTest {
     private static final int MockServerPort = 51000;
 
-    @ClassRule
-    public static final PortablePowerShellRule ps = new PortablePowerShellRule(true);
-
     @Rule
-    public final SignPathJenkinsRule j = new SignPathJenkinsRule(ps.getPowerShellExecutable());
+    public final SignPathJenkinsRule j = new SignPathJenkinsRule();
 
     @Rule
     public final WireMockRule wireMockRule = new WireMockRule(MockServerPort);
