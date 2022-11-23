@@ -142,17 +142,27 @@
                         <id>enforce-ban-deprecated</id>
                         <configuration>
                             <rules>
-                              <bannedDependencies>
-                                <excludes>
-                                  <exclude>io.signpath.signpathclient</exclude>
-                                </excludes>
-                                <searchTransitive>false</searchTransitive>
-                              </bannedDependencies>
+                                <bannedDependencies>
+                                    <excludes>
+                                        <exclude>io.signpath.signpathclient</exclude>
+                                    </excludes>
+                                    <searchTransitive>false</searchTransitive>
+                                </bannedDependencies>
                             </rules>
                             <fail>false</fail>
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <!--<version>3.8.1</version>-->
+                <configuration>
+                    <release>11</release>
+                    <showDeprecation>true</showDeprecation>
+                    <showWarnings>true</showWarnings>
+                </configuration>
             </plugin>
         </plugins>
     </build>
