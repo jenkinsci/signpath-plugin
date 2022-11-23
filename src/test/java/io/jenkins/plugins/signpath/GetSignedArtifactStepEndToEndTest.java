@@ -30,11 +30,8 @@ import static org.junit.Assert.*;
 public class GetSignedArtifactStepEndToEndTest {
     private static final int MockServerPort = 51000;
 
-    @ClassRule
-    public static final PortablePowerShellRule ps = new PortablePowerShellRule(true);
-
     @Rule
-    public final SignPathJenkinsRule j = new SignPathJenkinsRule(ps.getPowerShellExecutable());
+    public final SignPathJenkinsRule j = new SignPathJenkinsRule();
 
     @Rule
     public final WireMockRule wireMockRule = new WireMockRule(MockServerPort);
@@ -55,14 +52,13 @@ public class GetSignedArtifactStepEndToEndTest {
         CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, ciUserTokenCredentialId, ciUserToken);
 
         String apiUrl = getMockUrl();
-        String downloadSignedArtifact = "downloadSignedArtifact";
-
+        
         wireMockRule.stubFor(get(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withBody("{status: 'Completed', workflowStatus: 'Completed', isFinalStatus: true, signedArtifactLink: '" + getMockUrl(downloadSignedArtifact) + "'}")));
+                        .withBody("{status: 'Completed', workflowStatus: 'Completed', isFinalStatus: true}")));
 
-        wireMockRule.stubFor(get(urlEqualTo("/" + downloadSignedArtifact))
+        wireMockRule.stubFor(get(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "/SignedArtifact"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody(signedArtifactBytes)));

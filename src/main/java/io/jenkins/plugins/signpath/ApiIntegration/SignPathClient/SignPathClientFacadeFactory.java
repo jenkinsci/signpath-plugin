@@ -1,4 +1,4 @@
-package io.jenkins.plugins.signpath.ApiIntegration.PowerShell;
+package io.jenkins.plugins.signpath.ApiIntegration.SignPathClient;
 
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathCredentials;
@@ -9,22 +9,18 @@ import java.io.PrintStream;
 
 /**
  * @see SignPathFacadeFactory
- * that produces a
- * @see SignPathPowerShellFacade
  */
-public class SignPathPowerShellFacadeFactory implements SignPathFacadeFactory {
-    private final PowerShellExecutor powerShellExecutor;
+public class SignPathClientFacadeFactory implements SignPathFacadeFactory {
     private final ApiConfiguration apiConfiguration;
     private final PrintStream logger;
 
-    public SignPathPowerShellFacadeFactory(PowerShellExecutor powerShellExecutor, ApiConfiguration apiConfiguration, PrintStream logger) {
-        this.powerShellExecutor = powerShellExecutor;
+    public SignPathClientFacadeFactory(ApiConfiguration apiConfiguration, PrintStream logger) {
         this.apiConfiguration = apiConfiguration;
         this.logger = logger;
     }
 
     @Override
     public SignPathFacade create(SignPathCredentials credentials) {
-        return new SignPathPowerShellFacade(powerShellExecutor, credentials, apiConfiguration, logger);
+        return new SignPathClientFacade(credentials, apiConfiguration, logger);
     }
 }
