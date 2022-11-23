@@ -14,8 +14,6 @@ The following plugins must be installed:
 - Git [hudson.plugins.git.util.Build]
 - Pipeline
 
-Also, **PowerShell** (Version 5.1 or greater) must be installed on the Jenkins master node and the [SignPath PowerShell](https://www.powershellgallery.com/packages/SignPath) module must be installed and available to the user running the Jenkins server.
-
 Make sure that the correct **Jenkins URL** is set unter _Manage Jenkins / Configure system._
 
 ### Configuration
