@@ -114,7 +114,7 @@ stage('Download Signed Artifact') {
 
 ## Support
 
-The plugin is compatible with Jenkins 2.277.1 or higher.
+The plugin is compatible with Jenkins 2.359 or higher.
 
 Please refer to the support available in your respective [SignPath edition](https://about.signpath.io/product/editions).
 
