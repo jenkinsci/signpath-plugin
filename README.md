@@ -114,7 +114,7 @@ stage('Download Signed Artifact') {
 
 ## Build
 
-https://ci.jenkins.io/blue/organizations/jenkins/Plugins%2Fsignpath-plugin
+https://ci.jenkins.io/job/Plugins/job/signpath-plugin/
 
 ## Support
 
@@ -127,5 +127,3 @@ Please refer to the support available in your respective [SignPath edition](http
 Copyright by SignPath GmbH
 
 The SignPath Jenkins Plugin is being developed by [SignPath](https://about.signpath.io) and licensed under the **GNU General Public License v3 (GPL-3)**
-
-[![build](https://github.com/SignPath/signpath-jenkins-plugin/actions/workflows/maven.yml/badge.svg)](https://github.com/SignPath/signpath-jenkins-plugin/actions/workflows/maven.yml)
