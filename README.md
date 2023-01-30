@@ -112,6 +112,10 @@ stage('Download Signed Artifact') {
 | `outputArtifactPath`                                  | The relative path where the signed artifact is stored after signing
 | `waitForCompletion`                                   | set to `true` for synchronous and `false` for asynchronous signing requests
 
+## Build
+
+https://ci.jenkins.io/blue/organizations/jenkins/Plugins%2Fsignpath-plugin
+
 ## Support
 
 The plugin is compatible with Jenkins 2.359 or higher.
