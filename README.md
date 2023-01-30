@@ -1,3 +1,5 @@
+[![Build Status](https://ci.jenkins.io/buildStatus/icon?job=Plugins/signpath-plugin/main)](https://ci.jenkins.io/job/Plugins/job/signpath-plugin/job/main/)
+
 # SignPath Plugin
 
 ## Introduction
