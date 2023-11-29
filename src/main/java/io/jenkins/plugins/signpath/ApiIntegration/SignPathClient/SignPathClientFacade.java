@@ -51,7 +51,7 @@ public class SignPathClientFacade implements SignPathFacade {
             TemporaryFile outputArtifact = new TemporaryFile();
             
             String requestId = this.client.submitSigningRequestAndWaitForSignedArtifact(
-                    credentials.getCiUserToken().getPlainText(),
+                    credentials.getApiToken().getPlainText(),
                     credentials.getTrustedBuildSystemToken().getPlainText(),
                     submitModel.getOrganizationId().toString(),
                     submitModel.getArtifact().getFile(),
@@ -77,7 +77,7 @@ public class SignPathClientFacade implements SignPathFacade {
     public UUID submitSigningRequestAsync(SigningRequestModel submitModel) throws SignPathFacadeCallException {
         
         String requestId = this.client.submitSigningRequest(
-                credentials.getCiUserToken().getPlainText(),
+                credentials.getApiToken().getPlainText(),
                 credentials.getTrustedBuildSystemToken().getPlainText(),
                 submitModel.getOrganizationId().toString(),
                 submitModel.getArtifact().getFile(),
@@ -95,7 +95,7 @@ public class SignPathClientFacade implements SignPathFacade {
         
         try {
             SigningRequest request = client.getSigningRequestWaitForFinalStatus(
-                credentials.getCiUserToken().getPlainText(),
+                credentials.getApiToken().getPlainText(),
                 credentials.getTrustedBuildSystemToken().getPlainText(),
                 organizationId.toString(),
                 signingRequestID.toString());
@@ -105,7 +105,7 @@ public class SignPathClientFacade implements SignPathFacade {
             }
 
             client.downloadSignedArtifact(
-                    credentials.getCiUserToken().getPlainText(),
+                    credentials.getApiToken().getPlainText(),
                     credentials.getTrustedBuildSystemToken().getPlainText(),
                     organizationId.toString(),
                     signingRequestID.toString(),

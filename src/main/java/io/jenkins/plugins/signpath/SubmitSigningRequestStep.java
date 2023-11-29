@@ -50,7 +50,7 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
         SubmitSigningRequestStepInput input = new SubmitSigningRequestStepInput(
                 ensureValidUUID(getOrganizationId(), "organizationId"),
                 ensureNotNull(getTrustedBuildSystemTokenCredentialId(), "trustedBuildSystemTokenCredentialId"),
-                ensureNotNull(getCiUserTokenCredentialId(), "ciUserTokenCredentialId"),
+                ensureNotNull(getApiTokenCredentialId(), "apiTokenCredentialId"),
                 ensureNotNull(getProjectSlug(), "projectSlug"),
                 getArtifactConfigurationSlug(),
                 ensureNotNull(getSigningPolicySlug(), "signingPolicySlug"),

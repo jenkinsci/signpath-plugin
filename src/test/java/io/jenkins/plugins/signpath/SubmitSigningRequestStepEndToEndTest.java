@@ -49,8 +49,8 @@ public class SubmitSigningRequestStepEndToEndTest {
         String trustedBuildSystemTokenCredentialId = Some.stringNonEmpty();
         String trustedBuildSystemToken = Some.stringNonEmpty();
         String unsignedArtifactString = Some.stringNonEmpty();
-        String ciUserTokenCredentialId = Some.stringNonEmpty();
-        String ciUserToken = Some.stringNonEmpty();
+        String apiTokenCredentialId = Some.stringNonEmpty();
+        String apiToken = Some.stringNonEmpty();
         String projectSlug = Some.stringNonEmpty();
         String signingPolicySlug = Some.stringNonEmpty();
         String organizationId = Some.uuid().toString();
@@ -61,7 +61,7 @@ public class SubmitSigningRequestStepEndToEndTest {
         CredentialsStore credentialStore = CredentialStoreUtils.getCredentialStore(j.jenkins);
         assert credentialStore != null;
         CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, trustedBuildSystemTokenCredentialId, trustedBuildSystemToken);
-        CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, ciUserTokenCredentialId, ciUserToken);
+        CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, apiTokenCredentialId, apiToken);
 
         String apiUrl = getMockUrl();
         String downloadSignedArtifact = "downloadSignedArtifact";
@@ -88,8 +88,8 @@ public class SubmitSigningRequestStepEndToEndTest {
                         .withBody(signedArtifactBytes)));
  
         WorkflowJob workflowJob = withOptionalFields
-                ? createWorkflowJobWithOptionalParameters(apiUrl, trustedBuildSystemTokenCredentialId, ciUserTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, artifactConfigurationSlug, description, true)
-                : createWorkflowJob(apiUrl, trustedBuildSystemTokenCredentialId, ciUserTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, true);
+                ? createWorkflowJobWithOptionalParameters(apiUrl, trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, artifactConfigurationSlug, description, true)
+                : createWorkflowJob(apiUrl, trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, true);
 
         String remoteUrl = Some.url();
         BuildData buildData = new BuildData(Some.stringNonEmpty());
@@ -113,9 +113,9 @@ public class SubmitSigningRequestStepEndToEndTest {
         assertTrue(run.getLog().contains("<returnValue>:\"" + signingRequestId + "\""));
 
         if (withOptionalFields)
-            assertRequest(ciUserToken, trustedBuildSystemToken, unsignedArtifactString, remoteUrl, organizationId, projectSlug, signingPolicySlug, artifactConfigurationSlug, description);
+            assertRequest(apiToken, trustedBuildSystemToken, unsignedArtifactString, remoteUrl, organizationId, projectSlug, signingPolicySlug, artifactConfigurationSlug, description);
         else
-            assertRequest(ciUserToken, trustedBuildSystemToken, unsignedArtifactString, remoteUrl, organizationId, projectSlug, signingPolicySlug);
+            assertRequest(apiToken, trustedBuildSystemToken, unsignedArtifactString, remoteUrl, organizationId, projectSlug, signingPolicySlug);
     }
 
     @Theory
@@ -123,8 +123,8 @@ public class SubmitSigningRequestStepEndToEndTest {
         String unsignedArtifactString = Some.stringNonEmpty();
         String trustedBuildSystemTokenCredentialId = Some.stringNonEmpty();
         String trustedBuildSystemToken = Some.stringNonEmpty();
-        String ciUserTokenCredentialId = Some.stringNonEmpty();
-        String ciUserToken = Some.stringNonEmpty();
+        String apiTokenCredentialId = Some.stringNonEmpty();
+        String apiToken = Some.stringNonEmpty();
         String projectSlug = Some.stringNonEmpty();
         String signingPolicySlug = Some.stringNonEmpty();
         String organizationId = Some.uuid().toString();
@@ -135,7 +135,7 @@ public class SubmitSigningRequestStepEndToEndTest {
         CredentialsStore credentialStore = CredentialStoreUtils.getCredentialStore(j.jenkins);
         assert credentialStore != null;
         CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, trustedBuildSystemTokenCredentialId, trustedBuildSystemToken);
-        CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, ciUserTokenCredentialId, ciUserToken);
+        CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, apiTokenCredentialId, apiToken);
 
         String apiUrl = getMockUrl();
         wireMockRule.stubFor(post(urlEqualTo("/v1/" + organizationId + "/SigningRequests"))
@@ -145,8 +145,8 @@ public class SubmitSigningRequestStepEndToEndTest {
                         .withHeader("Location", getMockUrl("v1/" + organizationId + "/SigningRequests/" + signingRequestId))));
 
         WorkflowJob workflowJob = withOptionalFields
-                ? createWorkflowJobWithOptionalParameters(apiUrl, trustedBuildSystemTokenCredentialId, ciUserTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, artifactConfigurationSlug, description, false)
-                : createWorkflowJob(apiUrl, trustedBuildSystemTokenCredentialId, ciUserTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, false);
+                ? createWorkflowJobWithOptionalParameters(apiUrl, trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, artifactConfigurationSlug, description, false)
+                : createWorkflowJob(apiUrl, trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, false);
 
         String remoteUrl = Some.url();
         BuildData buildData = new BuildData(Some.stringNonEmpty());
@@ -167,9 +167,9 @@ public class SubmitSigningRequestStepEndToEndTest {
         assertTrue(run.getLog().contains("<returnValue>:\"" + signingRequestId + "\""));
 
         if (withOptionalFields)
-            assertRequest(ciUserToken, trustedBuildSystemToken, unsignedArtifactString, remoteUrl, organizationId, projectSlug, signingPolicySlug, artifactConfigurationSlug, description);
+            assertRequest(apiToken, trustedBuildSystemToken, unsignedArtifactString, remoteUrl, organizationId, projectSlug, signingPolicySlug, artifactConfigurationSlug, description);
         else
-            assertRequest(ciUserToken, trustedBuildSystemToken, unsignedArtifactString, remoteUrl, organizationId, projectSlug, signingPolicySlug);
+            assertRequest(apiToken, trustedBuildSystemToken, unsignedArtifactString, remoteUrl, organizationId, projectSlug, signingPolicySlug);
     }
 
     @Theory
@@ -221,7 +221,7 @@ public class SubmitSigningRequestStepEndToEndTest {
 
     private WorkflowJob createWorkflowJobWithOptionalParameters(String apiUrl,
                                                                 String trustedBuildSystemTokenCredentialId,
-                                                                String ciUserTokenCredentialId,
+                                                                String apiTokenCredentialId,
                                                                 String organizationId,
                                                                 String projectSlug,
                                                                 String signingPolicySlug,
@@ -236,7 +236,7 @@ public class SubmitSigningRequestStepEndToEndTest {
                         "inputArtifactPath: 'unsigned.exe', " +
                         "outputArtifactPath: 'signed.exe', " +
                         "trustedBuildSystemTokenCredentialId: '" + trustedBuildSystemTokenCredentialId + "'," +
-                        "ciUserTokenCredentialId: '" + ciUserTokenCredentialId + "'," +
+                        "apiTokenCredentialId: '" + apiTokenCredentialId + "'," +
                         "organizationId: '" + organizationId + "'," +
                         "projectSlug: '" + projectSlug + "'," +
                         "signingPolicySlug: '" + signingPolicySlug + "'," +
@@ -250,7 +250,7 @@ public class SubmitSigningRequestStepEndToEndTest {
 
     private WorkflowJob createWorkflowJob(String apiUrl,
                                           String trustedBuildSystemTokenCredentialId,
-                                          String ciUserTokenCredentialId,
+                                          String apiTokenCredentialId,
                                           String organizationId,
                                           String projectSlug,
                                           String signingPolicySlug,
@@ -267,7 +267,7 @@ public class SubmitSigningRequestStepEndToEndTest {
                         "inputArtifactPath: 'unsigned.exe', " +
                         outputArtifactPath +
                         "trustedBuildSystemTokenCredentialId: '" + trustedBuildSystemTokenCredentialId + "'," +
-                        "ciUserTokenCredentialId: '" + ciUserTokenCredentialId + "'," +
+                        "apiTokenCredentialId: '" + apiTokenCredentialId + "'," +
                         "organizationId: '" + organizationId + "'," +
                         "projectSlug: '" + projectSlug + "'," +
                         "signingPolicySlug: '" + signingPolicySlug + "'," +
@@ -278,7 +278,7 @@ public class SubmitSigningRequestStepEndToEndTest {
     }
 
     private void assertRequest(
-            String ciUserToken,
+            String apiToken,
             String trustedBuildSystemToken,
             String unsignedArtifactString,
             String remoteUrl,
@@ -287,7 +287,7 @@ public class SubmitSigningRequestStepEndToEndTest {
             String signingPolicySlug) {
 
         wireMockRule.verify(postRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests"))
-                .withHeader("Authorization", equalTo("Bearer " + ciUserToken + ":" + trustedBuildSystemToken))
+                .withHeader("Authorization", equalTo("Bearer " + apiToken + ":" + trustedBuildSystemToken))
                 .withRequestBodyPart(aMultipart().withBody(equalTo(projectSlug)).build())
                 .withRequestBodyPart(aMultipart().withBody(equalTo(signingPolicySlug)).build())
                 .withRequestBodyPart(aMultipart().withBody(equalTo(remoteUrl)).build()));
@@ -296,7 +296,7 @@ public class SubmitSigningRequestStepEndToEndTest {
     }
 
     private void assertRequest(
-            String ciUserToken,
+            String apiToken,
             String trustedBuildSystemToken,
             String unsignedArtifactString,
             String remoteUrl,
@@ -307,7 +307,7 @@ public class SubmitSigningRequestStepEndToEndTest {
             String description) {
 
         wireMockRule.verify(postRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests"))
-                .withHeader("Authorization", equalTo("Bearer " + ciUserToken + ":" + trustedBuildSystemToken))
+                .withHeader("Authorization", equalTo("Bearer " + apiToken + ":" + trustedBuildSystemToken))
                 .withRequestBodyPart(aMultipart().withBody(equalTo(projectSlug)).build())
                 .withRequestBodyPart(aMultipart().withBody(equalTo(signingPolicySlug)).build())
                 .withRequestBodyPart(aMultipart().withBody(equalTo(remoteUrl)).build())

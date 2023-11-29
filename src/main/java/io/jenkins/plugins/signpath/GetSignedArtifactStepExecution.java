@@ -54,8 +54,8 @@ public class GetSignedArtifactStepExecution extends SynchronousNonBlockingStepEx
 
         try {
             Secret trustedBuildSystemToken = secretRetriever.retrieveSecret(input.getTrustedBuildSystemTokenCredentialId());
-            Secret ciUserToken = secretRetriever.retrieveSecret(input.getCiUserTokenCredentialId());
-            SignPathCredentials credentials = new SignPathCredentials(ciUserToken, trustedBuildSystemToken);
+            Secret apiToken = secretRetriever.retrieveSecret(input.getApiTokenCredentialId());
+            SignPathCredentials credentials = new SignPathCredentials(apiToken, trustedBuildSystemToken);
             SignPathFacade signPathFacade = signPathFacadeFactory.create(credentials);
             try (TemporaryFile signedArtifact = signPathFacade.getSignedArtifact(input.getOrganizationId(), input.getSigningRequestId())) {
                 artifactFileManager.storeArtifact(signedArtifact, input.getOutputArtifactPath());

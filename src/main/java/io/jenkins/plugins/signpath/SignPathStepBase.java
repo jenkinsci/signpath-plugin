@@ -35,7 +35,7 @@ public abstract class SignPathStepBase extends Step {
     private int waitForPowerShellTimeoutInSeconds = (int) TimeUnit.MINUTES.toSeconds(30);
 
     private String trustedBuildSystemTokenCredentialId = "SignPath.TrustedBuildSystemToken";
-    private String ciUserTokenCredentialId = "SignPath.CIUserToken";
+    private String apiTokenCredentialId = "SignPath.ApiToken";
 
     public String getApiUrl() {
         return apiUrl;
@@ -45,8 +45,8 @@ public abstract class SignPathStepBase extends Step {
         return trustedBuildSystemTokenCredentialId;
     }
 
-    public String getCiUserTokenCredentialId() {
-        return ciUserTokenCredentialId;
+    public String getApiTokenCredentialId() {
+        return apiTokenCredentialId;
     }
 
     public int getServiceUnavailableTimeoutInSeconds() {
@@ -80,8 +80,8 @@ public abstract class SignPathStepBase extends Step {
     }
 
     @DataBoundSetter
-    public void setCiUserTokenCredentialId(String ciUserTokenCredentialId) {
-        this.ciUserTokenCredentialId = ciUserTokenCredentialId;
+    public void setApiTokenCredentialId(String apiTokenCredentialId) {
+        this.apiTokenCredentialId = apiTokenCredentialId;
     }
 
     @DataBoundSetter

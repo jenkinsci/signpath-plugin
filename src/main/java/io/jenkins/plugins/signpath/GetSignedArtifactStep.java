@@ -42,7 +42,7 @@ public class GetSignedArtifactStep extends SignPathStepBase {
                 ensureValidUUID(getOrganizationId(), "organizationId"),
                 ensureValidUUID(getSigningRequestId(), "signingRequestId"),
                 ensureNotNull(getTrustedBuildSystemTokenCredentialId(), "trustedBuildSystemTokenCredentialId"),
-                ensureNotNull(getCiUserTokenCredentialId(), "ciUserTokenCredentialId"),
+                ensureNotNull(getApiTokenCredentialId(), "apiTokenCredentialId"),
                 ensureNotNull(getOutputArtifactPath(), "outputArtifactPath"));
 
         ApiConfiguration apiConfiguration = getAndValidateApiConfiguration();
