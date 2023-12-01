@@ -8,16 +8,16 @@ import hudson.util.Secret;
  * @see SignPathFacade
  */
 public class SignPathCredentials {
-    private final Secret ciUserToken;
+    private final Secret apiToken;
     private final Secret trustedBuildSystemToken;
 
-    public SignPathCredentials(Secret ciUserToken, Secret trustedBuildSystemToken) {
-        this.ciUserToken = ciUserToken;
+    public SignPathCredentials(Secret apiToken, Secret trustedBuildSystemToken) {
+        this.apiToken = apiToken;
         this.trustedBuildSystemToken = trustedBuildSystemToken;
     }
     
-    public Secret getCiUserToken() {
-        return ciUserToken;
+    public Secret getApiToken() {
+        return apiToken;
     }
     
     public Secret getTrustedBuildSystemToken() {
@@ -25,6 +25,6 @@ public class SignPathCredentials {
     }
 
     public Secret toCredentialString() {
-        return Secret.fromString(String.format("%s:%s", ciUserToken.getPlainText(), trustedBuildSystemToken.getPlainText()));
+        return Secret.fromString(String.format("%s:%s", apiToken.getPlainText(), trustedBuildSystemToken.getPlainText()));
     }
 }

@@ -60,8 +60,8 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
 
         try {
             Secret trustedBuildSystemToken = secretRetriever.retrieveSecret(input.getTrustedBuildSystemTokenCredentialId());
-            Secret ciUserToken = secretRetriever.retrieveSecret(input.getCiUserTokenCredentialId());
-            SignPathCredentials credentials = new SignPathCredentials(ciUserToken, trustedBuildSystemToken);
+            Secret apiToken = secretRetriever.retrieveSecret(input.getApiTokenCredentialId());
+            SignPathCredentials credentials = new SignPathCredentials(apiToken, trustedBuildSystemToken);
             SignPathFacade signPathFacade = signPathFacadeFactory.create(credentials);
             try(SigningRequestOriginModel originModel = originRetriever.retrieveOrigin()) {
                 try (TemporaryFile unsignedArtifact = artifactFileManager.retrieveArtifact(input.getInputArtifactPath())) {
