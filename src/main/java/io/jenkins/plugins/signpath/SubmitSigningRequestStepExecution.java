@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * The step-execution for the
@@ -57,7 +58,14 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
         PrintStream logger = taskListener.getLogger();
 
         logger.printf("Submitting signing request for organization: %s (waiting for completion: %s)%n", input.getOrganizationId(), input.getWaitForCompletion());
-
+        
+        logger.println(String.format("[PARAM] organizationId: %s", input.getOrganizationId()));
+        logger.println(String.format("[PARAM] projectSlug: %s", input.getProjectSlug()));
+        logger.println(String.format("[PARAM] signingPolicySlug: %s", input.getSigningPolicySlug()));
+        if(!StringUtils.isEmpty(input.getArtifactConfigurationSlug())) {
+            logger.println(String.format("[PARAM] artifactConfigurationSlug: %s", input.getArtifactConfigurationSlug()));
+        }
+        
         try {
             Secret trustedBuildSystemToken = secretRetriever.retrieveSecret(input.getTrustedBuildSystemTokenCredentialId());
             Secret apiToken = secretRetriever.retrieveSecret(input.getApiTokenCredentialId());
