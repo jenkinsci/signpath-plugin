@@ -109,7 +109,7 @@ stage('Download Signed Artifact') {
 | `apiUrl`                                              | (optional) The API endpoint of SignPath. Defaults to `https://app.signpath.io/api`
 | `apiTokenCredentialId`                                | The ID of the credential containing the **API Token**
 | `trustedBuildSytemTokenCredentialId`                  | The ID of the credential containing the **Trusted Build System Token**
-| `organizationId`, `projectSlug`, `signingPolicySlug`  | Spefy which organization, project and signing policy to use for signing. See the [offial documentation](https://about.signpath.io/documentation/build-system-integration)
+| `organizationId`, `projectSlug`, `signingPolicySlug`  | Specify which organization, project and signing policy to use for signing. See the [official documentation](https://about.signpath.io/documentation/build-system-integration)
 | `inputArtifactPath`                                   | The relative path of the artifact to be signed
 | `outputArtifactPath`                                  | The relative path where the signed artifact is stored after signing
 | `waitForCompletion`                                   | Set to `true` for synchronous and `false` for asynchronous signing requests
