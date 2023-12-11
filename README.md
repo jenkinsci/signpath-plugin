@@ -109,10 +109,13 @@ stage('Download Signed Artifact') {
 | `apiUrl`                                              | (optional) The API endpoint of SignPath. Defaults to `https://app.signpath.io/api`
 | `apiTokenCredentialId`                                | The ID of the credential containing the **API Token**
 | `trustedBuildSytemTokenCredentialId`                  | The ID of the credential containing the **Trusted Build System Token**
-| `organizationId`, `projectSlug`, `signingPolicySlug`  | Specify which organization, project and signing policy to use for signing. See the [official documentation](https://about.signpath.io/documentation/build-system-integration)
+| `organizationId`, `projectSlug`, `signingPolicySlug`  | Spefy which organization, project and signing policy to use for signing. See the [offial documentation](https://about.signpath.io/documentation/build-system-integration)
 | `inputArtifactPath`                                   | The relative path of the artifact to be signed
 | `outputArtifactPath`                                  | The relative path where the signed artifact is stored after signing
-| `waitForCompletion`                                   | set to `true` for synchronous and `false` for asynchronous signing requests
+| `waitForCompletion`                                   | Set to `true` for synchronous and `false` for asynchronous signing requests
+| `serviceUnavailableTimeoutInSeconds`                  | (optional, defaults to 600) Total time in seconds that the cmdlet will wait for a single service call to succeed (across several retries).
+| `uploadAndDownloadRequestTimeoutInSeconds`            | (optional, defaults to 300)  HTTP timeout used for upload and download HTTP requests.
+| `waitForCompletionTimeoutInSeconds`                   | (optional, defaults to 600) Maximum time in seconds that the step will wait for the signing request to complete.
 
 ## Build
 
