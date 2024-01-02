@@ -1,5 +1,6 @@
 package io.jenkins.plugins.signpath.ApiIntegration.SignPathClient;
 //</editor-fold>
+import hudson.util.VersionNumber;
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestModel;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestOriginModel;
@@ -134,10 +135,11 @@ public class SignPathClientFacade implements SignPathFacade {
     }
     
     private String buildUserAgent(){
+        
         return String.format("SignPathJenkinsCIPlugin/%1$s (OpenJDK %2$s; Jenkins %3$s)",
                 SignPathClientFacade.class.getPackage().getImplementationVersion(),
                 System.getProperty("java.version"),
-                Jenkins.getVersion().toString()
+                Jenkins.getVersion()
                 );
     }
 }
