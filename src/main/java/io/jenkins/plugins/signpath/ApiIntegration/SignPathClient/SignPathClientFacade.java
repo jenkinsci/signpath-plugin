@@ -136,7 +136,7 @@ public class SignPathClientFacade implements SignPathFacade {
     
     private String buildUserAgent(){
         
-        return String.format("SignPathJenkinsCIPlugin/%1$s (OpenJDK %2$s; Jenkins %3$s)",
+        return String.format("SignPath.Plugins.Jenkins/%1$s (OpenJDK %2$s; Jenkins %3$s)",
                 SignPathClientFacade.class.getPackage().getImplementationVersion(),
                 System.getProperty("java.version"),
                 Jenkins.getVersion()
