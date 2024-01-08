@@ -1,5 +1,6 @@
 package io.jenkins.plugins.signpath.ApiIntegration.SignPathClient;
 //</editor-fold>
+import hudson.util.VersionNumber;
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestModel;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestOriginModel;
@@ -20,6 +21,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jenkins.model.Jenkins;
 
 public class SignPathClientFacade implements SignPathFacade {
 
@@ -41,7 +43,8 @@ public class SignPathClientFacade implements SignPathFacade {
                 apiConfiguration.getServiceUnavailableTimeoutInSeconds(),
                 apiConfiguration.getUploadAndDownloadRequestTimeoutInSeconds(),
                 apiConfiguration.getWaitForCompletionTimeoutInSeconds(),
-                apiConfiguration.getWaitBetweenReadinessChecksInSeconds()
+                apiConfiguration.getWaitBetweenReadinessChecksInSeconds(),
+                buildUserAgent()
             ));
     }
 
@@ -129,5 +132,14 @@ public class SignPathClientFacade implements SignPathFacade {
         originParameters.put("RepositoryData.SourceControlManagementType", origin.getRepositoryMetadata().getSourceControlManagementType());
         
         return originParameters;
-    } 
+    }
+    
+    private String buildUserAgent(){
+        
+        return String.format("SignPath.Plugins.Jenkins/%1$s (OpenJDK %2$s; Jenkins %3$s)",
+                SignPathClientFacade.class.getPackage().getImplementationVersion(),
+                System.getProperty("java.version"),
+                Jenkins.getVersion()
+                );
+    }
 }
