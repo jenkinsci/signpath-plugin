@@ -52,7 +52,8 @@ Include the `submitSigningRequest` and optionally, the `getSignedArtifact` steps
 ```
 stage('Sign with SignPath') {
   steps {
-    submitSigningRequest( 
+    submitSigningRequest(
+      apiUrl: "https://app.signpath.io/Api",
       apiTokenCredentialId: "${API_TOKEN_CREDENTIAL_ID}", 
       trustedBuildSystemTokenCredentialId: "${TRUSTED_BUILD_SYSTEM_TOKEN_CREDENTIAL_ID}", 
       organizationId: "${ORGANIZATION_ID}",
@@ -72,7 +73,8 @@ stage('Sign with SignPath') {
 stage('Sign with SignPath') {
   steps {
     script {
-      signingRequestId = submitSigningRequest( 
+      signingRequestId = submitSigningRequest(
+        apiUrl: "https://app.signpath.io/Api",
         apiTokenCredentialId: "${API_TOKEN_CREDENTIAL_ID}", 
         trustedBuildSystemTokenCredentialId: "${TRUSTED_BUILD_SYSTEM_TOKEN_CREDENTIAL_ID}",
         organizationId: "${ORGANIZATION_ID}",
