@@ -28,8 +28,8 @@ On SignPath.io:
 
 On Jenkins:
 
-1. Store the **Trusted Build System Token** in a System Credential (Under Manage Jenkins / Manage Credentials)
-2. Store the API Token(s) in a System Credential so that it is available to the build pipelines of the respective projects
+1. Store the **Trusted Build System Token** in a System Credential (Under Manage Jenkins / Manage Credentials) with the id `SignPath.TrustedBuildSystemToken`
+2. Store the API Token(s) in a System Credential so that it is available to the build pipelines of the respective projects (default id `SignPath.ApiToken`)
 
 _Note: Currently, the SignPath plugin requires you to use **git** as your source control system. The git repository origin information is extracted and included in the signing request._
 
@@ -53,9 +53,6 @@ Include the `submitSigningRequest` and optionally, the `getSignedArtifact` steps
 stage('Sign with SignPath') {
   steps {
     submitSigningRequest(
-      apiUrl: "https://app.signpath.io/Api",
-      apiTokenCredentialId: "${API_TOKEN_CREDENTIAL_ID}", 
-      trustedBuildSystemTokenCredentialId: "${TRUSTED_BUILD_SYSTEM_TOKEN_CREDENTIAL_ID}", 
       organizationId: "${ORGANIZATION_ID}",
       projectSlug: "${PROJECT_SLUG}",
       signingPolicySlug: "${SIGNING_POLICY_SLUG}",
@@ -74,9 +71,6 @@ stage('Sign with SignPath') {
   steps {
     script {
       signingRequestId = submitSigningRequest(
-        apiUrl: "https://app.signpath.io/Api",
-        apiTokenCredentialId: "${API_TOKEN_CREDENTIAL_ID}", 
-        trustedBuildSystemTokenCredentialId: "${TRUSTED_BUILD_SYSTEM_TOKEN_CREDENTIAL_ID}",
         organizationId: "${ORGANIZATION_ID}",
         projectSlug: "${PROJECT_SLUG}",
         signingPolicySlug: "${SIGNING_POLICY_SLUG}",
@@ -94,7 +88,6 @@ stage('Download Signed Artifact') {
   }
   steps{
     getSignedArtifact( 
-      apiToken: "${API_TOKEN}", 
       organizationId: "${ORGANIZATION_ID}",
       signingRequestId: "${signingRequestId}",
       outputArtifactPath: "build-output/my-artifact.exe"
@@ -109,9 +102,10 @@ stage('Download Signed Artifact') {
 | Parameter                                             |      |
 | ----------------------------------------------------- | ---- |
 | `apiUrl`                                              | (optional) The API endpoint of SignPath. Defaults to `https://app.signpath.io/api`
-| `apiTokenCredentialId`                                | The ID of the credential containing the **API Token**
-| `trustedBuildSytemTokenCredentialId`                  | The ID of the credential containing the **Trusted Build System Token**
+| `apiTokenCredentialId`                                | The ID of the credential containing the **API Token**. Defaults to `SignPath.ApiToken`. Recommended in scope "Global".
+| `trustedBuildSytemTokenCredentialId`                  | The ID of the credential containing the **Trusted Build System Token**. Needs to be in scope "System".
 | `organizationId`, `projectSlug`, `signingPolicySlug`  | Specify which organization, project and signing policy to use for signing. See the [official documentation](https://about.signpath.io/documentation/build-system-integration)
+| `artifactConfigurationSlug`                           | (optional). Specify which artifact configuration to use. See the [official documentation](https://about.signpath.io/documentation/build-system-integration)
 | `inputArtifactPath`                                   | The relative path of the artifact to be signed
 | `outputArtifactPath`                                  | The relative path where the signed artifact is stored after signing
 | `waitForCompletion`                                   | Set to `true` for synchronous and `false` for asynchronous signing requests
