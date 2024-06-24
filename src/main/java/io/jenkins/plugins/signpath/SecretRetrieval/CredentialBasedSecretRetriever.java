@@ -6,11 +6,13 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import hudson.util.Secret;
 import io.jenkins.plugins.signpath.Exceptions.SecretNotFoundException;
+import java.util.Arrays;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of the
@@ -30,6 +32,12 @@ public class CredentialBasedSecretRetriever implements SecretRetriever {
 
     @Override
     public Secret retrieveSecret(String id) throws SecretNotFoundException {
+        CredentialsScope[] allowedScopes = { CredentialsScope.SYSTEM };
+        return retrieveSecret(id, allowedScopes);
+    }
+    
+    @Override
+    public Secret retrieveSecret(String id, CredentialsScope[] allowedScopes) throws SecretNotFoundException {
         List<StringCredentials> credentials =
                 // authentication: null => SYSTEM, but with no warnings for using deprecated fields
                 CredentialsProvider.lookupCredentials(StringCredentials.class, jenkins, null, Collections.emptyList());
@@ -40,12 +48,17 @@ public class CredentialBasedSecretRetriever implements SecretRetriever {
             throw new SecretNotFoundException(String.format("The secret '%s' could not be found in the credential store.", id));
         }
 
-        if (credential.getScope() != CredentialsScope.SYSTEM) {
-            CredentialsScope scope = credential.getScope();
-            String scopeName = scope == null ? "<null>" : scope.getDisplayName();
+        CredentialsScope credentialScope = credential.getScope();
+        
+        if (allowedScopes.length > 0 && !Arrays.asList(allowedScopes).contains(credentialScope)) {
+            String scopeName = credentialScope == null ? "<null>" : credentialScope.getDisplayName();
+            String allowedScopesStr = Arrays.stream(allowedScopes)
+                      .map(CredentialsScope::getDisplayName)
+                      .collect(Collectors.joining("' or '"));
+            
             throw new SecretNotFoundException(
-                    String.format("The secret '%s' was configured with scope '%s' but needs to be in scope '%s'.",
-                            id, scopeName, CredentialsScope.SYSTEM.getDisplayName()));
+                    String.format("The secret '%s' was configured with scope '%s' but needs to be in scope(s) '%s'.",
+                            id, scopeName, allowedScopesStr));
         }
 
         return credential.getSecret();
