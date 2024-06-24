@@ -29,7 +29,7 @@ On SignPath.io:
 On Jenkins:
 
 1. Store the **Trusted Build System Token** in a System Credential (Under Manage Jenkins / Manage Credentials) with the id `SignPath.TrustedBuildSystemToken`
-2. Store the API Token(s) in a System Credential so that it is available to the build pipelines of the respective projects (default id `SignPath.ApiToken`)
+2. Store the API Token(s) in a Credential so that it is available to the build pipelines of the respective projects (default id `SignPath.ApiToken`)
 
 _Note: Currently, the SignPath plugin requires you to use **git** as your source control system. The git repository origin information is extracted and included in the signing request._
 
