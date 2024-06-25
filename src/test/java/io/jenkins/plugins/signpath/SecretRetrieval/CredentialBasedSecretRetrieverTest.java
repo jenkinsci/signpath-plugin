@@ -51,6 +51,20 @@ public class CredentialBasedSecretRetrieverTest {
     }
     
     @Test
+    public void retrieveSecretNoScopeRestriction() throws IOException, SecretNotFoundException {
+        String id = Some.stringNonEmpty();
+        String secret = Some.stringNonEmpty();
+        CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.USER, id, secret);
+
+        // ACT
+        CredentialsScope[] emptyScopesSet  = { };
+        Secret result = sut.retrieveSecret(id, emptyScopesSet);
+
+        // ASSERT
+        assertEquals(secret, result.getPlainText());
+    }
+    
+    @Test
     public void retrieveSecret_withDifferentDomain_works() throws IOException, SecretNotFoundException {
         String id = Some.stringNonEmpty();
         String secret = Some.stringNonEmpty();
