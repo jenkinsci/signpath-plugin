@@ -1,6 +1,5 @@
 package io.jenkins.plugins.signpath.ApiIntegration.SignPathClient;
 //</editor-fold>
-import hudson.util.VersionNumber;
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestModel;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestOriginModel;
@@ -63,7 +62,8 @@ public class SignPathClientFacade implements SignPathFacade {
                     submitModel.getArtifactConfigurationSlug(),
                     outputArtifact.getFile(),
                     submitModel.getDescription(), 
-                    buildOriginData(submitModel)
+                    buildOriginData(submitModel),
+                    submitModel.getParameters()
                     );
 
             return new SubmitSigningRequestResult(outputArtifact, UUID.fromString(requestId));
@@ -88,7 +88,8 @@ public class SignPathClientFacade implements SignPathFacade {
                 submitModel.getSigningPolicySlug(),
                 submitModel.getArtifactConfigurationSlug(),
                 submitModel.getDescription(),
-                buildOriginData(submitModel));
+                buildOriginData(submitModel),
+                submitModel.getParameters());
         return UUID.fromString(requestId);
     }
     

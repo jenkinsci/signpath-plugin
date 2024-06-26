@@ -80,7 +80,8 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
                             input.getSigningPolicySlug(),
                             input.getDescription(),
                             originModel,
-                            unsignedArtifact);
+                            unsignedArtifact,
+                            input.getParameters());
 
                     if (input.getWaitForCompletion()) {
                         try (SubmitSigningRequestResult result = signPathFacade.submitSigningRequest(model)) {

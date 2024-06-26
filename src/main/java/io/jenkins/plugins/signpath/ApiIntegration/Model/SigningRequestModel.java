@@ -1,6 +1,7 @@
 package io.jenkins.plugins.signpath.ApiIntegration.Model;
 
 import io.jenkins.plugins.signpath.Common.TemporaryFile;
+import java.util.Map;
 
 import java.util.UUID;
 
@@ -15,8 +16,11 @@ public class SigningRequestModel {
     private final String description;
     private final SigningRequestOriginModel origin;
     private final TemporaryFile artifact;
+    private final Map<String, String> parameters;
 
-    public SigningRequestModel(UUID organizationId, String projectSlug, String artifactConfigurationSlug, String signingPolicySlug, String description, SigningRequestOriginModel origin, TemporaryFile artifact) {
+    public SigningRequestModel(UUID organizationId, String projectSlug, String artifactConfigurationSlug,
+            String signingPolicySlug, String description, SigningRequestOriginModel origin,
+            TemporaryFile artifact, Map<String, String> parameters) {
         this.organizationId = organizationId;
         this.projectSlug = projectSlug;
         this.artifactConfigurationSlug = artifactConfigurationSlug;
@@ -24,6 +28,7 @@ public class SigningRequestModel {
         this.description = description;
         this.origin = origin;
         this.artifact = artifact;
+        this.parameters = parameters;
     }
 
     public UUID getOrganizationId() {
@@ -52,5 +57,9 @@ public class SigningRequestModel {
 
     public TemporaryFile getArtifact() {
         return artifact;
+    }
+    
+    public Map<String, String> getParameters() {
+        return parameters;
     }
 }
