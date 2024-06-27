@@ -1,5 +1,6 @@
 package io.jenkins.plugins.signpath;
 
+import com.cloudbees.plugins.credentials.CredentialsScope;
 import hudson.model.TaskListener;
 import hudson.util.Secret;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathCredentials;
@@ -54,7 +55,7 @@ public class GetSignedArtifactStepExecution extends SynchronousNonBlockingStepEx
 
         try {
             Secret trustedBuildSystemToken = secretRetriever.retrieveSecret(input.getTrustedBuildSystemTokenCredentialId());
-            Secret apiToken = secretRetriever.retrieveSecret(input.getApiTokenCredentialId());
+            Secret apiToken = secretRetriever.retrieveSecret(input.getApiTokenCredentialId(), new CredentialsScope[] { CredentialsScope.SYSTEM, CredentialsScope.GLOBAL });
             SignPathCredentials credentials = new SignPathCredentials(apiToken, trustedBuildSystemToken);
             SignPathFacade signPathFacade = signPathFacadeFactory.create(credentials);
             try (TemporaryFile signedArtifact = signPathFacade.getSignedArtifact(input.getOrganizationId(), input.getSigningRequestId())) {
