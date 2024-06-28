@@ -115,7 +115,7 @@ public class SubmitSigningRequestStepEndToEndTest {
         assertTrue(run.getLog().contains("<returnValue>:\"" + signingRequestId + "\""));
 
         if (withOptionalFields)
-            assertRequest(apiToken, trustedBuildSystemToken, unsignedArtifactString, remoteUrl, organizationId, projectSlug, signingPolicySlug, artifactConfigurationSlug, description, userDefinedParamName, userDefinedParamValue);
+            assertRequest(apiToken, trustedBuildSystemToken, unsignedArtifactString, remoteUrl, organizationId, projectSlug, signingPolicySlug, artifactConfigurationSlug, userDefinedParamName, userDefinedParamValue, description);
         else
             assertRequest(apiToken, trustedBuildSystemToken, unsignedArtifactString, remoteUrl, organizationId, projectSlug, signingPolicySlug);
     }
@@ -171,7 +171,7 @@ public class SubmitSigningRequestStepEndToEndTest {
         assertTrue(run.getLog().contains("<returnValue>:\"" + signingRequestId + "\""));
 
         if (withOptionalFields)
-            assertRequest(apiToken, trustedBuildSystemToken, unsignedArtifactString, remoteUrl, organizationId, projectSlug, signingPolicySlug, artifactConfigurationSlug, description, userDefinedParamName, userDefinedParamValue);
+            assertRequest(apiToken, trustedBuildSystemToken, unsignedArtifactString, remoteUrl, organizationId, projectSlug, signingPolicySlug, artifactConfigurationSlug, userDefinedParamName, userDefinedParamValue, description);
         else
             assertRequest(apiToken, trustedBuildSystemToken, unsignedArtifactString, remoteUrl, organizationId, projectSlug, signingPolicySlug);
     }
