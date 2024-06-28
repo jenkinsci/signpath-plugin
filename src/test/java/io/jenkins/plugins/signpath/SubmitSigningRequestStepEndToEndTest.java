@@ -90,13 +90,8 @@ public class SubmitSigningRequestStepEndToEndTest {
                         .withBody(signedArtifactBytes)));
  
         WorkflowJob workflowJob = withOptionalFields
-                ? createWorkflowJobWithOptionalParameters(apiUrl, trustedBuildSystemTokenCredentialId,
-                    apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug,
-                    unsignedArtifactString, artifactConfigurationSlug, description,
-                    userDefinedParamName, userDefinedParamValue, true)
-                : createWorkflowJob(apiUrl, trustedBuildSystemTokenCredentialId, apiTokenCredentialId,
-                    organizationId, projectSlug, signingPolicySlug,
-                    unsignedArtifactString, true);
+                ? createWorkflowJobWithOptionalParameters(apiUrl, trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, artifactConfigurationSlug, description, userDefinedParamName, userDefinedParamValue, true)
+                : createWorkflowJob(apiUrl, trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, true);
 
         String remoteUrl = Some.url();
         BuildData buildData = new BuildData(Some.stringNonEmpty());
@@ -120,9 +115,7 @@ public class SubmitSigningRequestStepEndToEndTest {
         assertTrue(run.getLog().contains("<returnValue>:\"" + signingRequestId + "\""));
 
         if (withOptionalFields)
-            assertRequest(apiToken, trustedBuildSystemToken, unsignedArtifactString,
-            remoteUrl, organizationId, projectSlug, signingPolicySlug,
-            artifactConfigurationSlug, description, userDefinedParamName, userDefinedParamValue);
+            assertRequest(apiToken, trustedBuildSystemToken, unsignedArtifactString, remoteUrl, organizationId, projectSlug, signingPolicySlug, artifactConfigurationSlug, description, userDefinedParamName, userDefinedParamValue);
         else
             assertRequest(apiToken, trustedBuildSystemToken, unsignedArtifactString, remoteUrl, organizationId, projectSlug, signingPolicySlug);
     }
@@ -156,9 +149,7 @@ public class SubmitSigningRequestStepEndToEndTest {
                         .withHeader("Location", getMockUrl("v1/" + organizationId + "/SigningRequests/" + signingRequestId))));
 
         WorkflowJob workflowJob = withOptionalFields
-                ? createWorkflowJobWithOptionalParameters(apiUrl, trustedBuildSystemTokenCredentialId, apiTokenCredentialId,
-                    organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, artifactConfigurationSlug, description,
-                    userDefinedParamName, userDefinedParamValue, false)
+                ? createWorkflowJobWithOptionalParameters(apiUrl, trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, artifactConfigurationSlug, description, userDefinedParamName, userDefinedParamValue, false)
                 : createWorkflowJob(apiUrl, trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, false);
 
         String remoteUrl = Some.url();
@@ -180,9 +171,7 @@ public class SubmitSigningRequestStepEndToEndTest {
         assertTrue(run.getLog().contains("<returnValue>:\"" + signingRequestId + "\""));
 
         if (withOptionalFields)
-            assertRequest(apiToken, trustedBuildSystemToken, unsignedArtifactString,
-                remoteUrl, organizationId, projectSlug, signingPolicySlug,
-                artifactConfigurationSlug, description, userDefinedParamName, userDefinedParamValue);
+            assertRequest(apiToken, trustedBuildSystemToken, unsignedArtifactString, remoteUrl, organizationId, projectSlug, signingPolicySlug, artifactConfigurationSlug, description, userDefinedParamName, userDefinedParamValue);
         else
             assertRequest(apiToken, trustedBuildSystemToken, unsignedArtifactString, remoteUrl, organizationId, projectSlug, signingPolicySlug);
     }
