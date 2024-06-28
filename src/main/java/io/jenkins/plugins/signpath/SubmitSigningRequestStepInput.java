@@ -1,6 +1,7 @@
 package io.jenkins.plugins.signpath;
 
 import java.io.Serializable;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -21,6 +22,7 @@ public class SubmitSigningRequestStepInput implements Serializable {
     private final String description;
     private final String outputArtifactPath;
     private final boolean waitForCompletion;
+    private final Map<String, String> parameters;
 
     public SubmitSigningRequestStepInput(UUID organizationId,
                                          String trustedBuildSystemTokenCredentialId,
@@ -31,6 +33,7 @@ public class SubmitSigningRequestStepInput implements Serializable {
                                          String inputArtifactPath,
                                          String description,
                                          String outputArtifactPath,
+                                         Map<String, String> parameters,
                                          boolean waitForCompletion) {
         this.organizationId = organizationId;
         this.trustedBuildSystemTokenCredentialId = trustedBuildSystemTokenCredentialId;
@@ -41,6 +44,7 @@ public class SubmitSigningRequestStepInput implements Serializable {
         this.inputArtifactPath = inputArtifactPath;
         this.description = description;
         this.outputArtifactPath = outputArtifactPath;
+        this.parameters = parameters;
         this.waitForCompletion = waitForCompletion;
     }
 
@@ -82,5 +86,9 @@ public class SubmitSigningRequestStepInput implements Serializable {
 
     public String getOutputArtifactPath() {
         return outputArtifactPath;
+    }
+    
+    public Map<String, String> getParameters() {
+        return parameters;
     }
 }

@@ -56,6 +56,7 @@ stage('Sign with SignPath') {
       organizationId: "${ORGANIZATION_ID}",
       projectSlug: "${PROJECT_SLUG}",
       signingPolicySlug: "${SIGNING_POLICY_SLUG}",
+      artifactConfigurationSlug: "${ARTIFACT_CONFIGURATION_SLUG}",
       inputArtifactPath: "build-output/my-artifact.exe",
       outputArtifactPath: "build-output/my-artifact.signed.exe",
       waitForCompletion: true
@@ -74,6 +75,7 @@ stage('Sign with SignPath') {
         organizationId: "${ORGANIZATION_ID}",
         projectSlug: "${PROJECT_SLUG}",
         signingPolicySlug: "${SIGNING_POLICY_SLUG}",
+        artifactConfigurationSlug: "${ARTIFACT_CONFIGURATION_SLUG}",
         inputArtifactPath: "build-output/my-artifact.exe",
         outputArtifactPath: "build-output/my-artifact.signed.exe",
         waitForCompletion: false
@@ -108,6 +110,7 @@ stage('Download Signed Artifact') {
 | `artifactConfigurationSlug`                           | (optional). Specify which artifact configuration to use. See the [official documentation](https://about.signpath.io/documentation/build-system-integration)
 | `inputArtifactPath`                                   | The relative path of the artifact to be signed
 | `outputArtifactPath`                                  | The relative path where the signed artifact is stored after signing
+| `artifactConfigurationSlug`                           | (optional) The artifact configuration slug to use for signing
 | `waitForCompletion`                                   | Set to `true` for synchronous and `false` for asynchronous signing requests
 | `serviceUnavailableTimeoutInSeconds`                  | (optional, defaults to 600) Total time in seconds that the cmdlet will wait for a single service call to succeed (across several retries).
 | `uploadAndDownloadRequestTimeoutInSeconds`            | (optional, defaults to 300)  HTTP timeout used for upload and download HTTP requests.

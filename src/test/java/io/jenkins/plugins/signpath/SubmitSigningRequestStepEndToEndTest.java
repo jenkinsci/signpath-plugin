@@ -57,6 +57,8 @@ public class SubmitSigningRequestStepEndToEndTest {
         String artifactConfigurationSlug = Some.stringNonEmpty();
         String description = Some.stringNonEmpty();
         String signingRequestId = Some.uuid().toString();
+        String userDefinedParamName = "UserDefinedParam";
+        String userDefinedParamValue = Some.stringNonEmpty();
 
         CredentialsStore credentialStore = CredentialStoreUtils.getCredentialStore(j.jenkins);
         assert credentialStore != null;
@@ -88,8 +90,13 @@ public class SubmitSigningRequestStepEndToEndTest {
                         .withBody(signedArtifactBytes)));
  
         WorkflowJob workflowJob = withOptionalFields
-                ? createWorkflowJobWithOptionalParameters(apiUrl, trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, artifactConfigurationSlug, description, true)
-                : createWorkflowJob(apiUrl, trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, true);
+                ? createWorkflowJobWithOptionalParameters(apiUrl, trustedBuildSystemTokenCredentialId,
+                    apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug,
+                    unsignedArtifactString, artifactConfigurationSlug, description,
+                    userDefinedParamName, userDefinedParamValue, true)
+                : createWorkflowJob(apiUrl, trustedBuildSystemTokenCredentialId, apiTokenCredentialId,
+                    organizationId, projectSlug, signingPolicySlug,
+                    unsignedArtifactString, true);
 
         String remoteUrl = Some.url();
         BuildData buildData = new BuildData(Some.stringNonEmpty());
@@ -113,7 +120,9 @@ public class SubmitSigningRequestStepEndToEndTest {
         assertTrue(run.getLog().contains("<returnValue>:\"" + signingRequestId + "\""));
 
         if (withOptionalFields)
-            assertRequest(apiToken, trustedBuildSystemToken, unsignedArtifactString, remoteUrl, organizationId, projectSlug, signingPolicySlug, artifactConfigurationSlug, description);
+            assertRequest(apiToken, trustedBuildSystemToken, unsignedArtifactString,
+            remoteUrl, organizationId, projectSlug, signingPolicySlug,
+            artifactConfigurationSlug, description, userDefinedParamName, userDefinedParamValue);
         else
             assertRequest(apiToken, trustedBuildSystemToken, unsignedArtifactString, remoteUrl, organizationId, projectSlug, signingPolicySlug);
     }
@@ -131,6 +140,8 @@ public class SubmitSigningRequestStepEndToEndTest {
         String artifactConfigurationSlug = Some.stringNonEmpty();
         String description = Some.stringNonEmpty();
         String signingRequestId = Some.uuid().toString();
+        String userDefinedParamName = "UserDefinedParam";
+        String userDefinedParamValue = Some.stringNonEmpty();
 
         CredentialsStore credentialStore = CredentialStoreUtils.getCredentialStore(j.jenkins);
         assert credentialStore != null;
@@ -145,7 +156,9 @@ public class SubmitSigningRequestStepEndToEndTest {
                         .withHeader("Location", getMockUrl("v1/" + organizationId + "/SigningRequests/" + signingRequestId))));
 
         WorkflowJob workflowJob = withOptionalFields
-                ? createWorkflowJobWithOptionalParameters(apiUrl, trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, artifactConfigurationSlug, description, false)
+                ? createWorkflowJobWithOptionalParameters(apiUrl, trustedBuildSystemTokenCredentialId, apiTokenCredentialId,
+                    organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, artifactConfigurationSlug, description,
+                    userDefinedParamName, userDefinedParamValue, false)
                 : createWorkflowJob(apiUrl, trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, false);
 
         String remoteUrl = Some.url();
@@ -167,7 +180,9 @@ public class SubmitSigningRequestStepEndToEndTest {
         assertTrue(run.getLog().contains("<returnValue>:\"" + signingRequestId + "\""));
 
         if (withOptionalFields)
-            assertRequest(apiToken, trustedBuildSystemToken, unsignedArtifactString, remoteUrl, organizationId, projectSlug, signingPolicySlug, artifactConfigurationSlug, description);
+            assertRequest(apiToken, trustedBuildSystemToken, unsignedArtifactString,
+                remoteUrl, organizationId, projectSlug, signingPolicySlug,
+                artifactConfigurationSlug, description, userDefinedParamName, userDefinedParamValue);
         else
             assertRequest(apiToken, trustedBuildSystemToken, unsignedArtifactString, remoteUrl, organizationId, projectSlug, signingPolicySlug);
     }
@@ -228,6 +243,8 @@ public class SubmitSigningRequestStepEndToEndTest {
                                                                 String unsignedArtifactString,
                                                                 String artifactConfigurationSlug,
                                                                 String description,
+                                                                String userDefinedParamName,
+                                                                String userDefinedParamValue,
                                                                 boolean waitForCompletion) throws IOException {
         return j.createWorkflow("SignPath",
                 "writeFile text: '" + unsignedArtifactString + "', file: 'unsigned.exe'; " +
@@ -245,6 +262,7 @@ public class SubmitSigningRequestStepEndToEndTest {
                         "waitForCompletion: '" + waitForCompletion + "'," +
                         "serviceUnavailableTimeoutInSeconds: 10," +
                         "uploadAndDownloadRequestTimeoutInSeconds: 10," +
+                        "parameters: [ " + userDefinedParamName + ": " + userDefinedParamValue + " ]" +
                         "waitForCompletionTimeoutInSeconds: 10) + '\"';");
     }
 
@@ -304,6 +322,8 @@ public class SubmitSigningRequestStepEndToEndTest {
             String projectSlug,
             String signingPolicySlug,
             String artifactConfigurationSlug,
+            String userDefinedParamName,
+            String userDefinedParamValue,
             String description) {
 
         wireMockRule.verify(postRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests"))
@@ -312,6 +332,8 @@ public class SubmitSigningRequestStepEndToEndTest {
                 .withRequestBodyPart(aMultipart().withBody(equalTo(signingPolicySlug)).build())
                 .withRequestBodyPart(aMultipart().withBody(equalTo(remoteUrl)).build())
                 .withRequestBodyPart(aMultipart().withBody(equalTo(description)).build())
+                .withRequestBodyPart(aMultipart().withBody(equalTo("Parameter." + userDefinedParamName)).build())
+                .withRequestBodyPart(aMultipart().withBody(equalTo(userDefinedParamValue)).build())
                 .withRequestBodyPart(aMultipart().withBody(equalTo(artifactConfigurationSlug)).build()));
 
         assertFormFiles(unsignedArtifactString, organizationId);

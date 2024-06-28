@@ -17,6 +17,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -37,6 +38,7 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
     private String description;
     private boolean waitForCompletion = false;
     private String outputArtifactPath;
+    private Map<String, String> parameters;
 
     @DataBoundConstructor
     public SubmitSigningRequestStep() {
@@ -57,6 +59,7 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
                 ensureNotNull(getInputArtifactPath(), "inputArtifactPath"),
                 getDescription(),
                 outputArtifactPath,
+                getParameters(),
                 waitForCompletion);
 
         ApiConfiguration apiConfiguration = getAndValidateApiConfiguration();
@@ -127,6 +130,10 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
     public String getOutputArtifactPath() {
         return outputArtifactPath;
     }
+    
+    public Map<String, String> getParameters () {
+        return parameters;
+    }
 
     @DataBoundSetter
     public void setOrganizationId(String organizationId) {
@@ -166,5 +173,10 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
     @DataBoundSetter
     public void setOutputArtifactPath(String outputArtifactPath) {
         this.outputArtifactPath = outputArtifactPath;
+    }
+    
+    @DataBoundSetter
+    public void setParameters (Map<String, String> parameters) {
+        this.parameters = parameters;
     }
 }
