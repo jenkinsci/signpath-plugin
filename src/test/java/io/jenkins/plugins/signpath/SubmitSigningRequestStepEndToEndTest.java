@@ -262,7 +262,7 @@ public class SubmitSigningRequestStepEndToEndTest {
                         "waitForCompletion: '" + waitForCompletion + "'," +
                         "serviceUnavailableTimeoutInSeconds: 10," +
                         "uploadAndDownloadRequestTimeoutInSeconds: 10," +
-                        "parameters: [ " + userDefinedParamName + ": " + userDefinedParamValue + " ]" +
+                        "parameters: [ " + userDefinedParamName + ": " + userDefinedParamValue + " ]," +
                         "waitForCompletionTimeoutInSeconds: 10) + '\"';");
     }
 
