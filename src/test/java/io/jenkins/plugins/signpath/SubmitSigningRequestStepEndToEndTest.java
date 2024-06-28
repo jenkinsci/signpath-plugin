@@ -322,7 +322,8 @@ public class SubmitSigningRequestStepEndToEndTest {
                 .withRequestBodyPart(aMultipart().withBody(equalTo(remoteUrl)).build())
                 .withRequestBodyPart(aMultipart().withBody(equalTo(description)).build())
                 .withRequestBodyPart(aMultipart().withBody(equalTo(artifactConfigurationSlug)).build())
-                .withRequestBodyPart(aMultipart().withBody(equalTo(userDefinedParamValue)).build()));
+                .withRequestBodyPart(aMultipart().withBody(equalTo(userDefinedParamValue)).build())
+                .withRequestBodyPart(aMultipart().withName("Parameters." + userDefinedParamName).build()));
 
         assertFormFiles(unsignedArtifactString, organizationId);
     }
