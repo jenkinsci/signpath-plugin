@@ -13,7 +13,8 @@
     <packaging>hpi</packaging>
     <properties>
         <changelist>999999-SNAPSHOT</changelist>
-        <jenkins.version>2.359</jenkins.version>
+        <jenkins.baseline>2.452</jenkins.baseline> 
+        <jenkins.version>${jenkins.baseline}.4</jenkins.version>
         <java.level>11</java.level>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
