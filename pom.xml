@@ -9,9 +9,10 @@
     </parent>
     <groupId>io.jenkins.plugins</groupId>
     <artifactId>signpath</artifactId>
-    <version>${changelist}</version>
+    <version>${revision}.${changelist}</version>
     <packaging>hpi</packaging>
     <properties>
+        <revision>2.0</revision>
         <changelist>999999-SNAPSHOT</changelist>
         <jenkins.baseline>2.452</jenkins.baseline> 
         <jenkins.version>${jenkins.baseline}.4</jenkins.version>
