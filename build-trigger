@@ -1,0 +1,4 @@
+We use this file as a trigger for the Jenkins plugin build pipeline.
+If you want to trigger a new build, just modify it.
+
+Version - 1
