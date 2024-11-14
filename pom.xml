@@ -22,7 +22,7 @@
         <host>0.0.0.0</host>
         <port>8080</port>
     </properties>
-    <name>SignPath</name>
+    <name>Code Signing with SignPath</name>
     <description>Use SignPath to sign your build artifacts</description>
     <developers>
         <developer>
