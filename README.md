@@ -120,6 +120,10 @@ stage('Download Signed Artifact') {
 
 https://ci.jenkins.io/job/Plugins/job/signpath-plugin/
 
+## Product Updates
+
+https://about.signpath.io/documentation/changelog/?component=jenkins_plugin
+
 ## Support
 
 The plugin is compatible with Jenkins 2.359 or higher.

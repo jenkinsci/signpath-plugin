@@ -4,24 +4,25 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>4.48</version>
+        <version>4.87</version>
         <relativePath />
     </parent>
     <groupId>io.jenkins.plugins</groupId>
     <artifactId>signpath</artifactId>
-    <version>${revision}${changelist}</version>
+    <version>${revision}.${changelist}</version>
     <packaging>hpi</packaging>
     <properties>
-        <revision>2.0.1</revision>
-        <changelist></changelist>
-        <jenkins.version>2.359</jenkins.version>
+        <revision>2.1.1</revision>
+        <changelist>999999-SNAPSHOT</changelist>
+        <jenkins.baseline>2.361</jenkins.baseline> 
+        <jenkins.version>${jenkins.baseline}.4</jenkins.version>
         <java.level>11</java.level>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <host>0.0.0.0</host>
         <port>8080</port>
     </properties>
-    <name>SignPath</name>
+    <name>Code Signing with SignPath</name>
     <description>Use SignPath to sign your build artifacts</description>
     <developers>
         <developer>
@@ -99,7 +100,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
-            <version>1.21</version>
+            <version>1.27.1</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -109,7 +110,7 @@
             <dependency>
                 <!-- Pick up common dependencies for the selected LTS line: https://github.com/jenkinsci/bom#usage -->
                 <groupId>io.jenkins.tools.bom</groupId>
-                <artifactId>bom-2.361.x</artifactId>
+                <artifactId>bom-${jenkins.baseline}.x</artifactId>
                 <version>2102.v854b_fec19c92</version>
                 <scope>import</scope>
                 <type>pom</type>
