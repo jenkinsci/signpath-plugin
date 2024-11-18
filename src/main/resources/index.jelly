@@ -1,4 +1,4 @@
 <?jelly escape-by-default='true'?>
 <div>
-    Signs the artifact from the current build with <a href="https://about.signpath.io">SignPath.io</a>.
+    Submits a build artifact to SignPath Code Integrity Platform for build integrity check and code signing.
 </div>
