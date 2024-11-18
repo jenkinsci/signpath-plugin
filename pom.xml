@@ -23,7 +23,7 @@
         <port>8080</port>
     </properties>
     <name>Code Signing with SignPath</name>
-    <description>Use SignPath to sign your build artifacts</description>
+    <description>Submits a build artifact to SignPath Code Integrity Platform for build integrity check and code signing.</description>
     <developers>
         <developer>
             <id>signpath</id>
