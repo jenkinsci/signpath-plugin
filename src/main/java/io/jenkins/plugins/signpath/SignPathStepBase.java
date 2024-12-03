@@ -1,9 +1,14 @@
 package io.jenkins.plugins.signpath;
 
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
+import io.jenkins.plugins.signpath.Common.PluginConstants;
 import io.jenkins.plugins.signpath.Exceptions.SignPathStepInvalidArgumentException;
+import jenkins.model.GlobalConfiguration;
+
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.kohsuke.stapler.DataBoundSetter;
+
+import hudson.model.TaskListener;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -17,7 +22,7 @@ import java.util.concurrent.TimeUnit;
  * @see io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration
  */
 public abstract class SignPathStepBase extends Step {
-    private String apiUrl = "https://app.signpath.io/api/";
+    private String apiUrl;
 
     // we set some sensible defaults for various timeouts, note that the
     // serviceUnavailableTimeoutInSeconds is used for upload, download and wait operations
@@ -34,14 +39,40 @@ public abstract class SignPathStepBase extends Step {
     // also a timeout that is too high is not useful anymore
     private int waitForPowerShellTimeoutInSeconds = (int) TimeUnit.MINUTES.toSeconds(30);
 
-    private String trustedBuildSystemTokenCredentialId = "SignPath.TrustedBuildSystemToken";
+    private String trustedBuildSystemTokenCredentialId;
     private String apiTokenCredentialId = "SignPath.ApiToken";
 
     public String getApiUrl() {
         return apiUrl;
     }
 
+    // we use this method in the task to avoid overriding empty values at build level
+    // with the values from the global configuration
+    public String getApiUrlWithGlobalConfig() {
+        if (apiUrl == null || apiUrl.isEmpty()) {
+            // if the apiUrl is not set we try to get the default from the global configuration
+            SignPathPluginGlobalConfiguration config = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
+            if (config != null) {
+                return config.getDefaultApiURL();
+            }
+        }
+        return apiUrl;
+    }
+
     public String getTrustedBuildSystemTokenCredentialId() {
+        return trustedBuildSystemTokenCredentialId;
+    }
+
+    // we use this method in the task to avoid overriding empty values at build level
+    // with the values from the global configuration
+    public String getTrustedBuildSystemTokenCredentialIdWithGlobalConfig() {
+        if (trustedBuildSystemTokenCredentialId == null || trustedBuildSystemTokenCredentialId.isEmpty()) {
+            // if the TBS credentials ID is not set we try to get the default from the global configuration
+            SignPathPluginGlobalConfiguration config = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
+            if (config != null) {
+                return config.getDefaultTrustedBuildSystemCredentialId();
+            }
+        }
         return trustedBuildSystemTokenCredentialId;
     }
 
@@ -106,7 +137,7 @@ public abstract class SignPathStepBase extends Step {
 
     public ApiConfiguration getAndValidateApiConfiguration() throws SignPathStepInvalidArgumentException {
         return new ApiConfiguration(
-                ensureValidURL(getApiUrl()),
+                ensureValidURL(getApiUrlWithGlobalConfig()),
                 getServiceUnavailableTimeoutInSeconds(),
                 getUploadAndDownloadRequestTimeoutInSeconds(),
                 getWaitForCompletionTimeoutInSeconds(),

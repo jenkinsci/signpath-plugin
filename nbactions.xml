@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+        <action>
+            <actionName>CUSTOM-Install skip-spotbugs</actionName>
+            <displayName>Install skip-spotbugs</displayName>
+            <goals>
+                <goal>install</goal>
+                <goal>-Dspotbugs.skip=true</goal>
+            </goals>
+        </action>
+    </actions>
