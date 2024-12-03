@@ -14,6 +14,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 /**
  * A common base class for all SignPath API / Facade related Jenkins Steps
@@ -49,14 +50,7 @@ public abstract class SignPathStepBase extends Step {
     // we use this method in the task to avoid overriding empty values at build level
     // with the values from the global configuration
     public String getApiUrlWithGlobalConfig() {
-        if (apiUrl == null || apiUrl.isEmpty()) {
-            // if the apiUrl is not set we try to get the default from the global configuration
-            SignPathPluginGlobalConfiguration config = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
-            if (config != null) {
-                return config.getDefaultApiURL();
-            }
-        }
-        return apiUrl;
+        return getWithGlobalConfig(apiUrl, SignPathPluginGlobalConfiguration::getDefaultApiURL);
     }
 
     public String getTrustedBuildSystemTokenCredentialId() {
@@ -66,14 +60,7 @@ public abstract class SignPathStepBase extends Step {
     // we use this method in the task to avoid overriding empty values at build level
     // with the values from the global configuration
     public String getTrustedBuildSystemTokenCredentialIdWithGlobalConfig() {
-        if (trustedBuildSystemTokenCredentialId == null || trustedBuildSystemTokenCredentialId.isEmpty()) {
-            // if the TBS credentials ID is not set we try to get the default from the global configuration
-            SignPathPluginGlobalConfiguration config = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
-            if (config != null) {
-                return config.getDefaultTrustedBuildSystemCredentialId();
-            }
-        }
-        return trustedBuildSystemTokenCredentialId;
+        return getWithGlobalConfig(trustedBuildSystemTokenCredentialId, SignPathPluginGlobalConfiguration::getDefaultTrustedBuildSystemCredentialId);
     }
 
     public String getApiTokenCredentialId() {
@@ -166,5 +153,16 @@ public abstract class SignPathStepBase extends Step {
             throw new SignPathStepInvalidArgumentException(name + " must be set");
 
         return input;
+    }
+
+    protected String getWithGlobalConfig(String value, Function<SignPathPluginGlobalConfiguration, String> getter) {
+        if (value == null || value.isEmpty()) {
+            SignPathPluginGlobalConfiguration config = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
+            if (config != null) {
+                return getter.apply(config);
+            }
+        }
+
+        return value;
     }
 }

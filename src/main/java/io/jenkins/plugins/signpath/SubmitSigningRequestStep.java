@@ -21,6 +21,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * Represents the submitSigningRequestStep step that is executable via pipeline-script
@@ -108,15 +109,7 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
     // we use this method in the task to avoid overriding empty values at build level
     // with the values from the global configuration
     public String getOrganizationIdWithGlobalConfig() {
-        if (organizationId == null || organizationId.isEmpty()) {
-            // if the organizationId is not set we try to get the default from the global configuration
-            SignPathPluginGlobalConfiguration config = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
-            if (config != null) {
-                return config.getDefaultOrganizationId();
-            }
-        }
-
-        return organizationId;
+        return getWithGlobalConfig(organizationId, SignPathPluginGlobalConfiguration::getDefaultOrganizationId);
     }
 
     public String getProjectSlug() {
