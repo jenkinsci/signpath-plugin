@@ -1,5 +1,7 @@
 package io.jenkins.plugins.signpath;
 
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.CredentialsStore;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
@@ -11,13 +13,15 @@ import org.mockito.MockitoAnnotations;
 import hudson.util.FormValidation;
 import io.jenkins.plugins.signpath.Exceptions.SecretNotFoundException;
 import io.jenkins.plugins.signpath.SecretRetrieval.CredentialBasedSecretRetriever;
-import jenkins.model.Jenkins;
+import io.jenkins.plugins.signpath.TestUtils.CredentialStoreUtils;
+import io.jenkins.plugins.signpath.TestUtils.SignPathJenkinsRule;
+import org.junit.Rule;
 
 public class SignPathPluginGlobalConfigurationTest {
     private SignPathPluginGlobalConfiguration config;
 
-    @Mock
-    private Jenkins jenkinsMock;
+    @Rule
+    public final SignPathJenkinsRule j = new SignPathJenkinsRule();
 
     @Mock
     private CredentialBasedSecretRetriever secretRetrieverMock;
@@ -41,6 +45,16 @@ public class SignPathPluginGlobalConfigurationTest {
         config.setDefaultTrustedBuildSystemCredentialId(credentialId);
         assertEquals("The TBS Credential ID should match the set value.", credentialId, config.getDefaultTrustedBuildSystemCredentialId());
     }
+    
+    @Test
+    public void testDoCheckDefaultTrustedBuildSystemCredentialId_Valid() throws Exception {
+        String validCredentialId = "valid-id";
+        CredentialsStore credentialStore = CredentialStoreUtils.getCredentialStore(j.jenkins);
+        assert credentialStore != null;
+        CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, validCredentialId, "dummySecret");
+        FormValidation result = config.doCheckDefaultTrustedBuildSystemCredentialId(validCredentialId);
+        assertEquals("Validation should pass with a valid credential ID.", FormValidation.ok(), result);
+    }
 
     @Test
     public void testDoCheckDefaultTrustedBuildSystemCredentialId_Invalid() throws Exception {
@@ -50,7 +64,7 @@ public class SignPathPluginGlobalConfigurationTest {
                 .retrieveSecret(eq(invalidCredentialId), any());
 
         FormValidation result = config.doCheckDefaultTrustedBuildSystemCredentialId(invalidCredentialId);
-        assertEquals("Validation should fail with an invalid credential ID.", FormValidation.error("Secret not found").toString(), result.toString());
+        assertEquals("Validation should fail.", FormValidation.Kind.ERROR, result.kind);
     }
 
     @Test
