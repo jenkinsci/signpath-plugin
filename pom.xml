@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>4.48</version>
+        <version>4.87</version>
         <relativePath />
     </parent>
     <groupId>io.jenkins.plugins</groupId>
@@ -22,7 +22,7 @@
         <host>0.0.0.0</host>
         <port>8080</port>
     </properties>
-    <name>SignPath</name>
+    <name>Code Signing with SignPath</name>
     <description>Submits a build artifact to SignPath Code Integrity Platform for build integrity check and code signing.</description>
     <developers>
         <developer>
@@ -63,7 +63,7 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
             <artifactId>workflow-aggregator</artifactId>
-            <version>2.7</version>
+            <version>600.vb_57cdd26fdd7</version>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
@@ -100,7 +100,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
-            <version>1.21</version>
+            <version>1.27.1</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -111,7 +111,7 @@
                 <!-- Pick up common dependencies for the selected LTS line: https://github.com/jenkinsci/bom#usage -->
                 <groupId>io.jenkins.tools.bom</groupId>
                 <artifactId>bom-${jenkins.baseline}.x</artifactId>
-                <version>1595.v8c71c13cc3a_9</version>
+                <version>2102.v854b_fec19c92</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
