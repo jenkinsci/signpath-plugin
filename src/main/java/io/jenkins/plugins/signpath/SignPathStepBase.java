@@ -43,7 +43,12 @@ public abstract class SignPathStepBase extends Step {
 
     public String getApiUrl() {
         SignPathPluginGlobalConfiguration config = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
-        return config.getApiURL();
+        if(config != null) {
+            return config.getApiURL();
+        }
+        else {
+            return null;
+        }
     }
 
     public String getTrustedBuildSystemTokenCredentialId() {
