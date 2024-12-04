@@ -10,6 +10,8 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.signpath.Exceptions.SignPathStepInvalidArgumentException;
+import jenkins.model.GlobalConfiguration;
+
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
@@ -39,9 +41,9 @@ public class GetSignedArtifactStep extends SignPathStepBase {
     @Override
     public StepExecution start(StepContext context) throws IOException, InterruptedException, SignPathStepInvalidArgumentException {
         GetSignedArtifactStepInput input =  new GetSignedArtifactStepInput(
-                ensureValidUUID(getOrganizationId(), "organizationId"),
+                ensureValidUUID(getOrganizationIdWithGlobalConfig(), "organizationId"),
                 ensureValidUUID(getSigningRequestId(), "signingRequestId"),
-                ensureNotNull(getTrustedBuildSystemTokenCredentialId(), "trustedBuildSystemTokenCredentialId"),
+                ensureNotNull(getTrustedBuildSystemTokenCredentialIdWithGlobalConfig(), "trustedBuildSystemTokenCredentialId"),
                 ensureNotNull(getApiTokenCredentialId(), "apiTokenCredentialId"),
                 ensureNotNull(getOutputArtifactPath(), "outputArtifactPath"));
 
@@ -82,6 +84,12 @@ public class GetSignedArtifactStep extends SignPathStepBase {
 
     public String getOrganizationId() {
         return organizationId;
+    }
+
+    // we use this method in the task to avoid overriding empty values at build level
+    // with the values from the global configuration
+    public String getOrganizationIdWithGlobalConfig() {
+        return getWithGlobalConfig(organizationId, SignPathPluginGlobalConfiguration::getDefaultOrganizationId);
     }
 
     public String getSigningRequestId() {

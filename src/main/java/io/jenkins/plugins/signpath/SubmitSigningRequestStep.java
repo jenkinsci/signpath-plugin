@@ -10,6 +10,8 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.signpath.Exceptions.SignPathStepInvalidArgumentException;
+import jenkins.model.GlobalConfiguration;
+
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
@@ -19,6 +21,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * Represents the submitSigningRequestStep step that is executable via pipeline-script
@@ -50,8 +53,8 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
         boolean waitForCompletion = getWaitForCompletion();
         String outputArtifactPath = waitForCompletion ? ensureNotNull(getOutputArtifactPath(), "outputArtifactPath") : null;
         SubmitSigningRequestStepInput input = new SubmitSigningRequestStepInput(
-                ensureValidUUID(getOrganizationId(), "organizationId"),
-                ensureNotNull(getTrustedBuildSystemTokenCredentialId(), "trustedBuildSystemTokenCredentialId"),
+                ensureValidUUID(getOrganizationIdWithGlobalConfig(), "organizationId"),
+                ensureNotNull(getTrustedBuildSystemTokenCredentialIdWithGlobalConfig(), "trustedBuildSystemTokenCredentialId"),
                 ensureNotNull(getApiTokenCredentialId(), "apiTokenCredentialId"),
                 ensureNotNull(getProjectSlug(), "projectSlug"),
                 getArtifactConfigurationSlug(),
@@ -101,6 +104,12 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
 
     public String getOrganizationId() {
         return organizationId;
+    }
+
+    // we use this method in the task to avoid overriding empty values at build level
+    // with the values from the global configuration
+    public String getOrganizationIdWithGlobalConfig() {
+        return getWithGlobalConfig(organizationId, SignPathPluginGlobalConfiguration::getDefaultOrganizationId);
     }
 
     public String getProjectSlug() {

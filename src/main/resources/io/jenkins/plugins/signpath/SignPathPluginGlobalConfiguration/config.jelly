@@ -1,0 +1,14 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <f:section title="${%Code Signing with SignPath}">
+    <f:entry title="${%Default Api URL}" field="defaultApiURL">
+      <f:textbox />
+    </f:entry>
+    <f:entry title="${%Default Trusted Build System Credential ID}" field="defaultTrustedBuildSystemCredentialId">
+      <f:textbox />
+    </f:entry>
+    <f:entry title="${%Default Organization ID}" field="defaultOrganizationId">
+      <f:textbox />
+    </f:entry>
+  </f:section>
+</j:jelly>
