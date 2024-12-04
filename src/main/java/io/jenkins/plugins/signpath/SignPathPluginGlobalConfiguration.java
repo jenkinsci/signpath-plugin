@@ -9,6 +9,8 @@ import io.jenkins.plugins.signpath.Common.PluginConstants;
 import io.jenkins.plugins.signpath.Exceptions.SecretNotFoundException;
 import io.jenkins.plugins.signpath.SecretRetrieval.CredentialBasedSecretRetriever;
 import io.jenkins.plugins.signpath.SecretRetrieval.SecretRetriever;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.UUID;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.QueryParameter;
@@ -16,7 +18,7 @@ import org.kohsuke.stapler.QueryParameter;
 @Extension
 public class SignPathPluginGlobalConfiguration extends GlobalConfiguration {
 
-    private String defaultApiURL = PluginConstants.DEFAULT_API_URL;
+    private String apiURL = PluginConstants.DEFAULT_API_URL;
     private String defaultTrustedBuildSystemCredentialId = PluginConstants.DEFAULT_TBS_CREDENTIAL_ID;
     private String defaultOrganizationId;
 
@@ -26,14 +28,27 @@ public class SignPathPluginGlobalConfiguration extends GlobalConfiguration {
 
     // default DefaultApiURL
     
-    public String getDefaultApiURL() {
-        return defaultApiURL;
+    public String getApiURL() {
+        return apiURL;
     }
 
     @DataBoundSetter
-    public void setDefaultApiURL(String url) {
-        this.defaultApiURL = url;
+    public void setApiURL(String url) {
+        this.apiURL = url;
         save();
+    }
+
+    public FormValidation doCheckApiURL(@QueryParameter String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return FormValidation.error("Api URL is required"); // empty value is allowed
+        }
+        
+        try {
+            new URL(value);
+            return FormValidation.ok();
+        } catch (MalformedURLException e) {
+            return FormValidation.error("Api URL must be a valid url");
+        }        
     }
     
     // DefaultTrustedBuildSystemCredential
