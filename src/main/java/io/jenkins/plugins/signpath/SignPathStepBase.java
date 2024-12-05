@@ -23,8 +23,6 @@ import java.util.function.Function;
  * @see io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration
  */
 public abstract class SignPathStepBase extends Step {
-    private String apiUrl;
-
     // we set some sensible defaults for various timeouts, note that the
     // serviceUnavailableTimeoutInSeconds is used for upload, download and wait operations
     private int serviceUnavailableTimeoutInSeconds = (int) TimeUnit.MINUTES.toSeconds(10);
@@ -44,13 +42,13 @@ public abstract class SignPathStepBase extends Step {
     private String apiTokenCredentialId = "SignPath.ApiToken";
 
     public String getApiUrl() {
-        return apiUrl;
-    }
-
-    // we use this method in the task to avoid overriding empty values at build level
-    // with the values from the global configuration
-    public String getApiUrlWithGlobalConfig() {
-        return getWithGlobalConfig(apiUrl, SignPathPluginGlobalConfiguration::getDefaultApiURL);
+        SignPathPluginGlobalConfiguration config = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
+        if(config != null) {
+            return config.getApiURL();
+        }
+        else {
+            return null;
+        }
     }
 
     public String getTrustedBuildSystemTokenCredentialId() {
@@ -88,11 +86,6 @@ public abstract class SignPathStepBase extends Step {
     }
 
     @DataBoundSetter
-    public void setApiUrl(String apiUrl) {
-        this.apiUrl = apiUrl;
-    }
-
-    @DataBoundSetter
     public void setTrustedBuildSystemTokenCredentialId(String trustedBuildSystemTokenCredentialId) {
         this.trustedBuildSystemTokenCredentialId = trustedBuildSystemTokenCredentialId;
     }
@@ -124,20 +117,12 @@ public abstract class SignPathStepBase extends Step {
 
     public ApiConfiguration getAndValidateApiConfiguration() throws SignPathStepInvalidArgumentException {
         return new ApiConfiguration(
-                ensureValidURL(getApiUrlWithGlobalConfig()),
+                ensureValidURL(getApiUrl()),
                 getServiceUnavailableTimeoutInSeconds(),
                 getUploadAndDownloadRequestTimeoutInSeconds(),
                 getWaitForCompletionTimeoutInSeconds(),
                 getWaitForPowerShellTimeoutInSeconds(),
                 getWaitBetweenReadinessChecksInSeconds());
-    }
-
-    protected URL ensureValidURL(String apiUrl) throws SignPathStepInvalidArgumentException {
-        try {
-            return new URL(apiUrl);
-        } catch (MalformedURLException e) {
-            throw new SignPathStepInvalidArgumentException(apiUrl + " must be a valid url");
-        }
     }
 
     protected UUID ensureValidUUID(String input, String name) throws SignPathStepInvalidArgumentException {
@@ -164,5 +149,13 @@ public abstract class SignPathStepBase extends Step {
         }
 
         return value;
+    }
+
+    protected URL ensureValidURL(String apiUrl) throws SignPathStepInvalidArgumentException {
+        try {
+            return new URL(apiUrl);
+        } catch (MalformedURLException e) {
+            throw new SignPathStepInvalidArgumentException(apiUrl + " must be a valid url");
+        }
     }
 }

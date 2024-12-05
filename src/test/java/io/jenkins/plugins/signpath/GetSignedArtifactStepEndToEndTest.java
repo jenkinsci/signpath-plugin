@@ -24,6 +24,7 @@ import org.junit.runner.RunWith;
 import java.io.IOException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import jenkins.model.GlobalConfiguration;
 import static org.junit.Assert.*;
 
 @RunWith(Theories.class)
@@ -52,6 +53,8 @@ public class GetSignedArtifactStepEndToEndTest {
         CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, apiTokenCredentialId, apiToken);
 
         String apiUrl = getMockUrl();
+        SignPathPluginGlobalConfiguration globalConfig = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
+        globalConfig.setApiURL(apiUrl);
         
         wireMockRule.stubFor(get(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId))
                 .willReturn(aResponse()
@@ -63,7 +66,7 @@ public class GetSignedArtifactStepEndToEndTest {
                         .withStatus(200)
                         .withBody(signedArtifactBytes)));
 
-        WorkflowJob workflowJob = createWorkflowJob(apiUrl, trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, signingRequestId);
+        WorkflowJob workflowJob = createWorkflowJob(trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, signingRequestId);
 
         String remoteUrl = Some.url();
         BuildData buildData = new BuildData(Some.stringNonEmpty());
@@ -106,13 +109,12 @@ public class GetSignedArtifactStepEndToEndTest {
         assertTrue(run.getLog().contains("SignPathStepInvalidArgumentException"));
     }
 
-    private WorkflowJob createWorkflowJob(String apiUrl,
-                                          String trustedBuildSystemTokenCredentialId,
+    private WorkflowJob createWorkflowJob(String trustedBuildSystemTokenCredentialId,
                                           String apiTokenCredentialId,
                                           String organizationId,
                                           String signingRequestId) throws IOException {
         return j.createWorkflow("SignPath",
-                "getSignedArtifact( apiUrl: '" + apiUrl + "', " +
+                "getSignedArtifact(" +
                         "outputArtifactPath: 'signed.exe', " +
                         "trustedBuildSystemTokenCredentialId: '" + trustedBuildSystemTokenCredentialId + "'," +
                         "apiTokenCredentialId: '" + apiTokenCredentialId + "'," +

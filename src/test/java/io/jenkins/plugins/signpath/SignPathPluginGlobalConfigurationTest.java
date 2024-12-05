@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import hudson.util.FormValidation;
+import hudson.util.FormValidation.Kind;
 import io.jenkins.plugins.signpath.Exceptions.SecretNotFoundException;
 import io.jenkins.plugins.signpath.SecretRetrieval.CredentialBasedSecretRetriever;
 import io.jenkins.plugins.signpath.TestUtils.CredentialStoreUtils;
@@ -35,8 +36,22 @@ public class SignPathPluginGlobalConfigurationTest {
     @Test
     public void testGetAndSetDefaultApiURL() {
         String url = "https://api.example.com";
-        config.setDefaultApiURL(url);
-        assertEquals("The default API URL should match the set value.", url, config.getDefaultApiURL());
+        config.setApiURL(url);
+        assertEquals("The API URL should match the set value.", url, config.getApiURL());
+    }
+    
+    @Test
+    public void testDoCheckApiURL_Valid() {
+        String validUrl = "https://api.example.com";
+        FormValidation result = config.doCheckApiURL(validUrl);
+        assertEquals("Validation should pass with a valid url.", Kind.OK, result.kind);
+    }
+
+    @Test
+    public void testDoCheckApiURL_Invalid() {
+        String invalidUrl = "invalid-url";
+        FormValidation result = config.doCheckApiURL(invalidUrl);
+        assertEquals("Validation should fail.", FormValidation.Kind.ERROR, result.kind);
     }
 
     @Test
