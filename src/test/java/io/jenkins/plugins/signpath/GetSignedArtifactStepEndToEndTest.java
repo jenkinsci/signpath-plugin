@@ -55,6 +55,7 @@ public class GetSignedArtifactStepEndToEndTest {
         String apiUrl = getMockUrl();
         SignPathPluginGlobalConfiguration globalConfig = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
         globalConfig.setApiURL(apiUrl);
+        globalConfig.setTrustedBuildSystemCredentialId(trustedBuildSystemTokenCredentialId);
         
         wireMockRule.stubFor(get(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId))
                 .willReturn(aResponse()
@@ -66,7 +67,7 @@ public class GetSignedArtifactStepEndToEndTest {
                         .withStatus(200)
                         .withBody(signedArtifactBytes)));
 
-        WorkflowJob workflowJob = createWorkflowJob(trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, signingRequestId);
+        WorkflowJob workflowJob = createWorkflowJob(apiTokenCredentialId, organizationId, signingRequestId);
 
         String remoteUrl = Some.url();
         BuildData buildData = new BuildData(Some.stringNonEmpty());
@@ -109,14 +110,12 @@ public class GetSignedArtifactStepEndToEndTest {
         assertTrue(run.getLog().contains("SignPathStepInvalidArgumentException"));
     }
 
-    private WorkflowJob createWorkflowJob(String trustedBuildSystemTokenCredentialId,
-                                          String apiTokenCredentialId,
+    private WorkflowJob createWorkflowJob(String apiTokenCredentialId,
                                           String organizationId,
                                           String signingRequestId) throws IOException {
         return j.createWorkflow("SignPath",
                 "getSignedArtifact(" +
                         "outputArtifactPath: 'signed.exe', " +
-                        "trustedBuildSystemTokenCredentialId: '" + trustedBuildSystemTokenCredentialId + "'," +
                         "apiTokenCredentialId: '" + apiTokenCredentialId + "'," +
                         "organizationId: '" + organizationId + "'," +
                         "signingRequestId: '" + signingRequestId + "'," +
