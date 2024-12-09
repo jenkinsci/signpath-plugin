@@ -92,9 +92,10 @@ public class SubmitSigningRequestStepEndToEndTest {
  
         SignPathPluginGlobalConfiguration globalConfig = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
         globalConfig.setApiURL(apiUrl);
+        globalConfig.setTrustedBuildSystemCredentialId(trustedBuildSystemTokenCredentialId);
         WorkflowJob workflowJob = withOptionalFields
-                ? createWorkflowJobWithOptionalParameters(trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, artifactConfigurationSlug, description, userDefinedParamName, userDefinedParamValue, true)
-                : createWorkflowJob(trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, true);
+                ? createWorkflowJobWithOptionalParameters(apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, artifactConfigurationSlug, description, userDefinedParamName, userDefinedParamValue, true)
+                : createWorkflowJob(apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, true);
 
         String remoteUrl = Some.url();
         BuildData buildData = new BuildData(Some.stringNonEmpty());
@@ -152,11 +153,12 @@ public class SubmitSigningRequestStepEndToEndTest {
                         .withHeader("Location", getMockUrl("v1/" + organizationId + "/SigningRequests/" + signingRequestId))));
 
         SignPathPluginGlobalConfiguration globalConfig = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
-        globalConfig.setApiURL(apiUrl);                
+        globalConfig.setApiURL(apiUrl);      
+        globalConfig.setTrustedBuildSystemCredentialId(trustedBuildSystemTokenCredentialId);
         
         WorkflowJob workflowJob = withOptionalFields
-                ? createWorkflowJobWithOptionalParameters(trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, artifactConfigurationSlug, description, userDefinedParamName, userDefinedParamValue, false)
-                : createWorkflowJob(trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, false);
+                ? createWorkflowJobWithOptionalParameters(apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, artifactConfigurationSlug, description, userDefinedParamName, userDefinedParamValue, false)
+                : createWorkflowJob(apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, false);
 
         String remoteUrl = Some.url();
         BuildData buildData = new BuildData(Some.stringNonEmpty());
@@ -211,8 +213,9 @@ public class SubmitSigningRequestStepEndToEndTest {
 
         SignPathPluginGlobalConfiguration globalConfig = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
         globalConfig.setApiURL(getMockUrl());
+        globalConfig.setTrustedBuildSystemCredentialId(Some.stringNonEmpty());
         
-        WorkflowJob workflowJob = createWorkflowJob(Some.stringNonEmpty(), Some.stringNonEmpty(), organizationId, Some.stringNonEmpty(), Some.stringNonEmpty(), Some.stringNonEmpty(), false);
+        WorkflowJob workflowJob = createWorkflowJob(Some.stringNonEmpty(), organizationId, Some.stringNonEmpty(), Some.stringNonEmpty(), Some.stringNonEmpty(), false);
 
         BuildData buildData = new BuildData(Some.stringNonEmpty());
         buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(1));
@@ -232,8 +235,7 @@ public class SubmitSigningRequestStepEndToEndTest {
         wireMockRule.verify(exactly(0), postRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests")));
     }
 
-    private WorkflowJob createWorkflowJobWithOptionalParameters(String trustedBuildSystemTokenCredentialId,
-                                                                String apiTokenCredentialId,
+    private WorkflowJob createWorkflowJobWithOptionalParameters(String apiTokenCredentialId,
                                                                 String organizationId,
                                                                 String projectSlug,
                                                                 String signingPolicySlug,
@@ -249,7 +251,6 @@ public class SubmitSigningRequestStepEndToEndTest {
                         "echo '<returnValue>:\"'+ submitSigningRequest(" +
                         "inputArtifactPath: 'unsigned.exe', " +
                         "outputArtifactPath: 'signed.exe', " +
-                        "trustedBuildSystemTokenCredentialId: '" + trustedBuildSystemTokenCredentialId + "'," +
                         "apiTokenCredentialId: '" + apiTokenCredentialId + "'," +
                         "organizationId: '" + organizationId + "'," +
                         "projectSlug: '" + projectSlug + "'," +
@@ -263,8 +264,7 @@ public class SubmitSigningRequestStepEndToEndTest {
                         "waitForCompletionTimeoutInSeconds: 10) + '\"';");
     }
 
-    private WorkflowJob createWorkflowJob(String trustedBuildSystemTokenCredentialId,
-                                          String apiTokenCredentialId,
+    private WorkflowJob createWorkflowJob(String apiTokenCredentialId,
                                           String organizationId,
                                           String projectSlug,
                                           String signingPolicySlug,
@@ -280,7 +280,6 @@ public class SubmitSigningRequestStepEndToEndTest {
                         "echo '<returnValue>:\"'+ submitSigningRequest(" +
                         "inputArtifactPath: 'unsigned.exe', " +
                         outputArtifactPath +
-                        "trustedBuildSystemTokenCredentialId: '" + trustedBuildSystemTokenCredentialId + "'," +
                         "apiTokenCredentialId: '" + apiTokenCredentialId + "'," +
                         "organizationId: '" + organizationId + "'," +
                         "projectSlug: '" + projectSlug + "'," +

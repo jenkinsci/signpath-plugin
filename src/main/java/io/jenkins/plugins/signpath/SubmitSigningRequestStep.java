@@ -54,7 +54,7 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
         String outputArtifactPath = waitForCompletion ? ensureNotNull(getOutputArtifactPath(), "outputArtifactPath") : null;
         SubmitSigningRequestStepInput input = new SubmitSigningRequestStepInput(
                 ensureValidUUID(getOrganizationIdWithGlobalConfig(), "organizationId"),
-                ensureNotNull(getTrustedBuildSystemTokenCredentialIdWithGlobalConfig(), "trustedBuildSystemTokenCredentialId"),
+                ensureNotNull(getTrustedBuildSystemTokenCredentialId(), "trustedBuildSystemTokenCredentialId"),
                 ensureNotNull(getApiTokenCredentialId(), "apiTokenCredentialId"),
                 ensureNotNull(getProjectSlug(), "projectSlug"),
                 getArtifactConfigurationSlug(),
