@@ -38,29 +38,18 @@ public abstract class SignPathStepBase extends Step {
     // also a timeout that is too high is not useful anymore
     private int waitForPowerShellTimeoutInSeconds = (int) TimeUnit.MINUTES.toSeconds(30);
 
-    private String trustedBuildSystemTokenCredentialId;
     private String apiTokenCredentialId = "SignPath.ApiToken";
 
     public String getApiUrl() {
         SignPathPluginGlobalConfiguration config = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
-        if(config != null) {
-            return config.getApiURL();
-        }
-        else {
-            return null;
-        }
+        return config != null ? config.getApiURL() : null;
     }
 
     public String getTrustedBuildSystemTokenCredentialId() {
-        return trustedBuildSystemTokenCredentialId;
+        SignPathPluginGlobalConfiguration config = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
+        return config != null ? config.getTrustedBuildSystemCredentialId() : null;
     }
-
-    // we use this method in the task to avoid overriding empty values at build level
-    // with the values from the global configuration
-    public String getTrustedBuildSystemTokenCredentialIdWithGlobalConfig() {
-        return getWithGlobalConfig(trustedBuildSystemTokenCredentialId, SignPathPluginGlobalConfiguration::getDefaultTrustedBuildSystemCredentialId);
-    }
-
+    
     public String getApiTokenCredentialId() {
         return apiTokenCredentialId;
     }
@@ -83,11 +72,6 @@ public abstract class SignPathStepBase extends Step {
     
     public int getWaitBetweenReadinessChecksInSeconds() {
         return waitBetweenReadinessChecksInSeconds;
-    }
-
-    @DataBoundSetter
-    public void setTrustedBuildSystemTokenCredentialId(String trustedBuildSystemTokenCredentialId) {
-        this.trustedBuildSystemTokenCredentialId = trustedBuildSystemTokenCredentialId;
     }
 
     @DataBoundSetter

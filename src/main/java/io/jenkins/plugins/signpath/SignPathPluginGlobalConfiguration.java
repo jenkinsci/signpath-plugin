@@ -19,7 +19,7 @@ import org.kohsuke.stapler.QueryParameter;
 public class SignPathPluginGlobalConfiguration extends GlobalConfiguration {
 
     private String apiURL = PluginConstants.DEFAULT_API_URL;
-    private String defaultTrustedBuildSystemCredentialId = PluginConstants.DEFAULT_TBS_CREDENTIAL_ID;
+    private String trustedBuildSystemCredentialId = PluginConstants.DEFAULT_TBS_CREDENTIAL_ID;
     private String defaultOrganizationId;
 
     public SignPathPluginGlobalConfiguration() {
@@ -53,17 +53,17 @@ public class SignPathPluginGlobalConfiguration extends GlobalConfiguration {
     
     // DefaultTrustedBuildSystemCredential
     
-    public String getDefaultTrustedBuildSystemCredentialId() {
-        return defaultTrustedBuildSystemCredentialId;
+    public String getTrustedBuildSystemCredentialId() {
+        return trustedBuildSystemCredentialId;
     }
 
     @DataBoundSetter
-    public void setDefaultTrustedBuildSystemCredentialId(String tbsCredentialId) {
-        this.defaultTrustedBuildSystemCredentialId = tbsCredentialId;
+    public void setTrustedBuildSystemCredentialId(String tbsCredentialId) {
+        this.trustedBuildSystemCredentialId = tbsCredentialId;
         save();
     }
     
-    public FormValidation doCheckDefaultTrustedBuildSystemCredentialId(@QueryParameter String value) {
+    public FormValidation doCheckTrustedBuildSystemCredentialId(@QueryParameter String value) {
         if (value == null || value.trim().isEmpty()) {
             return FormValidation.ok(); // empty value is allowed
         }

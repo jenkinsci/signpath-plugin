@@ -34,7 +34,7 @@ public class SignPathPluginGlobalConfigurationTest {
     }
 
     @Test
-    public void testGetAndSetDefaultApiURL() {
+    public void testGetAndSetApiURL() {
         String url = "https://api.example.com";
         config.setApiURL(url);
         assertEquals("The API URL should match the set value.", url, config.getApiURL());
@@ -55,30 +55,30 @@ public class SignPathPluginGlobalConfigurationTest {
     }
 
     @Test
-    public void testGetAndSetDefaultTrustedBuildSystemCredentialId() {
+    public void testGetAndSetTrustedBuildSystemCredentialId() {
         String credentialId = "test-credential-id";
-        config.setDefaultTrustedBuildSystemCredentialId(credentialId);
-        assertEquals("The TBS Credential ID should match the set value.", credentialId, config.getDefaultTrustedBuildSystemCredentialId());
+        config.setTrustedBuildSystemCredentialId(credentialId);
+        assertEquals("The TBS Credential ID should match the set value.", credentialId, config.getTrustedBuildSystemCredentialId());
     }
     
     @Test
-    public void testDoCheckDefaultTrustedBuildSystemCredentialId_Valid() throws Exception {
+    public void testDoCheckTrustedBuildSystemCredentialId_Valid() throws Exception {
         String validCredentialId = "valid-id";
         CredentialsStore credentialStore = CredentialStoreUtils.getCredentialStore(j.jenkins);
         assert credentialStore != null;
         CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, validCredentialId, "dummySecret");
-        FormValidation result = config.doCheckDefaultTrustedBuildSystemCredentialId(validCredentialId);
+        FormValidation result = config.doCheckTrustedBuildSystemCredentialId(validCredentialId);
         assertEquals("Validation should pass with a valid credential ID.", FormValidation.ok(), result);
     }
 
     @Test
-    public void testDoCheckDefaultTrustedBuildSystemCredentialId_Invalid() throws Exception {
+    public void testDoCheckTrustedBuildSystemCredentialId_Invalid() throws Exception {
         String invalidCredentialId = "invalid-id";
         doThrow(new SecretNotFoundException("Secret not found"))
                 .when(secretRetrieverMock)
                 .retrieveSecret(eq(invalidCredentialId), any());
 
-        FormValidation result = config.doCheckDefaultTrustedBuildSystemCredentialId(invalidCredentialId);
+        FormValidation result = config.doCheckTrustedBuildSystemCredentialId(invalidCredentialId);
         assertEquals("Validation should fail.", FormValidation.Kind.ERROR, result.kind);
     }
 
