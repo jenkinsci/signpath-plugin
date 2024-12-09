@@ -41,13 +41,11 @@ public abstract class SignPathStepBase extends Step {
     private String apiTokenCredentialId = "SignPath.ApiToken";
 
     public String getApiUrl() {
-        SignPathPluginGlobalConfiguration config = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
-        return config != null ? config.getApiURL() : null;
+        return getSignPathConfig().getApiURL();
     }
 
     public String getTrustedBuildSystemTokenCredentialId() {
-        SignPathPluginGlobalConfiguration config = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
-        return config != null ? config.getTrustedBuildSystemCredentialId() : null;
+        return getSignPathConfig().getTrustedBuildSystemCredentialId();
     }
     
     public String getApiTokenCredentialId() {
@@ -141,5 +139,13 @@ public abstract class SignPathStepBase extends Step {
         } catch (MalformedURLException e) {
             throw new SignPathStepInvalidArgumentException(apiUrl + " must be a valid url");
         }
+    }
+    
+    protected SignPathPluginGlobalConfiguration getSignPathConfig() {
+        SignPathPluginGlobalConfiguration config = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
+        if (config == null) {
+            throw new IllegalStateException("SignPathPluginGlobalConfiguration is not available. Ensure it is properly configured.");
+        }
+        return config;
     }
 }
