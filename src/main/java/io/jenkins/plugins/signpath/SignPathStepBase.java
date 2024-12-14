@@ -170,7 +170,9 @@ public abstract class SignPathStepBase extends Step {
         // here we have both values set. We enforce a rule that step level value should be identical to global value
         if (!stepLevelValue.equals(globalVal)) {
             throw new SignPathStepInvalidArgumentException(
-                String.format("Parameter '%s' is configured globally and cannot be changed in pipeline", paramName));
+                String.format(
+                    "Parameter '%s' is configured globally to '%s' and cannot be changed in pipeline to '%s'.", 
+                    paramName, globalVal, stepLevelValue));
         }
 
         if (stepLevelValue == null || stepLevelValue.isEmpty()) {
