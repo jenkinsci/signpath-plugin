@@ -94,8 +94,8 @@ public class SubmitSigningRequestStepEndToEndTest {
         globalConfig.setApiURL(apiUrl);
         globalConfig.setTrustedBuildSystemCredentialId(trustedBuildSystemTokenCredentialId);
         WorkflowJob workflowJob = withOptionalFields
-                ? createWorkflowJobWithOptionalParameters(apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, artifactConfigurationSlug, description, userDefinedParamName, userDefinedParamValue, true)
-                : createWorkflowJob(apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, true);
+                ? createWorkflowJobWithOptionalParameters(apiUrl, trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, artifactConfigurationSlug, description, userDefinedParamName, userDefinedParamValue, true)
+                : createWorkflowJob(apiUrl, trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, true);
 
         String remoteUrl = Some.url();
         BuildData buildData = new BuildData(Some.stringNonEmpty());
