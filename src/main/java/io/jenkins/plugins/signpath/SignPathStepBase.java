@@ -164,7 +164,8 @@ public abstract class SignPathStepBase extends Step {
         }
 
         if (stepLevelValue == null || stepLevelValue.isEmpty()) {
-            return globalVal; // step level value is not set, use global value
+            // step level value is not set, use global value
+            return globalVal;
         }
 
         // here we have both values set. We enforce a rule that step level value should be identical to global value
@@ -175,13 +176,7 @@ public abstract class SignPathStepBase extends Step {
                     paramName, globalVal, stepLevelValue));
         }
 
-        if (stepLevelValue == null || stepLevelValue.isEmpty()) {
-            
-            if (config != null) {
-                return globalValueGetter.apply(config);
-            }
-        }
-
+        // here it doesn't matter which value we return, as they are identical
         return stepLevelValue;
     }
 
