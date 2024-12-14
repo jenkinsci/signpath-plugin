@@ -153,12 +153,12 @@ public class SubmitSigningRequestStepEndToEndTest {
                         .withHeader("Location", getMockUrl("v1/" + organizationId + "/SigningRequests/" + signingRequestId))));
 
         SignPathPluginGlobalConfiguration globalConfig = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
-        globalConfig.setApiURL(apiUrl);      
+        globalConfig.setApiURL(apiUrl);
         globalConfig.setTrustedBuildSystemCredentialId(trustedBuildSystemTokenCredentialId);
         
         WorkflowJob workflowJob = withOptionalFields
-                ? createWorkflowJobWithOptionalParameters(apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, artifactConfigurationSlug, description, userDefinedParamName, userDefinedParamValue, false)
-                : createWorkflowJob(apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, false);
+                ? createWorkflowJobWithOptionalParameters(apiUrl, trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, artifactConfigurationSlug, description, userDefinedParamName, userDefinedParamValue, false)
+                : createWorkflowJob(apiUrl, trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, false);
 
         String remoteUrl = Some.url();
         BuildData buildData = new BuildData(Some.stringNonEmpty());
@@ -212,10 +212,12 @@ public class SubmitSigningRequestStepEndToEndTest {
         String organizationId = Some.uuid().toString();
 
         SignPathPluginGlobalConfiguration globalConfig = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
-        globalConfig.setApiURL(getMockUrl());
-        globalConfig.setTrustedBuildSystemCredentialId(Some.stringNonEmpty());
+        String mockUrl = getMockUrl();
+        String tbsToken = Some.stringNonEmpty();
+        globalConfig.setApiURL(mockUrl);
+        globalConfig.setTrustedBuildSystemCredentialId(tbsToken);
         
-        WorkflowJob workflowJob = createWorkflowJob(Some.stringNonEmpty(), organizationId, Some.stringNonEmpty(), Some.stringNonEmpty(), Some.stringNonEmpty(), false);
+        WorkflowJob workflowJob = createWorkflowJob(mockUrl, tbsToken, Some.stringNonEmpty(), organizationId, Some.stringNonEmpty(), Some.stringNonEmpty(), Some.stringNonEmpty(), false);
 
         BuildData buildData = new BuildData(Some.stringNonEmpty());
         buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(1));
@@ -235,7 +237,9 @@ public class SubmitSigningRequestStepEndToEndTest {
         wireMockRule.verify(exactly(0), postRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests")));
     }
 
-    private WorkflowJob createWorkflowJobWithOptionalParameters(String apiTokenCredentialId,
+    private WorkflowJob createWorkflowJobWithOptionalParameters(String apiUrl,
+                                                                String trustedBuildSystemTokenCredentialId,
+                                                                String apiTokenCredentialId,
                                                                 String organizationId,
                                                                 String projectSlug,
                                                                 String signingPolicySlug,
@@ -248,9 +252,10 @@ public class SubmitSigningRequestStepEndToEndTest {
         return j.createWorkflow("SignPath",
                 "writeFile text: '" + unsignedArtifactString + "', file: 'unsigned.exe'; " +
                         "archiveArtifacts artifacts: 'unsigned.exe', fingerprint: true; " +
-                        "echo '<returnValue>:\"'+ submitSigningRequest(" +
+                        "echo '<returnValue>:\"'+ submitSigningRequest( apiUrl: '" + apiUrl + "', " +
                         "inputArtifactPath: 'unsigned.exe', " +
                         "outputArtifactPath: 'signed.exe', " +
+                        "trustedBuildSystemTokenCredentialId: '" + trustedBuildSystemTokenCredentialId + "'," +
                         "apiTokenCredentialId: '" + apiTokenCredentialId + "'," +
                         "organizationId: '" + organizationId + "'," +
                         "projectSlug: '" + projectSlug + "'," +
@@ -264,7 +269,9 @@ public class SubmitSigningRequestStepEndToEndTest {
                         "waitForCompletionTimeoutInSeconds: 10) + '\"';");
     }
 
-    private WorkflowJob createWorkflowJob(String apiTokenCredentialId,
+    private WorkflowJob createWorkflowJob(String apiUrl,
+                                          String trustedBuildSystemTokenCredentialId,
+                                          String apiTokenCredentialId,
                                           String organizationId,
                                           String projectSlug,
                                           String signingPolicySlug,
@@ -277,9 +284,10 @@ public class SubmitSigningRequestStepEndToEndTest {
         return j.createWorkflow("SignPath",
                 "writeFile text: '" + unsignedArtifactString + "', file: 'unsigned.exe'; " +
                         "archiveArtifacts artifacts: 'unsigned.exe', fingerprint: true; " +
-                        "echo '<returnValue>:\"'+ submitSigningRequest(" +
+                        "echo '<returnValue>:\"'+ submitSigningRequest(apiUrl: '" + apiUrl + "', " +
                         "inputArtifactPath: 'unsigned.exe', " +
                         outputArtifactPath +
+                        "trustedBuildSystemTokenCredentialId: '" + trustedBuildSystemTokenCredentialId + "'," +
                         "apiTokenCredentialId: '" + apiTokenCredentialId + "'," +
                         "organizationId: '" + organizationId + "'," +
                         "projectSlug: '" + projectSlug + "'," +
