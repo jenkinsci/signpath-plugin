@@ -19,8 +19,8 @@ import org.kohsuke.stapler.QueryParameter;
 public class SignPathPluginGlobalConfiguration extends GlobalConfiguration {
 
     private String apiURL = PluginConstants.DEFAULT_API_URL;
-    private String trustedBuildSystemCredentialId = PluginConstants.DEFAULT_TBS_CREDENTIAL_ID;
-    private String defaultOrganizationId;
+    private String trustedBuildSystemCredentialId = PluginConstants.DEFAULT_TBS_TOKEN_CREDENTIAL_ID;
+    private String organizationId;
 
     public SignPathPluginGlobalConfiguration() {
         load();
@@ -40,18 +40,18 @@ public class SignPathPluginGlobalConfiguration extends GlobalConfiguration {
 
     public FormValidation doCheckApiURL(@QueryParameter String value) {
         if (value == null || value.trim().isEmpty()) {
-            return FormValidation.error("Api URL is required"); // empty value is allowed
+            return FormValidation.error("Api URL is required.");
         }
         
         try {
             new URL(value);
             return FormValidation.ok();
         } catch (MalformedURLException e) {
-            return FormValidation.error("Api URL must be a valid url");
+            return FormValidation.error("Api URL must be a valid url.");
         }        
     }
     
-    // DefaultTrustedBuildSystemCredential
+    // TrustedBuildSystemCredential
     
     public String getTrustedBuildSystemCredentialId() {
         return trustedBuildSystemCredentialId;
@@ -65,7 +65,7 @@ public class SignPathPluginGlobalConfiguration extends GlobalConfiguration {
     
     public FormValidation doCheckTrustedBuildSystemCredentialId(@QueryParameter String value) {
         if (value == null || value.trim().isEmpty()) {
-            return FormValidation.ok(); // empty value is allowed
+            return FormValidation.error("Trusted Build System Credential ID is required.");
         }
         
         Jenkins jenkins = Jenkins.get();
@@ -83,25 +83,25 @@ public class SignPathPluginGlobalConfiguration extends GlobalConfiguration {
         }
     }
     
-    // DefaultOrganizationId
+    // organizationId
 
-    public String getDefaultOrganizationId() {
-        return defaultOrganizationId;
+    public String getOrganizationId() {
+        return organizationId;
     }
 
     @DataBoundSetter
-    public void setDefaultOrganizationId(String organizationId) {
-        this.defaultOrganizationId = organizationId;
+    public void setOrganizationId(String organizationId) {
+        this.organizationId = organizationId;
         save();
     }
     
-    public FormValidation doCheckDefaultOrganizationId(@QueryParameter String value) {
+    public FormValidation doCheckOrganizationId(@QueryParameter String value) {
         if (value == null || value.trim().isEmpty()) {
-            return FormValidation.ok(); // empty value is allowed
+            return FormValidation.error("Organization ID is required.");
         }
         
         if (!isValidUUID(value)) {
-            return FormValidation.error("Default Organization ID must be a valid uuid.");
+            return FormValidation.error("Organization ID must be a valid uuid.");
         }
         
         return FormValidation.ok();

@@ -38,16 +38,34 @@ public abstract class SignPathStepBase extends Step {
     // also a timeout that is too high is not useful anymore
     private int waitForPowerShellTimeoutInSeconds = (int) TimeUnit.MINUTES.toSeconds(30);
 
-    private String apiTokenCredentialId = "SignPath.ApiToken";
+    @Deprecated
+    private String apiUrl = PluginConstants.DEFAULT_API_URL;
+    @Deprecated
+    private String trustedBuildSystemTokenCredentialId = PluginConstants.DEFAULT_TBS_TOKEN_CREDENTIAL_ID;
+    private String apiTokenCredentialId = PluginConstants.DEFAULT_API_TOKEN_CREDENTIAL_ID;
 
     public String getApiUrl() {
-        return getSignPathConfig().getApiURL();
+        return apiUrl;
+    }
+
+    public String getApiUrlWithGlobal() throws SignPathStepInvalidArgumentException {
+        return getWithGlobalConfig(
+            apiUrl,
+            SignPathPluginGlobalConfiguration::getApiURL,
+            "apiUrl");
     }
 
     public String getTrustedBuildSystemTokenCredentialId() {
-        return getSignPathConfig().getTrustedBuildSystemCredentialId();
+        return trustedBuildSystemTokenCredentialId;
     }
-    
+
+    public String getTrustedBuildSystemTokenCredentialIdWithGlobal() throws SignPathStepInvalidArgumentException {
+        return getWithGlobalConfig(
+            trustedBuildSystemTokenCredentialId,
+            SignPathPluginGlobalConfiguration::getTrustedBuildSystemCredentialId,
+            "trustedBuildSystemTokenCredentialId");
+    }
+
     public String getApiTokenCredentialId() {
         return apiTokenCredentialId;
     }
@@ -70,6 +88,16 @@ public abstract class SignPathStepBase extends Step {
     
     public int getWaitBetweenReadinessChecksInSeconds() {
         return waitBetweenReadinessChecksInSeconds;
+    }
+
+    @DataBoundSetter
+    public void setApiUrl(String apiUrl) {
+        this.apiUrl = apiUrl;
+    }
+
+    @DataBoundSetter
+    public void setTrustedBuildSystemTokenCredentialId(String trustedBuildSystemTokenCredentialId) {
+        this.trustedBuildSystemTokenCredentialId = trustedBuildSystemTokenCredentialId;
     }
 
     @DataBoundSetter
@@ -122,15 +150,37 @@ public abstract class SignPathStepBase extends Step {
         return input;
     }
 
-    protected String getWithGlobalConfig(String value, Function<SignPathPluginGlobalConfiguration, String> getter) {
-        if (value == null || value.isEmpty()) {
-            SignPathPluginGlobalConfiguration config = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
+    protected String getWithGlobalConfig(String stepLevelValue, Function<SignPathPluginGlobalConfiguration, String> globalValueGetter, String paramName) throws SignPathStepInvalidArgumentException {
+
+        SignPathPluginGlobalConfiguration config = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
+        if (config == null) {
+            throw new IllegalStateException("SignPathPluginGlobalConfiguration is not available. Ensure it is properly configured.");
+        }
+        String globalVal = globalValueGetter.apply(config);
+
+        if (globalVal == null || globalVal.isEmpty()) {
+            // global value is not set yet, fallback to the obsolete step-level value
+            return stepLevelValue;
+        }
+
+        if (stepLevelValue == null || stepLevelValue.isEmpty()) {
+            return globalVal; // step level value is not set, use global value
+        }
+
+        // here we have both values set. We enforce a rule that step level value should be identical to global value
+        if (!stepLevelValue.equals(globalVal)) {
+            throw new SignPathStepInvalidArgumentException(
+                String.format("Parameter '%s' is configured globally and cannot be changed in pipeline", paramName));
+        }
+
+        if (stepLevelValue == null || stepLevelValue.isEmpty()) {
+            
             if (config != null) {
-                return getter.apply(config);
+                return globalValueGetter.apply(config);
             }
         }
 
-        return value;
+        return stepLevelValue;
     }
 
     protected URL ensureValidURL(String apiUrl) throws SignPathStepInvalidArgumentException {

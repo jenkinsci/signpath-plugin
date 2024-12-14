@@ -55,6 +55,12 @@ public class SignPathPluginGlobalConfigurationTest {
     }
 
     @Test
+    public void testDoCheckApiURL_EmptyValue() {
+        FormValidation result = config.doCheckApiURL("");
+        assertEquals("Validation should not pass for an empty value.", FormValidation.error("Api URL is required.").toString(), result.toString());
+    }
+
+    @Test
     public void testGetAndSetTrustedBuildSystemCredentialId() {
         String credentialId = "test-credential-id";
         config.setTrustedBuildSystemCredentialId(credentialId);
@@ -83,29 +89,35 @@ public class SignPathPluginGlobalConfigurationTest {
     }
 
     @Test
-    public void testGetAndSetDefaultOrganizationId() {
-        String organizationId = "123e4567-e89b-12d3-a456-426614174000"; 
-        config.setDefaultOrganizationId(organizationId);
-        assertEquals("The default organization ID should match the set value.", organizationId, config.getDefaultOrganizationId());
+    public void testDoCheckTrustedBuildSystemCredentialId_EmptyValue() {
+        FormValidation result = config.doCheckTrustedBuildSystemCredentialId("");
+        assertEquals("Validation should not pass for an empty value.", FormValidation.error("Trusted Build System Credential ID is required.").toString(), result.toString());
     }
 
     @Test
-    public void testDoCheckDefaultOrganizationId_ValidUUID() {
+    public void testGetAndSetOrganizationId() {
+        String organizationId = "123e4567-e89b-12d3-a456-426614174000"; 
+        config.setOrganizationId(organizationId);
+        assertEquals("The organization ID should match the set value.", organizationId, config.getOrganizationId());
+    }
+
+    @Test
+    public void testDoCheckOrganizationId_ValidUUID() {
         String validUUID = "123e4567-e89b-12d3-a456-426614174000";
-        FormValidation result = config.doCheckDefaultOrganizationId(validUUID);
+        FormValidation result = config.doCheckOrganizationId(validUUID);
         assertEquals("Validation should pass for a valid UUID.", FormValidation.ok(), result);
     }
 
     @Test
-    public void testDoCheckDefaultOrganizationId_InvalidUUID() {
+    public void testDoCheckOrganizationId_InvalidUUID() {
         String invalidUUID = "invalid-uuid";
-        FormValidation result = config.doCheckDefaultOrganizationId(invalidUUID);
-        assertEquals("Validation should fail for an invalid UUID.", FormValidation.error("Default Organization ID must be a valid uuid.").toString(), result.toString());
+        FormValidation result = config.doCheckOrganizationId(invalidUUID);
+        assertEquals("Validation should fail for an invalid UUID.", FormValidation.error("Organization ID must be a valid uuid.").toString(), result.toString());
     }
 
     @Test
-    public void testDoCheckDefaultOrganizationId_EmptyValue() {
-        FormValidation result = config.doCheckDefaultOrganizationId("");
-        assertEquals("Validation should pass for an empty value.", FormValidation.ok(), result);
+    public void testDoCheckOrganizationId_EmptyValue() {
+        FormValidation result = config.doCheckOrganizationId("");
+        assertEquals("Validation should not pass for an empty value.", FormValidation.error("Organization ID is required.").toString(), result.toString());
     }
 }
