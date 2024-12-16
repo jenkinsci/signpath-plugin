@@ -4,12 +4,14 @@ import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.signpath.Common.PluginConstants;
 import io.jenkins.plugins.signpath.Exceptions.SignPathStepInvalidArgumentException;
 import jenkins.model.GlobalConfiguration;
+import jenkins.model.Jenkins;
 
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import hudson.model.TaskListener;
 
+import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.UUID;
@@ -38,16 +40,32 @@ public abstract class SignPathStepBase extends Step {
     // also a timeout that is too high is not useful anymore
     private int waitForPowerShellTimeoutInSeconds = (int) TimeUnit.MINUTES.toSeconds(30);
 
-    private String apiTokenCredentialId = "SignPath.ApiToken";
+    private String apiUrl;
+    private String trustedBuildSystemTokenCredentialId;
+    private String apiTokenCredentialId = PluginConstants.DEFAULT_API_TOKEN_CREDENTIAL_ID;
 
     public String getApiUrl() {
-        return getSignPathConfig().getApiURL();
+        return apiUrl;
+    }
+
+    public String getApiUrlWithGlobal() throws SignPathStepInvalidArgumentException {
+        return getWithGlobalConfig(
+            apiUrl,
+            SignPathPluginGlobalConfiguration::getApiURL,
+            "apiUrl");
     }
 
     public String getTrustedBuildSystemTokenCredentialId() {
-        return getSignPathConfig().getTrustedBuildSystemCredentialId();
+        return trustedBuildSystemTokenCredentialId;
     }
-    
+
+    public String getTrustedBuildSystemTokenCredentialIdWithGlobal() throws SignPathStepInvalidArgumentException {
+        return getWithGlobalConfig(
+            trustedBuildSystemTokenCredentialId,
+            SignPathPluginGlobalConfiguration::getTrustedBuildSystemCredentialId,
+            "trustedBuildSystemTokenCredentialId");
+    }
+
     public String getApiTokenCredentialId() {
         return apiTokenCredentialId;
     }
@@ -70,6 +88,16 @@ public abstract class SignPathStepBase extends Step {
     
     public int getWaitBetweenReadinessChecksInSeconds() {
         return waitBetweenReadinessChecksInSeconds;
+    }
+
+    @DataBoundSetter
+    public void setApiUrl(String apiUrl) {
+        this.apiUrl = apiUrl;
+    }
+
+    @DataBoundSetter
+    public void setTrustedBuildSystemTokenCredentialId(String trustedBuildSystemTokenCredentialId) {
+        this.trustedBuildSystemTokenCredentialId = trustedBuildSystemTokenCredentialId;
     }
 
     @DataBoundSetter
@@ -99,7 +127,7 @@ public abstract class SignPathStepBase extends Step {
 
     public ApiConfiguration getAndValidateApiConfiguration() throws SignPathStepInvalidArgumentException {
         return new ApiConfiguration(
-                ensureValidURL(getApiUrl()),
+                ensureValidURL(getApiUrlWithGlobal()),
                 getServiceUnavailableTimeoutInSeconds(),
                 getUploadAndDownloadRequestTimeoutInSeconds(),
                 getWaitForCompletionTimeoutInSeconds(),
@@ -122,15 +150,45 @@ public abstract class SignPathStepBase extends Step {
         return input;
     }
 
-    protected String getWithGlobalConfig(String value, Function<SignPathPluginGlobalConfiguration, String> getter) {
-        if (value == null || value.isEmpty()) {
-            SignPathPluginGlobalConfiguration config = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
-            if (config != null) {
-                return getter.apply(config);
-            }
+    protected String getWithGlobalConfig(String stepLevelValue, Function<SignPathPluginGlobalConfiguration, String> globalValueGetter, String paramName) throws SignPathStepInvalidArgumentException {
+
+        SignPathPluginGlobalConfiguration config = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
+        if (config == null) {
+            throw new IllegalStateException("SignPathPluginGlobalConfiguration is not available. Ensure it is properly configured.");
+        }
+        String globalVal = globalValueGetter.apply(config);
+
+        if (globalVal == null || globalVal.isEmpty()) {
+            // global value is not set yet, fallback to the deprecated step-level value
+            return stepLevelValue;
         }
 
-        return value;
+        if (stepLevelValue == null || stepLevelValue.isEmpty()) {
+            // step level value is not set, use global value
+            return globalVal;
+        }
+
+        // here we have both values set. We enforce a rule that step level value should be identical to global value
+        if (!stepLevelValue.equals(globalVal)) {
+            throw new SignPathStepInvalidArgumentException(
+                String.format(
+                    "Parameter '%s' is configured globally to '%s' and cannot be changed in pipeline to '%s'.", 
+                    paramName, globalVal, stepLevelValue));
+        }
+
+        // here it doesn't matter which value we return, as they are identical
+        return stepLevelValue;
+    }
+
+    protected void logStepParameterDeprecationWarning(TaskListener listener, String parameterName, String globalConfigName) {
+        listener
+            .getLogger()
+            .println(
+                String.format(
+                    "WARNING: The '%s' parameter is deprecated and will be removed in a future release." +
+                    " Please use Jenkins system configuration 'Code Signing with SignPath'->'%s' instead.",
+                    parameterName,
+                    globalConfigName));
     }
 
     protected URL ensureValidURL(String apiUrl) throws SignPathStepInvalidArgumentException {

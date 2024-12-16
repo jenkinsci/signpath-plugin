@@ -10,7 +10,6 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.signpath.Exceptions.SignPathStepInvalidArgumentException;
-import jenkins.model.GlobalConfiguration;
 
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
@@ -29,6 +28,7 @@ public class GetSignedArtifactStep extends SignPathStepBase {
     private final static String FunctionName = "getSignedArtifact";
     private final static String DisplayName = "Download SignPath Signed Artifact";
 
+    @Deprecated
     private String organizationId;
     private String signingRequestId;
     private String outputArtifactPath;
@@ -41,7 +41,7 @@ public class GetSignedArtifactStep extends SignPathStepBase {
     @Override
     public StepExecution start(StepContext context) throws IOException, InterruptedException, SignPathStepInvalidArgumentException {
         GetSignedArtifactStepInput input =  new GetSignedArtifactStepInput(
-                ensureValidUUID(getOrganizationIdWithGlobalConfig(), "organizationId"),
+                ensureValidUUID(getOrganizationIdWithGlobal(), "organizationId"),
                 ensureValidUUID(getSigningRequestId(), "signingRequestId"),
                 ensureNotNull(getTrustedBuildSystemTokenCredentialId(), "trustedBuildSystemTokenCredentialId"),
                 ensureNotNull(getApiTokenCredentialId(), "apiTokenCredentialId"),
@@ -82,14 +82,16 @@ public class GetSignedArtifactStep extends SignPathStepBase {
         }
     }
 
-    public String getOrganizationId() {
+    @Deprecated
+    public String getOrganizationId() throws SignPathStepInvalidArgumentException {
         return organizationId;
     }
 
-    // we use this method in the task to avoid overriding empty values at build level
-    // with the values from the global configuration
-    public String getOrganizationIdWithGlobalConfig() {
-        return getWithGlobalConfig(organizationId, SignPathPluginGlobalConfiguration::getDefaultOrganizationId);
+    public String getOrganizationIdWithGlobal() throws SignPathStepInvalidArgumentException {
+        return getWithGlobalConfig(
+            organizationId,
+            SignPathPluginGlobalConfiguration::getOrganizationId,
+            "organizationId");
     }
 
     public String getSigningRequestId() {
@@ -100,6 +102,7 @@ public class GetSignedArtifactStep extends SignPathStepBase {
         return outputArtifactPath;
     }
 
+    @Deprecated
     @DataBoundSetter
     public void setOrganizationId(String organizationId) {
         this.organizationId = organizationId;
