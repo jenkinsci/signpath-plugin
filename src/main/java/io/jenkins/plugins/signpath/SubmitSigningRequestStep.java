@@ -10,9 +10,6 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.signpath.Exceptions.SignPathStepInvalidArgumentException;
-import jenkins.model.GlobalConfiguration;
-
-import org.apache.http.annotation.Obsolete;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
@@ -22,7 +19,6 @@ import org.kohsuke.stapler.DataBoundSetter;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 
 /**
  * Represents the submitSigningRequestStep step that is executable via pipeline-script
@@ -34,7 +30,6 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
     private final static String FunctionName = "submitSigningRequest";
     private final static String DisplayName = "Submit SignPath Signing Request";
 
-    @Deprecated
     private String organizationId;
     private String projectSlug;
     private String artifactConfigurationSlug;
@@ -69,6 +64,8 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
 
         ApiConfiguration apiConfiguration = getAndValidateApiConfiguration();
         SignPathContainer container = SignPathContainer.build(context, apiConfiguration);
+
+        CheckDeprecatedParametersUsage(container);
 
         return new SubmitSigningRequestStepExecution(input,
                 container.getSecretRetriever(),
@@ -190,5 +187,19 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
     @DataBoundSetter
     public void setParameters (Map<String, String> parameters) {
         this.parameters = parameters;
+    }
+
+    private void CheckDeprecatedParametersUsage(SignPathContainer container) {
+        if (this.getApiUrl() != null && !this.getApiUrl().isEmpty()) {
+            logStepParameterDeprecationWarning(container.getTaskListener(), "apiUrl", "Api URL");
+        }
+        
+        if(this.getTrustedBuildSystemTokenCredentialId() != null && !this.getTrustedBuildSystemTokenCredentialId().isEmpty()) {
+            logStepParameterDeprecationWarning(container.getTaskListener(), "trustedBuildSystemTokenCredentialId", "Trusted Build System Credential ID");
+        }
+
+        if(this.getOrganizationId() != null && !this.getOrganizationId().isEmpty()) {
+            logStepParameterDeprecationWarning(container.getTaskListener(), "organizationId", "Organization ID");
+        }
     }
 }

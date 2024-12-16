@@ -82,6 +82,7 @@ public class GetSignedArtifactStep extends SignPathStepBase {
         }
     }
 
+    @Deprecated
     public String getOrganizationId() throws SignPathStepInvalidArgumentException {
         return organizationId;
     }
@@ -101,6 +102,7 @@ public class GetSignedArtifactStep extends SignPathStepBase {
         return outputArtifactPath;
     }
 
+    @Deprecated
     @DataBoundSetter
     public void setOrganizationId(String organizationId) {
         this.organizationId = organizationId;
