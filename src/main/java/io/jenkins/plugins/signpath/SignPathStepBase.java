@@ -159,7 +159,7 @@ public abstract class SignPathStepBase extends Step {
         String globalVal = globalValueGetter.apply(config);
 
         if (globalVal == null || globalVal.isEmpty()) {
-            // global value is not set yet, fallback to the obsolete step-level value
+            // global value is not set yet, fallback to the deprecated step-level value
             return stepLevelValue;
         }
 
