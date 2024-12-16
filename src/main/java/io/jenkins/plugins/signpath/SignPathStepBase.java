@@ -40,8 +40,8 @@ public abstract class SignPathStepBase extends Step {
     // also a timeout that is too high is not useful anymore
     private int waitForPowerShellTimeoutInSeconds = (int) TimeUnit.MINUTES.toSeconds(30);
 
-    private String apiUrl = PluginConstants.DEFAULT_API_URL;
-    private String trustedBuildSystemTokenCredentialId = PluginConstants.DEFAULT_TBS_TOKEN_CREDENTIAL_ID;
+    private String apiUrl;
+    private String trustedBuildSystemTokenCredentialId;
     private String apiTokenCredentialId = PluginConstants.DEFAULT_API_TOKEN_CREDENTIAL_ID;
 
     public String getApiUrl() {
