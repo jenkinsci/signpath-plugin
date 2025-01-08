@@ -19,14 +19,14 @@ import org.kohsuke.stapler.QueryParameter;
 public class SignPathPluginGlobalConfiguration extends GlobalConfiguration {
 
     private String apiURL = PluginConstants.DEFAULT_API_URL;
-    private String trustedBuildSystemCredentialId = PluginConstants.DEFAULT_TBS_TOKEN_CREDENTIAL_ID;
-    private String organizationId;
+    private String defaultTrustedBuildSystemCredentialId = PluginConstants.DEFAULT_TBS_TOKEN_CREDENTIAL_ID;
+    private String defaultOrganizationId;
 
     public SignPathPluginGlobalConfiguration() {
         load();
     }
 
-    // default DefaultApiURL
+    // ApiURL
     
     public String getApiURL() {
         return apiURL;
@@ -50,22 +50,22 @@ public class SignPathPluginGlobalConfiguration extends GlobalConfiguration {
             return FormValidation.error("Api URL must be a valid url.");
         }        
     }
+
+    // DefaultTrustedBuildSystemCredential
     
-    // TrustedBuildSystemCredential
-    
-    public String getTrustedBuildSystemCredentialId() {
-        return trustedBuildSystemCredentialId;
+    public String getDefaultTrustedBuildSystemCredentialId() {
+        return defaultTrustedBuildSystemCredentialId;
     }
 
     @DataBoundSetter
-    public void setTrustedBuildSystemCredentialId(String tbsCredentialId) {
-        this.trustedBuildSystemCredentialId = tbsCredentialId;
+    public void setDefaultTrustedBuildSystemCredentialId(String tbsCredentialId) {
+        this.defaultTrustedBuildSystemCredentialId = tbsCredentialId;
         save();
     }
     
-    public FormValidation doCheckTrustedBuildSystemCredentialId(@QueryParameter String value) {
+    public FormValidation doCheckDefaultTrustedBuildSystemCredentialId(@QueryParameter String value) {
         if (value == null || value.trim().isEmpty()) {
-            return FormValidation.error("Trusted Build System Credential ID is required.");
+            return FormValidation.ok();
         }
         
         Jenkins jenkins = Jenkins.get();
@@ -83,25 +83,25 @@ public class SignPathPluginGlobalConfiguration extends GlobalConfiguration {
         }
     }
     
-    // organizationId
+    // DefaultOrganizationId
 
-    public String getOrganizationId() {
-        return organizationId;
+    public String getDefaultOrganizationId() {
+        return defaultOrganizationId;
     }
 
     @DataBoundSetter
-    public void setOrganizationId(String organizationId) {
-        this.organizationId = organizationId;
+    public void setDefaultOrganizationId(String organizationId) {
+        this.defaultOrganizationId = organizationId;
         save();
     }
     
-    public FormValidation doCheckOrganizationId(@QueryParameter String value) {
+    public FormValidation doCheckDefaultOrganizationId(@QueryParameter String value) {
         if (value == null || value.trim().isEmpty()) {
-            return FormValidation.error("Organization ID is required.");
+            return FormValidation.ok();
         }
         
         if (!isValidUUID(value)) {
-            return FormValidation.error("Organization ID must be a valid uuid.");
+            return FormValidation.error("Default organization ID must be a valid uuid.");
         }
         
         return FormValidation.ok();

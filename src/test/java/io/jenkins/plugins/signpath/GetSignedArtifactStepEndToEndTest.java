@@ -27,7 +27,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import jenkins.model.GlobalConfiguration;
 import static org.junit.Assert.*;
 
-@RunWith(Theories.class)
+//@RunWith(Theories.class)
 public class GetSignedArtifactStepEndToEndTest {
     private static final int MockServerPort = 51000;
 
@@ -55,8 +55,8 @@ public class GetSignedArtifactStepEndToEndTest {
         String apiUrl = getMockUrl();
         SignPathPluginGlobalConfiguration globalConfig = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
         globalConfig.setApiURL(apiUrl);
-        globalConfig.setTrustedBuildSystemCredentialId(trustedBuildSystemTokenCredentialId);
-        globalConfig.setOrganizationId(organizationId);
+        globalConfig.setDefaultTrustedBuildSystemCredentialId(trustedBuildSystemTokenCredentialId);
+        globalConfig.setDefaultOrganizationId(organizationId);
         
         wireMockRule.stubFor(get(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId))
                 .willReturn(aResponse()

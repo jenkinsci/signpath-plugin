@@ -52,7 +52,7 @@ public abstract class SignPathStepBase extends Step {
         return getWithGlobalConfig(
             apiUrl,
             SignPathPluginGlobalConfiguration::getApiURL,
-            "apiUrl");
+            "apiUrl", true);
     }
 
     public String getTrustedBuildSystemTokenCredentialId() {
@@ -62,8 +62,8 @@ public abstract class SignPathStepBase extends Step {
     public String getTrustedBuildSystemTokenCredentialIdWithGlobal() throws SignPathStepInvalidArgumentException {
         return getWithGlobalConfig(
             trustedBuildSystemTokenCredentialId,
-            SignPathPluginGlobalConfiguration::getTrustedBuildSystemCredentialId,
-            "trustedBuildSystemTokenCredentialId");
+            SignPathPluginGlobalConfiguration::getDefaultTrustedBuildSystemCredentialId,
+            "trustedBuildSystemTokenCredentialId", true);
     }
 
     public String getApiTokenCredentialId() {
@@ -150,7 +150,7 @@ public abstract class SignPathStepBase extends Step {
         return input;
     }
 
-    protected String getWithGlobalConfig(String stepLevelValue, Function<SignPathPluginGlobalConfiguration, String> globalValueGetter, String paramName) throws SignPathStepInvalidArgumentException {
+    protected String getWithGlobalConfig(String stepLevelValue, Function<SignPathPluginGlobalConfiguration, String> globalValueGetter, String paramName, Boolean allowOverrideAtPipelineLevel) throws SignPathStepInvalidArgumentException {
 
         SignPathPluginGlobalConfiguration config = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
         if (config == null) {
@@ -169,7 +169,7 @@ public abstract class SignPathStepBase extends Step {
         }
 
         // here we have both values set. We enforce a rule that step level value should be identical to global value
-        if (!stepLevelValue.equals(globalVal)) {
+        if (!stepLevelValue.equals(globalVal) && !allowOverrideAtPipelineLevel) {
             throw new SignPathStepInvalidArgumentException(
                 String.format(
                     "Parameter '%s' is configured globally to '%s' and cannot be changed in pipeline to '%s'.", 
