@@ -7,7 +7,7 @@
     <f:entry title="Default Trusted Build System Credential ID" field="defaultTrustedBuildSystemCredentialId">
       <f:textbox />
     </f:entry>
-    <f:entry title="Default Organization ID" field="organizationId">
+    <f:entry title="Default Organization ID" field="defaultOrganizationId">
       <f:textbox />
     </f:entry>
   </f:section>
