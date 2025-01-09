@@ -27,7 +27,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import jenkins.model.GlobalConfiguration;
 import static org.junit.Assert.*;
 
-//@RunWith(Theories.class)
+@RunWith(Theories.class)
 public class GetSignedArtifactStepEndToEndTest {
     private static final int MockServerPort = 51000;
 
