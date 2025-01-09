@@ -52,7 +52,7 @@ public abstract class SignPathStepBase extends Step {
         return getWithGlobalConfig(
             apiUrl,
             SignPathPluginGlobalConfiguration::getApiURL,
-            "apiUrl", true);
+            "apiUrl", false);
     }
 
     public String getTrustedBuildSystemTokenCredentialId() {
