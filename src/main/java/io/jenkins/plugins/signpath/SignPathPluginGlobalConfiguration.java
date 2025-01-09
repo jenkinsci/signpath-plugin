@@ -99,7 +99,7 @@ public class SignPathPluginGlobalConfiguration extends GlobalConfiguration {
         save();
     }
 
-    public FormValidation doCheckDefaultOrganizationId(@QueryParameter String value) {
+    public FormValidation doCheckOrganizationId(@QueryParameter String value) {
         if (value == null || value.trim().isEmpty()) {
             return FormValidation.ok();
         }

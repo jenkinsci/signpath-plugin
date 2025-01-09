@@ -104,20 +104,20 @@ public class SignPathPluginGlobalConfigurationTest {
     @Test
     public void testDoCheckDefaultOrganizationId_ValidUUID() {
         String validUUID = "123e4567-e89b-12d3-a456-426614174000";
-        FormValidation result = config.doCheckDefaultOrganizationId(validUUID);
+        FormValidation result = config.doCheckOrganizationId(validUUID);
         assertEquals("Validation should pass for a valid UUID.", FormValidation.Kind.OK, result.kind);
     }
 
     @Test
     public void testDoCheckDefaultOrganizationId_InvalidUUID() {
         String invalidUUID = "invalid-uuid";
-        FormValidation result = config.doCheckDefaultOrganizationId(invalidUUID);
+        FormValidation result = config.doCheckOrganizationId(invalidUUID);
         assertEquals("Validation should fail for an invalid UUID.", FormValidation.error("Default organization ID must be a valid uuid.").toString(), result.toString());
     }
 
     @Test
     public void testDoCheckDefaultOrganizationId_EmptyValue() {
-        FormValidation result = config.doCheckDefaultOrganizationId("");
+        FormValidation result = config.doCheckOrganizationId("");
         assertEquals("Validation should pass for an empty value.", FormValidation.Kind.OK, result.kind);
     }
 }
