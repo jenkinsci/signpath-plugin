@@ -19,8 +19,12 @@ import org.kohsuke.stapler.QueryParameter;
 public class SignPathPluginGlobalConfiguration extends GlobalConfiguration {
 
     private String apiURL = PluginConstants.DEFAULT_API_URL;
-    private String defaultTrustedBuildSystemCredentialId = PluginConstants.DEFAULT_TBS_TOKEN_CREDENTIAL_ID;
-    private String defaultOrganizationId;
+
+    // the fields below are default values which might be overridden at the pipeline level
+    // we cannot name the fields with "Default" prefix because this version was already used by our customers
+    // and renaming will clear already saved values in the global configuration 
+    private String trustedBuildSystemCredentialId = PluginConstants.DEFAULT_TBS_TOKEN_CREDENTIAL_ID;
+    private String organizationId;
 
     public SignPathPluginGlobalConfiguration() {
         load();
@@ -51,19 +55,19 @@ public class SignPathPluginGlobalConfiguration extends GlobalConfiguration {
         }        
     }
 
-    // DefaultTrustedBuildSystemCredential
+    // TrustedBuildSystemCredential
     
-    public String getDefaultTrustedBuildSystemCredentialId() {
-        return defaultTrustedBuildSystemCredentialId;
+    public String getTrustedBuildSystemCredentialId() {
+        return trustedBuildSystemCredentialId;
     }
 
     @DataBoundSetter
-    public void setDefaultTrustedBuildSystemCredentialId(String tbsCredentialId) {
-        this.defaultTrustedBuildSystemCredentialId = tbsCredentialId;
+    public void setTrustedBuildSystemCredentialId(String tbsCredentialId) {
+        this.trustedBuildSystemCredentialId = tbsCredentialId;
         save();
     }
     
-    public FormValidation doCheckDefaultTrustedBuildSystemCredentialId(@QueryParameter String value) {
+    public FormValidation doCheckTrustedBuildSystemCredentialId(@QueryParameter String value) {
         if (value == null || value.trim().isEmpty()) {
             return FormValidation.ok();
         }
@@ -83,18 +87,18 @@ public class SignPathPluginGlobalConfiguration extends GlobalConfiguration {
         }
     }
     
-    // DefaultOrganizationId
+    // OrganizationId
 
-    public String getDefaultOrganizationId() {
-        return defaultOrganizationId;
+    public String getOrganizationId() {
+        return organizationId;
     }
 
     @DataBoundSetter
-    public void setDefaultOrganizationId(String organizationId) {
-        this.defaultOrganizationId = organizationId;
+    public void setOrganizationId(String organizationId) {
+        this.organizationId = organizationId;
         save();
     }
-    
+
     public FormValidation doCheckDefaultOrganizationId(@QueryParameter String value) {
         if (value == null || value.trim().isEmpty()) {
             return FormValidation.ok();

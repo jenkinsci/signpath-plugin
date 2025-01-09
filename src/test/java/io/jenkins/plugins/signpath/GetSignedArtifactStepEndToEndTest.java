@@ -55,8 +55,8 @@ public class GetSignedArtifactStepEndToEndTest {
         String apiUrl = getMockUrl();
         SignPathPluginGlobalConfiguration globalConfig = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
         globalConfig.setApiURL(apiUrl);
-        globalConfig.setDefaultTrustedBuildSystemCredentialId(trustedBuildSystemTokenCredentialId);
-        globalConfig.setDefaultOrganizationId(organizationId);
+        globalConfig.setTrustedBuildSystemCredentialId(trustedBuildSystemTokenCredentialId);
+        globalConfig.setOrganizationId(organizationId);
         
         wireMockRule.stubFor(get(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId))
                 .willReturn(aResponse()

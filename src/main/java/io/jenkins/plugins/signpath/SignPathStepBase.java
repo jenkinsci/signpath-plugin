@@ -62,7 +62,7 @@ public abstract class SignPathStepBase extends Step {
     public String getTrustedBuildSystemTokenCredentialIdWithGlobal() throws SignPathStepInvalidArgumentException {
         return getWithGlobalConfig(
             trustedBuildSystemTokenCredentialId,
-            SignPathPluginGlobalConfiguration::getDefaultTrustedBuildSystemCredentialId,
+            SignPathPluginGlobalConfiguration::getTrustedBuildSystemCredentialId,
             "trustedBuildSystemTokenCredentialId", true);
     }
 

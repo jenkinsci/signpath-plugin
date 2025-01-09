@@ -92,7 +92,7 @@ public class SubmitSigningRequestStepEndToEndTest {
  
         SignPathPluginGlobalConfiguration globalConfig = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
         globalConfig.setApiURL(apiUrl);
-        globalConfig.setDefaultTrustedBuildSystemCredentialId(trustedBuildSystemTokenCredentialId);
+        globalConfig.setTrustedBuildSystemCredentialId(trustedBuildSystemTokenCredentialId);
         WorkflowJob workflowJob = withOptionalFields
                 ? createWorkflowJobWithOptionalParameters(apiUrl, trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, artifactConfigurationSlug, description, userDefinedParamName, userDefinedParamValue, true)
                 : createWorkflowJob(apiUrl, trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, true);
@@ -154,7 +154,7 @@ public class SubmitSigningRequestStepEndToEndTest {
 
         SignPathPluginGlobalConfiguration globalConfig = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
         globalConfig.setApiURL(apiUrl);
-        globalConfig.setDefaultTrustedBuildSystemCredentialId(trustedBuildSystemTokenCredentialId);
+        globalConfig.setTrustedBuildSystemCredentialId(trustedBuildSystemTokenCredentialId);
         
         WorkflowJob workflowJob = withOptionalFields
                 ? createWorkflowJobWithOptionalParameters(apiUrl, trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, artifactConfigurationSlug, description, userDefinedParamName, userDefinedParamValue, false)
@@ -215,7 +215,7 @@ public class SubmitSigningRequestStepEndToEndTest {
         String mockUrl = getMockUrl();
         String tbsToken = Some.stringNonEmpty();
         globalConfig.setApiURL(mockUrl);
-        globalConfig.setDefaultTrustedBuildSystemCredentialId(tbsToken);
+        globalConfig.setTrustedBuildSystemCredentialId(tbsToken);
         
         WorkflowJob workflowJob = createWorkflowJob(mockUrl, tbsToken, Some.stringNonEmpty(), organizationId, Some.stringNonEmpty(), Some.stringNonEmpty(), Some.stringNonEmpty(), false);
 

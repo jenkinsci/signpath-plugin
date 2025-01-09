@@ -90,7 +90,7 @@ public class GetSignedArtifactStep extends SignPathStepBase {
     public String getOrganizationIdWithGlobal() throws SignPathStepInvalidArgumentException {
         return getWithGlobalConfig(
             organizationId,
-            SignPathPluginGlobalConfiguration::getDefaultOrganizationId,
+            SignPathPluginGlobalConfiguration::getOrganizationId,
             "organizationId", true);
     }
 

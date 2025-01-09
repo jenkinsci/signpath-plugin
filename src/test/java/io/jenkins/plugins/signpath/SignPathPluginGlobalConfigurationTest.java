@@ -63,8 +63,8 @@ public class SignPathPluginGlobalConfigurationTest {
     @Test
     public void testGetAndSetDefaultTrustedBuildSystemCredentialId() {
         String credentialId = "test-credential-id";
-        config.setDefaultTrustedBuildSystemCredentialId(credentialId);
-        assertEquals("The TBS Credential ID should match the set value.", credentialId, config.getDefaultTrustedBuildSystemCredentialId());
+        config.setTrustedBuildSystemCredentialId(credentialId);
+        assertEquals("The TBS Credential ID should match the set value.", credentialId, config.getTrustedBuildSystemCredentialId());
     }
     
     @Test
@@ -73,7 +73,7 @@ public class SignPathPluginGlobalConfigurationTest {
         CredentialsStore credentialStore = CredentialStoreUtils.getCredentialStore(j.jenkins);
         assert credentialStore != null;
         CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, validCredentialId, "dummySecret");
-        FormValidation result = config.doCheckDefaultTrustedBuildSystemCredentialId(validCredentialId);
+        FormValidation result = config.doCheckTrustedBuildSystemCredentialId(validCredentialId);
         assertEquals("Validation should pass with a valid credential ID.", FormValidation.Kind.OK, result.kind);
     }
 
@@ -84,21 +84,21 @@ public class SignPathPluginGlobalConfigurationTest {
                 .when(secretRetrieverMock)
                 .retrieveSecret(eq(invalidCredentialId), any());
 
-        FormValidation result = config.doCheckDefaultTrustedBuildSystemCredentialId(invalidCredentialId);
+        FormValidation result = config.doCheckTrustedBuildSystemCredentialId(invalidCredentialId);
         assertEquals("Validation should fail.", FormValidation.Kind.ERROR, result.kind);
     }
 
     @Test
     public void testDoCheckDefaultTrustedBuildSystemCredentialId_EmptyValue() {
-        FormValidation result = config.doCheckDefaultTrustedBuildSystemCredentialId("");
+        FormValidation result = config.doCheckTrustedBuildSystemCredentialId("");
         assertEquals("Validation should pass for an empty value.", FormValidation.Kind.OK, result.kind);
     }
 
     @Test
     public void testGetAndSetDefaultOrganizationId() {
         String organizationId = "123e4567-e89b-12d3-a456-426614174000"; 
-        config.setDefaultOrganizationId(organizationId);
-        assertEquals("The organization ID should match the set value.", organizationId, config.getDefaultOrganizationId());
+        config.setOrganizationId(organizationId);
+        assertEquals("The organization ID should match the set value.", organizationId, config.getOrganizationId());
     }
 
     @Test
