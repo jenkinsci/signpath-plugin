@@ -168,7 +168,9 @@ public abstract class SignPathStepBase extends Step {
             return globalVal;
         }
 
-        // here we have both values set. We enforce a rule that step level value should be identical to global value
+        // here we have both values set.
+        // We enforce a rule that step level value should be identical to global value
+        // unless an override is explicitly allowed for specific parameters
         if (!stepLevelValue.equals(globalVal) && !allowOverrideAtPipelineLevel) {
             throw new SignPathStepInvalidArgumentException(
                 String.format(
