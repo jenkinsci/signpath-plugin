@@ -52,7 +52,7 @@ public abstract class SignPathStepBase extends Step {
         return getWithGlobalConfig(
             apiUrl,
             SignPathPluginGlobalConfiguration::getApiURL,
-            "apiUrl");
+            "apiUrl", false);
     }
 
     public String getTrustedBuildSystemTokenCredentialId() {
@@ -63,7 +63,7 @@ public abstract class SignPathStepBase extends Step {
         return getWithGlobalConfig(
             trustedBuildSystemTokenCredentialId,
             SignPathPluginGlobalConfiguration::getTrustedBuildSystemCredentialId,
-            "trustedBuildSystemTokenCredentialId");
+            "trustedBuildSystemTokenCredentialId", true);
     }
 
     public String getApiTokenCredentialId() {
@@ -150,7 +150,7 @@ public abstract class SignPathStepBase extends Step {
         return input;
     }
 
-    protected String getWithGlobalConfig(String stepLevelValue, Function<SignPathPluginGlobalConfiguration, String> globalValueGetter, String paramName) throws SignPathStepInvalidArgumentException {
+    protected String getWithGlobalConfig(String stepLevelValue, Function<SignPathPluginGlobalConfiguration, String> globalValueGetter, String paramName, Boolean allowOverrideAtPipelineLevel) throws SignPathStepInvalidArgumentException {
 
         SignPathPluginGlobalConfiguration config = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
         if (config == null) {
@@ -168,8 +168,10 @@ public abstract class SignPathStepBase extends Step {
             return globalVal;
         }
 
-        // here we have both values set. We enforce a rule that step level value should be identical to global value
-        if (!stepLevelValue.equals(globalVal)) {
+        // here we have both values set.
+        // We enforce a rule that step level value should be identical to global value
+        // unless an override is explicitly allowed for specific parameters
+        if (!stepLevelValue.equals(globalVal) && !allowOverrideAtPipelineLevel) {
             throw new SignPathStepInvalidArgumentException(
                 String.format(
                     "Parameter '%s' is configured globally to '%s' and cannot be changed in pipeline to '%s'.", 

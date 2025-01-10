@@ -109,7 +109,7 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
         return getWithGlobalConfig(
             organizationId,
             SignPathPluginGlobalConfiguration::getOrganizationId,
-            "organizationId");
+            "organizationId", true);
     }
 
     public String getProjectSlug() {
@@ -192,14 +192,6 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
     private void CheckDeprecatedParametersUsage(SignPathContainer container) {
         if (this.getApiUrl() != null && !this.getApiUrl().isEmpty()) {
             logStepParameterDeprecationWarning(container.getTaskListener(), "apiUrl", "Api URL");
-        }
-        
-        if(this.getTrustedBuildSystemTokenCredentialId() != null && !this.getTrustedBuildSystemTokenCredentialId().isEmpty()) {
-            logStepParameterDeprecationWarning(container.getTaskListener(), "trustedBuildSystemTokenCredentialId", "Trusted Build System Credential ID");
-        }
-
-        if(this.getOrganizationId() != null && !this.getOrganizationId().isEmpty()) {
-            logStepParameterDeprecationWarning(container.getTaskListener(), "organizationId", "Organization ID");
         }
     }
 }

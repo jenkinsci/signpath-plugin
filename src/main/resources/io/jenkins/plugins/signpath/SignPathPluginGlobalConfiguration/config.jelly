@@ -1,13 +1,13 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  <f:section title="${%Code Signing with SignPath}">
-    <f:entry title="${%Api URL}" field="apiURL">
+  <f:section title="Code Signing with SignPath">
+    <f:entry title="Api URL" field="apiURL">
       <f:textbox />
     </f:entry>
-    <f:entry title="${%Trusted Build System Credential ID}" field="trustedBuildSystemCredentialId">
+    <f:entry title="Default Trusted Build System Credential ID" field="trustedBuildSystemCredentialId">
       <f:textbox />
     </f:entry>
-    <f:entry title="${%Organization ID}" field="organizationId">
+    <f:entry title="Default Organization ID" field="organizationId">
       <f:textbox />
     </f:entry>
   </f:section>

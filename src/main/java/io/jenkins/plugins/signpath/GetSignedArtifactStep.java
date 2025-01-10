@@ -91,7 +91,7 @@ public class GetSignedArtifactStep extends SignPathStepBase {
         return getWithGlobalConfig(
             organizationId,
             SignPathPluginGlobalConfiguration::getOrganizationId,
-            "organizationId");
+            "organizationId", true);
     }
 
     public String getSigningRequestId() {

@@ -19,6 +19,10 @@ import org.kohsuke.stapler.QueryParameter;
 public class SignPathPluginGlobalConfiguration extends GlobalConfiguration {
 
     private String apiURL = PluginConstants.DEFAULT_API_URL;
+
+    // the fields below are default values which might be overridden at the pipeline level
+    // we cannot name the fields with "Default" prefix because this version was already used by our customers
+    // and renaming will clear already saved values in the global configuration 
     private String trustedBuildSystemCredentialId = PluginConstants.DEFAULT_TBS_TOKEN_CREDENTIAL_ID;
     private String organizationId;
 
@@ -26,7 +30,7 @@ public class SignPathPluginGlobalConfiguration extends GlobalConfiguration {
         load();
     }
 
-    // default DefaultApiURL
+    // ApiURL
     
     public String getApiURL() {
         return apiURL;
@@ -50,7 +54,7 @@ public class SignPathPluginGlobalConfiguration extends GlobalConfiguration {
             return FormValidation.error("Api URL must be a valid url.");
         }        
     }
-    
+
     // TrustedBuildSystemCredential
     
     public String getTrustedBuildSystemCredentialId() {
@@ -65,7 +69,7 @@ public class SignPathPluginGlobalConfiguration extends GlobalConfiguration {
     
     public FormValidation doCheckTrustedBuildSystemCredentialId(@QueryParameter String value) {
         if (value == null || value.trim().isEmpty()) {
-            return FormValidation.error("Trusted Build System Credential ID is required.");
+            return FormValidation.ok();
         }
         
         Jenkins jenkins = Jenkins.get();
@@ -83,7 +87,7 @@ public class SignPathPluginGlobalConfiguration extends GlobalConfiguration {
         }
     }
     
-    // organizationId
+    // OrganizationId
 
     public String getOrganizationId() {
         return organizationId;
@@ -94,14 +98,14 @@ public class SignPathPluginGlobalConfiguration extends GlobalConfiguration {
         this.organizationId = organizationId;
         save();
     }
-    
+
     public FormValidation doCheckOrganizationId(@QueryParameter String value) {
         if (value == null || value.trim().isEmpty()) {
-            return FormValidation.error("Organization ID is required.");
+            return FormValidation.ok();
         }
         
         if (!isValidUUID(value)) {
-            return FormValidation.error("Organization ID must be a valid uuid.");
+            return FormValidation.error("Default organization ID must be a valid uuid.");
         }
         
         return FormValidation.ok();

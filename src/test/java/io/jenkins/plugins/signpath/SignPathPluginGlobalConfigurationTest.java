@@ -61,24 +61,24 @@ public class SignPathPluginGlobalConfigurationTest {
     }
 
     @Test
-    public void testGetAndSetTrustedBuildSystemCredentialId() {
+    public void testGetAndSetDefaultTrustedBuildSystemCredentialId() {
         String credentialId = "test-credential-id";
         config.setTrustedBuildSystemCredentialId(credentialId);
         assertEquals("The TBS Credential ID should match the set value.", credentialId, config.getTrustedBuildSystemCredentialId());
     }
     
     @Test
-    public void testDoCheckTrustedBuildSystemCredentialId_Valid() throws Exception {
+    public void testDoCheckDefaultTrustedBuildSystemCredentialId_Valid() throws Exception {
         String validCredentialId = "valid-id";
         CredentialsStore credentialStore = CredentialStoreUtils.getCredentialStore(j.jenkins);
         assert credentialStore != null;
         CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, validCredentialId, "dummySecret");
         FormValidation result = config.doCheckTrustedBuildSystemCredentialId(validCredentialId);
-        assertEquals("Validation should pass with a valid credential ID.", FormValidation.ok(), result);
+        assertEquals("Validation should pass with a valid credential ID.", FormValidation.Kind.OK, result.kind);
     }
 
     @Test
-    public void testDoCheckTrustedBuildSystemCredentialId_Invalid() throws Exception {
+    public void testDoCheckDefaultTrustedBuildSystemCredentialId_Invalid() throws Exception {
         String invalidCredentialId = "invalid-id";
         doThrow(new SecretNotFoundException("Secret not found"))
                 .when(secretRetrieverMock)
@@ -89,35 +89,35 @@ public class SignPathPluginGlobalConfigurationTest {
     }
 
     @Test
-    public void testDoCheckTrustedBuildSystemCredentialId_EmptyValue() {
+    public void testDoCheckDefaultTrustedBuildSystemCredentialId_EmptyValue() {
         FormValidation result = config.doCheckTrustedBuildSystemCredentialId("");
-        assertEquals("Validation should not pass for an empty value.", FormValidation.error("Trusted Build System Credential ID is required.").toString(), result.toString());
+        assertEquals("Validation should pass for an empty value.", FormValidation.Kind.OK, result.kind);
     }
 
     @Test
-    public void testGetAndSetOrganizationId() {
+    public void testGetAndSetDefaultOrganizationId() {
         String organizationId = "123e4567-e89b-12d3-a456-426614174000"; 
         config.setOrganizationId(organizationId);
         assertEquals("The organization ID should match the set value.", organizationId, config.getOrganizationId());
     }
 
     @Test
-    public void testDoCheckOrganizationId_ValidUUID() {
+    public void testDoCheckDefaultOrganizationId_ValidUUID() {
         String validUUID = "123e4567-e89b-12d3-a456-426614174000";
         FormValidation result = config.doCheckOrganizationId(validUUID);
-        assertEquals("Validation should pass for a valid UUID.", FormValidation.ok(), result);
+        assertEquals("Validation should pass for a valid UUID.", FormValidation.Kind.OK, result.kind);
     }
 
     @Test
-    public void testDoCheckOrganizationId_InvalidUUID() {
+    public void testDoCheckDefaultOrganizationId_InvalidUUID() {
         String invalidUUID = "invalid-uuid";
         FormValidation result = config.doCheckOrganizationId(invalidUUID);
-        assertEquals("Validation should fail for an invalid UUID.", FormValidation.error("Organization ID must be a valid uuid.").toString(), result.toString());
+        assertEquals("Validation should fail for an invalid UUID.", FormValidation.error("Default organization ID must be a valid uuid.").toString(), result.toString());
     }
 
     @Test
-    public void testDoCheckOrganizationId_EmptyValue() {
+    public void testDoCheckDefaultOrganizationId_EmptyValue() {
         FormValidation result = config.doCheckOrganizationId("");
-        assertEquals("Validation should not pass for an empty value.", FormValidation.error("Organization ID is required.").toString(), result.toString());
+        assertEquals("Validation should pass for an empty value.", FormValidation.Kind.OK, result.kind);
     }
 }
