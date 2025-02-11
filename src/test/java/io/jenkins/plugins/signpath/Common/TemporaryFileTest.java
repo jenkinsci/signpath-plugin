@@ -1,17 +1,19 @@
 package io.jenkins.plugins.signpath.Common;
 
-
-import org.junit.Test;
-import org.junit.function.ThrowingRunnable;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 
 import java.io.IOException;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TemporaryFileTest {
+class TemporaryFileTest {
 
     @Test
-    public void create_withName() throws IOException {
+    void create_withName() throws IOException {
         // ACT
         TemporaryFile temporaryFile = new TemporaryFile("file.txt");
 
@@ -20,7 +22,7 @@ public class TemporaryFileTest {
     }
 
     @Test
-    public void create_withSubfolder() throws IOException {
+    void create_withSubfolder() throws IOException {
         // ACT
         TemporaryFile temporaryFile = new TemporaryFile("subfolder/file.txt");
 
@@ -30,12 +32,12 @@ public class TemporaryFileTest {
     }
 
     @Test
-    public void navigateToParent_throws() {
+    void navigateToParent_throws() {
         // ACT
-        ThrowingRunnable act = () -> new TemporaryFile("../file.txt");
+        Executable act = () -> new TemporaryFile("../file.txt");
 
         // ASSERT
         Throwable ex = assertThrows(IllegalAccessError.class, act);
-        assertEquals(ex.getMessage(), "Navigating to parent is not allowed.");
+        assertEquals("Navigating to parent is not allowed.", ex.getMessage());
     }
 }

@@ -12,6 +12,7 @@ import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
 import java.io.IOException;
 
 public class CredentialStoreUtils {
+
     public static void addCredentials(CredentialsStore credentialsStore, CredentialsScope scope, String id, String secret) throws IOException {
         Domain domain = credentialsStore.getDomains().get(0);
         credentialsStore.addCredentials(domain,

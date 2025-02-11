@@ -14,7 +14,7 @@
     <properties>
         <revision>3.0.1</revision>
         <changelist>999999-SNAPSHOT</changelist>
-        <jenkins.baseline>2.361</jenkins.baseline> 
+        <jenkins.baseline>2.361</jenkins.baseline>
         <jenkins.version>${jenkins.baseline}.4</jenkins.version>
         <java.level>11</java.level>
         <maven.compiler.source>11</maven.compiler.source>
@@ -87,14 +87,18 @@
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <version>1.10.19</version>
+            <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.github.tomakehurst</groupId>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.wiremock</groupId>
             <artifactId>wiremock-standalone</artifactId>
-            <version>2.27.2</version>
+            <version>3.11.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
