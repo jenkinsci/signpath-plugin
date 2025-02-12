@@ -4,6 +4,7 @@ import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathCredentials;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathFacade;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathFacadeFactory;
+import io.signpath.signpathclient.SignPathClientSimpleLogger;
 
 import java.io.PrintStream;
 
@@ -12,9 +13,9 @@ import java.io.PrintStream;
  */
 public class SignPathClientFacadeFactory implements SignPathFacadeFactory {
     private final ApiConfiguration apiConfiguration;
-    private final PrintStream logger;
+    private final SignPathClientSimpleLogger logger;
 
-    public SignPathClientFacadeFactory(ApiConfiguration apiConfiguration, PrintStream logger) {
+    public SignPathClientFacadeFactory(ApiConfiguration apiConfiguration, SignPathClientSimpleLogger logger) {
         this.apiConfiguration = apiConfiguration;
         this.logger = logger;
     }

@@ -13,6 +13,7 @@ import io.jenkins.plugins.signpath.OriginRetrieval.GitOriginRetriever;
 import io.jenkins.plugins.signpath.OriginRetrieval.OriginRetriever;
 import io.jenkins.plugins.signpath.SecretRetrieval.CredentialBasedSecretRetriever;
 import io.jenkins.plugins.signpath.SecretRetrieval.SecretRetriever;
+import io.signpath.signpathclient.SignPathClientSimpleLogger;
 import jenkins.model.Jenkins;
 import jenkins.model.JenkinsLocationConfiguration;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
@@ -87,7 +88,7 @@ public class SignPathContainer {
         assert listener != null;
         Run<?, ?> run = context.get(Run.class);
         Launcher launcher = context.get(Launcher.class);
-        PrintStream logger = listener.getLogger();
+        SignPathClientSimpleLogger logger = new SignPathClientLogger(listener.getLogger());
         Jenkins jenkins = Jenkins.get();
         FingerprintMap fingerprintMap = jenkins.getFingerprintMap();
         JenkinsLocationConfiguration config = JenkinsLocationConfiguration.get();

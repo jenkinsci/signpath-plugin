@@ -8,9 +8,10 @@ import io.jenkins.plugins.signpath.ApiIntegration.SignPathCredentials;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathFacade;
 import io.jenkins.plugins.signpath.Common.TemporaryFile;
 import io.jenkins.plugins.signpath.Exceptions.SignPathFacadeCallException;
-import io.signpath.signpathclient.ClientSettings;
+import io.signpath.signpathclient.SignPathClientSettings;
 import io.signpath.signpathclient.SignPathClient;
 import io.signpath.signpathclient.SignPathClientException;
+import io.signpath.signpathclient.SignPathClientSimpleLogger;
 import io.signpath.signpathclient.api.model.SigningRequest;
 
 import java.io.IOException;
@@ -27,9 +28,9 @@ public class SignPathClientFacade implements SignPathFacade {
     private final SignPathClient client;
     private final SignPathCredentials credentials;
     private final ApiConfiguration apiConfiguration;
-    private final PrintStream logger;
+    private final SignPathClientSimpleLogger logger;
 
-    public SignPathClientFacade(SignPathCredentials credentials, ApiConfiguration apiConfiguration, PrintStream logger) {
+    public SignPathClientFacade(SignPathCredentials credentials, ApiConfiguration apiConfiguration, SignPathClientSimpleLogger logger) {
         this.credentials = credentials;
         this.apiConfiguration = apiConfiguration;
         this.logger = logger;
@@ -38,7 +39,7 @@ public class SignPathClientFacade implements SignPathFacade {
             baseUrl = baseUrl + "/";
         }
         this.client = new SignPathClient(baseUrl, logger,
-            new ClientSettings(
+            new SignPathClientSettings(
                 apiConfiguration.getServiceUnavailableTimeoutInSeconds(),
                 apiConfiguration.getUploadAndDownloadRequestTimeoutInSeconds(),
                 apiConfiguration.getWaitForCompletionTimeoutInSeconds(),
@@ -61,7 +62,8 @@ public class SignPathClientFacade implements SignPathFacade {
                     submitModel.getSigningPolicySlug(),
                     submitModel.getArtifactConfigurationSlug(),
                     outputArtifact.getFile(),
-                    submitModel.getDescription(), 
+                    submitModel.getDescription(),
+                    true,
                     buildOriginData(submitModel),
                     submitModel.getParameters()
                     );
@@ -88,6 +90,7 @@ public class SignPathClientFacade implements SignPathFacade {
                 submitModel.getSigningPolicySlug(),
                 submitModel.getArtifactConfigurationSlug(),
                 submitModel.getDescription(),
+                true,
                 buildOriginData(submitModel),
                 submitModel.getParameters());
         return UUID.fromString(requestId);
@@ -100,7 +103,6 @@ public class SignPathClientFacade implements SignPathFacade {
         try {
             SigningRequest request = client.getSigningRequestWaitForFinalStatus(
                 credentials.getApiToken().getPlainText(),
-                credentials.getTrustedBuildSystemToken().getPlainText(),
                 organizationId.toString(),
                 signingRequestID.toString());
         
@@ -110,7 +112,6 @@ public class SignPathClientFacade implements SignPathFacade {
 
             client.downloadSignedArtifact(
                     credentials.getApiToken().getPlainText(),
-                    credentials.getTrustedBuildSystemToken().getPlainText(),
                     organizationId.toString(),
                     signingRequestID.toString(),
                     outputArtifact.getFile());
