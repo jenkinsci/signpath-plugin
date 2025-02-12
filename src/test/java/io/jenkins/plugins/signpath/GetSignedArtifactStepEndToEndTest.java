@@ -95,7 +95,7 @@ public class GetSignedArtifactStepEndToEndTest {
         assertArrayEquals(signedArtifactBytes, signedArtifactContent);
 
         wireMockRule.verify(getRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId))
-                .withHeader("Authorization", equalTo("Bearer " + apiToken + ":" + trustedBuildSystemToken)));
+                .withHeader("Authorization", equalTo("Bearer " + apiToken)));
     }
 
     @Theory
