@@ -2,7 +2,7 @@ package io.jenkins.plugins.signpath;
 
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import hudson.Launcher;
 import hudson.model.FingerprintMap;
 import hudson.model.Result;
@@ -12,33 +12,46 @@ import hudson.plugins.git.util.BuildData;
 import io.jenkins.plugins.signpath.Artifacts.DefaultArtifactFileManager;
 import io.jenkins.plugins.signpath.Common.TemporaryFile;
 import io.jenkins.plugins.signpath.Exceptions.ArtifactNotFoundException;
-import io.jenkins.plugins.signpath.TestUtils.*;
+import io.jenkins.plugins.signpath.TestUtils.BuildDataDomainObjectMother;
+import io.jenkins.plugins.signpath.TestUtils.CredentialStoreUtils;
+import io.jenkins.plugins.signpath.TestUtils.Some;
+import io.jenkins.plugins.signpath.TestUtils.TemporaryFileUtil;
+import io.jenkins.plugins.signpath.TestUtils.WorkflowJobUtil;
+import jenkins.model.GlobalConfiguration;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.experimental.theories.Theories;
-import org.junit.experimental.theories.Theory;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.io.IOException;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import jenkins.model.GlobalConfiguration;
-import static org.junit.Assert.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
-@RunWith(Theories.class)
-public class GetSignedArtifactStepEndToEndTest {
+@WithJenkins
+@ExtendWith(WireMockExtension.class)
+class GetSignedArtifactStepEndToEndTest {
     private static final int MockServerPort = 51000;
 
-    @Rule
-    public final SignPathJenkinsRule j = new SignPathJenkinsRule();
+    @RegisterExtension
+    static WireMockExtension wireMock = WireMockExtension.newInstance()
+            .options(wireMockConfig().port(MockServerPort))
+            .build();
 
-    @Rule
-    public final WireMockRule wireMockRule = new WireMockRule(MockServerPort);
-
-    @Theory
-    public void getSignedArtifact() throws Exception {
+    @Test
+    void getSignedArtifact(JenkinsRule j) throws Exception {
         byte[] signedArtifactBytes = Some.bytes();
         String trustedBuildSystemTokenCredentialId = Some.stringNonEmpty();
         String trustedBuildSystemToken = Some.stringNonEmpty();
@@ -57,18 +70,19 @@ public class GetSignedArtifactStepEndToEndTest {
         globalConfig.setApiURL(apiUrl);
         globalConfig.setTrustedBuildSystemCredentialId(trustedBuildSystemTokenCredentialId);
         globalConfig.setOrganizationId(organizationId);
-        
-        wireMockRule.stubFor(get(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId))
+
+        wireMock.stubFor(get(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody("{status: 'Completed', workflowStatus: 'Completed', isFinalStatus: true}")));
 
-        wireMockRule.stubFor(get(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "/SignedArtifact"))
+        wireMock.stubFor(get(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "/SignedArtifact"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody(signedArtifactBytes)));
 
-        WorkflowJob workflowJob = createWorkflowJob(
+        WorkflowJob workflowJob = WorkflowJobUtil.createWorkflowJob(
+            j,
             apiUrl,
             trustedBuildSystemTokenCredentialId,
             apiTokenCredentialId,
@@ -91,16 +105,16 @@ public class GetSignedArtifactStepEndToEndTest {
             fail();
         }
 
-        byte[] signedArtifactContent = getSignedArtifactBytes(run);
+        byte[] signedArtifactContent = getSignedArtifactBytes(j, run);
         assertArrayEquals(signedArtifactBytes, signedArtifactContent);
 
-        wireMockRule.verify(getRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId))
+        wireMock.verify(getRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId))
                 .withHeader("Authorization", equalTo("Bearer " + apiToken)));
     }
 
-    @Theory
-    public void getSignedArtifact_withMissingField_fails() throws Exception {
-        WorkflowJob workflowJob = j.createWorkflow("SignPath", "getSignedArtifact();");
+    @Test
+    void getSignedArtifact_withMissingField_fails(JenkinsRule j) throws Exception {
+        WorkflowJob workflowJob = WorkflowJobUtil.createWorkflow(j, "SignPath", "getSignedArtifact();");
 
         BuildData buildData = new BuildData(Some.stringNonEmpty());
         buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(1));
@@ -108,7 +122,7 @@ public class GetSignedArtifactStepEndToEndTest {
 
         // ACT
         QueueTaskFuture<WorkflowRun> runFuture = workflowJob.scheduleBuild2(0, buildData);
-        assert runFuture != null;
+        assertNotNull(runFuture);
         WorkflowRun run = runFuture.get();
 
         // ASSERT
@@ -116,32 +130,15 @@ public class GetSignedArtifactStepEndToEndTest {
         assertTrue(run.getLog().contains("SignPathStepInvalidArgumentException"));
     }
 
-    private WorkflowJob createWorkflowJob(String apiUrl,
-                                          String trustedBuildSystemTokenCredentialId,
-                                          String apiTokenCredentialId,
-                                          String organizationId,
-                                          String signingRequestId) throws IOException {
-        return j.createWorkflow("SignPath",
-                "getSignedArtifact(apiUrl: '" + apiUrl + "', " +
-                        "outputArtifactPath: 'signed.exe', " +
-                        "trustedBuildSystemTokenCredentialId: '" + trustedBuildSystemTokenCredentialId + "'," +
-                        "apiTokenCredentialId: '" + apiTokenCredentialId + "'," +
-                        "organizationId: '" + organizationId + "'," +
-                        "signingRequestId: '" + signingRequestId + "'," +
-                        "serviceUnavailableTimeoutInSeconds: 10," +
-                        "uploadAndDownloadRequestTimeoutInSeconds: 10," +
-                        "waitForCompletionTimeoutInSeconds: 10);");
-    }
-
-    private String getMockUrl() {
+    private static String getMockUrl() {
         return getMockUrl("");
     }
 
-    private String getMockUrl(String postfix) {
+    private static String getMockUrl(String postfix) {
         return String.format("http://localhost:%d/%s", MockServerPort, postfix);
     }
 
-    private byte[] getSignedArtifactBytes(WorkflowRun run) throws IOException, ArtifactNotFoundException {
+    private static byte[] getSignedArtifactBytes(JenkinsRule j, WorkflowRun run) throws IOException, ArtifactNotFoundException {
         Launcher launcher = j.createLocalLauncher();
         TaskListener listener = j.createTaskListener();
         FingerprintMap fingerprintMap = j.jenkins.getFingerprintMap();

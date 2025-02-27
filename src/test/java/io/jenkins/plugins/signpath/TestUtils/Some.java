@@ -2,7 +2,6 @@ package io.jenkins.plugins.signpath.TestUtils;
 
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
 import org.apache.commons.lang.RandomStringUtils;
-import org.junit.Assert;
 
 import java.math.BigInteger;
 import java.net.MalformedURLException;
@@ -12,6 +11,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class Some {
     private static final Random RANDOM = new Random();
@@ -39,7 +40,7 @@ public class Some {
         try {
             return MessageDigest.getInstance("SHA-1");
         } catch (NoSuchAlgorithmException ex) {
-            Assert.fail();
+            fail();
             return null;
         }
     }
