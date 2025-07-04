@@ -13,7 +13,8 @@
     <packaging>hpi</packaging>
     <properties>
         <revision>3.1.0</revision>
-        <changelist>999999-SNAPSHOT</changelist>
+        <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
+        <changelist>${maven.build.timestamp}-SNAPSHOT</changelist>
         <jenkins.baseline>2.361</jenkins.baseline> 
         <jenkins.version>${jenkins.baseline}.4</jenkins.version>
         <java.level>11</java.level>
