@@ -19,7 +19,6 @@ import jenkins.model.JenkinsLocationConfiguration;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 
 import java.io.IOException;
-import java.io.PrintStream;
 
 /**
  * A helper class that helps us share all dependencies needed for the

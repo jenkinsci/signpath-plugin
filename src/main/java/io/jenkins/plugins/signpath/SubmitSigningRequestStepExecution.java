@@ -59,14 +59,14 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
         PrintStream logger = taskListener.getLogger();
 
         logger.printf("Submitting signing request for organization: %s (waiting for completion: %s)%n", input.getOrganizationId(), input.getWaitForCompletion());
-        
-        logger.println(String.format("[PARAM] organizationId: %s", input.getOrganizationId()));
-        logger.println(String.format("[PARAM] projectSlug: %s", input.getProjectSlug()));
-        logger.println(String.format("[PARAM] signingPolicySlug: %s", input.getSigningPolicySlug()));
+
+        logger.printf("[PARAM] organizationId: %s%n", input.getOrganizationId());
+        logger.printf("[PARAM] projectSlug: %s%n", input.getProjectSlug());
+        logger.printf("[PARAM] signingPolicySlug: %s%n", input.getSigningPolicySlug());
         if(!StringUtils.isEmpty(input.getArtifactConfigurationSlug())) {
-            logger.println(String.format("[PARAM] artifactConfigurationSlug: %s", input.getArtifactConfigurationSlug()));
+            logger.printf("[PARAM] artifactConfigurationSlug: %s%n", input.getArtifactConfigurationSlug());
         }
-        
+
         try {
             Secret trustedBuildSystemToken = secretRetriever.retrieveSecret(input.getTrustedBuildSystemTokenCredentialId());
             Secret apiToken = secretRetriever.retrieveSecret(input.getApiTokenCredentialId(), new CredentialsScope[] { CredentialsScope.SYSTEM, CredentialsScope.GLOBAL });

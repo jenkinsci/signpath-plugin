@@ -4,14 +4,12 @@ import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.signpath.Common.PluginConstants;
 import io.jenkins.plugins.signpath.Exceptions.SignPathStepInvalidArgumentException;
 import jenkins.model.GlobalConfiguration;
-import jenkins.model.Jenkins;
 
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import hudson.model.TaskListener;
 
-import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.UUID;
@@ -85,7 +83,7 @@ public abstract class SignPathStepBase extends Step {
     public int getWaitForPowerShellTimeoutInSeconds() {
         return waitForPowerShellTimeoutInSeconds;
     }
-    
+
     public int getWaitBetweenReadinessChecksInSeconds() {
         return waitBetweenReadinessChecksInSeconds;
     }
@@ -174,7 +172,7 @@ public abstract class SignPathStepBase extends Step {
         if (!stepLevelValue.equals(globalVal) && !allowOverrideAtPipelineLevel) {
             throw new SignPathStepInvalidArgumentException(
                 String.format(
-                    "Parameter '%s' is configured globally to '%s' and cannot be changed in pipeline to '%s'.", 
+                    "Parameter '%s' is configured globally to '%s' and cannot be changed in pipeline to '%s'.",
                     paramName, globalVal, stepLevelValue));
         }
 
@@ -185,12 +183,11 @@ public abstract class SignPathStepBase extends Step {
     protected void logStepParameterDeprecationWarning(TaskListener listener, String parameterName, String globalConfigName) {
         listener
             .getLogger()
-            .println(
-                String.format(
-                    "WARNING: The '%s' parameter is deprecated and will be removed in a future release." +
-                    " Please use Jenkins system configuration 'Code Signing with SignPath'->'%s' instead.",
-                    parameterName,
-                    globalConfigName));
+            .printf(
+                "WARNING: The '%s' parameter is deprecated and will be removed in a future release." +
+                        " Please use Jenkins system configuration 'Code Signing with SignPath'->'%s' instead.%n",
+                parameterName,
+                globalConfigName);
     }
 
     protected URL ensureValidURL(String apiUrl) throws SignPathStepInvalidArgumentException {
@@ -200,7 +197,7 @@ public abstract class SignPathStepBase extends Step {
             throw new SignPathStepInvalidArgumentException(apiUrl + " must be a valid url");
         }
     }
-    
+
     protected SignPathPluginGlobalConfiguration getSignPathConfig() {
         SignPathPluginGlobalConfiguration config = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
         if (config == null) {

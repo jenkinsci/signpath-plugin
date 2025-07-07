@@ -49,7 +49,7 @@ public class CredentialBasedSecretRetrieverTest {
         // ASSERT
         assertEquals(secret, result.getPlainText());
     }
-    
+
     @Test
     public void retrieveSecretNoScopeRestriction() throws IOException, SecretNotFoundException {
         String id = Some.stringNonEmpty();
@@ -63,7 +63,7 @@ public class CredentialBasedSecretRetrieverTest {
         // ASSERT
         assertEquals(secret, result.getPlainText());
     }
-    
+
     @Test
     public void retrieveSecret_withDifferentDomain_works() throws IOException, SecretNotFoundException {
         String id = Some.stringNonEmpty();
@@ -106,13 +106,13 @@ public class CredentialBasedSecretRetrieverTest {
         Throwable ex = assertThrows(SecretNotFoundException.class, act);
         assertEquals(ex.getMessage(), String.format("The secret '%s' was configured with scope 'Global (Jenkins, nodes, items, all child items, etc)' but needs to be in scope(s) 'System (Jenkins and nodes only)'.", id));
     }
-    
+
     @Test
     public void retrieveSecret_wrongScope_multiple_scopes_throws() throws IOException {
         String id = Some.stringNonEmpty();
         String secret = Some.stringNonEmpty();
         CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.GLOBAL, id, secret);
-        
+
         // ACT
         ThrowingRunnable act = () -> sut.retrieveSecret(id, new CredentialsScope[] { CredentialsScope.SYSTEM, CredentialsScope.USER, });
 
@@ -136,7 +136,7 @@ public class CredentialBasedSecretRetrieverTest {
     }
 
     @Test
-    public void retrieveSecret_wrongCredentialType_throws() throws IOException {
+    public void retrieveSecret_wrongCredentialType_throws() throws Exception {
         String id = Some.stringNonEmpty();
         String secret = Some.stringNonEmpty();
         Domain domain = credentialStore.getDomains().get(0);

@@ -15,7 +15,6 @@ import io.jenkins.plugins.signpath.Exceptions.ArtifactNotFoundException;
 import io.jenkins.plugins.signpath.TestUtils.*;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.experimental.theories.Theories;
 import org.junit.experimental.theories.Theory;
@@ -57,7 +56,7 @@ public class GetSignedArtifactStepEndToEndTest {
         globalConfig.setApiURL(apiUrl);
         globalConfig.setTrustedBuildSystemCredentialId(trustedBuildSystemTokenCredentialId);
         globalConfig.setOrganizationId(organizationId);
-        
+
         wireMockRule.stubFor(get(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -120,7 +119,7 @@ public class GetSignedArtifactStepEndToEndTest {
                                           String trustedBuildSystemTokenCredentialId,
                                           String apiTokenCredentialId,
                                           String organizationId,
-                                          String signingRequestId) throws IOException {
+                                          String signingRequestId) throws Exception {
         return j.createWorkflow("SignPath",
                 "getSignedArtifact(apiUrl: '" + apiUrl + "', " +
                         "outputArtifactPath: 'signed.exe', " +
