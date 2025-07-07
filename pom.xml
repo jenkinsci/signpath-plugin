@@ -38,13 +38,21 @@
     </licenses>
     <dependencies>
         <dependency>
-            <groupId>org.jenkins-ci.plugins.workflow</groupId>
-            <artifactId>workflow-support</artifactId>
+            <groupId>io.jenkins.plugins</groupId>
+            <artifactId>commons-lang-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.jenkins.plugins</groupId>
+            <artifactId>okhttp-api</artifactId>
         </dependency>
         <dependency>
             <groupId>io.signpath.javaclient</groupId>
             <artifactId>api-client</artifactId>
             <version>3.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins.workflow</groupId>
+            <artifactId>workflow-support</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
