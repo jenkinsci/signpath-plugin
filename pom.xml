@@ -12,9 +12,10 @@
     <version>${revision}.${changelist}</version>
     <packaging>hpi</packaging>
     <properties>
-        <revision>3.1.0</revision>
-        <changelist>999999-SNAPSHOT</changelist>
-        <jenkins.baseline>2.361</jenkins.baseline>
+        <revision>3.2.0</revision>
+        <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
+        <changelist>${maven.build.timestamp}-SNAPSHOT</changelist>
+        <jenkins.baseline>2.361</jenkins.baseline> 
         <jenkins.version>${jenkins.baseline}.4</jenkins.version>
         <java.level>11</java.level>
         <maven.compiler.source>11</maven.compiler.source>
@@ -46,7 +47,7 @@
         <dependency>
             <groupId>io.signpath.javaclient</groupId>
             <artifactId>api-client</artifactId>
-            <version>2.1.0</version>
+            <version>3.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -129,6 +130,29 @@
         <repository>
             <id>repo1.maven.org</id>
             <url>https://repo1.maven.org/maven2</url>
+        </repository>
+        <repository>
+            <id>ossrh-snapshots</id>
+            <name>OSSRH Snapshots</name>
+
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <name>Central Portal Snapshots</name>
+            <id>central-portal-snapshots</id>
+            <url>https://central.sonatype.com/repository/maven-snapshots/</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
         </repository>
     </repositories>
     <pluginRepositories>
