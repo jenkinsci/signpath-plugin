@@ -12,7 +12,7 @@ View the documentation on [docs.signpath.io/trusted-build-systems/jenkins](https
 
 ## Product Updates
 
-See the [changelog](https://about.signpath.io/documentation/changelog/?component=jenkins_plugin).
+See the [changelog](https://docs.signpath.io/changelog/?component=jenkins_plugin).
 
 ## Support
 
