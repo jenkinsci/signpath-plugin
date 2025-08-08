@@ -70,7 +70,7 @@ public class GitOriginRetriever implements OriginRetriever {
      */
     private String getSingleRemoteUrl(BuildData buildData, int buildNumber) throws OriginNotRetrievableException {
         Set<String> remoteUrls = buildData.getRemoteUrls();
-        if (remoteUrls.size() == 0) {
+        if (remoteUrls.isEmpty()) {
             throw new OriginNotRetrievableException(String.format("No remote URLs for build with build number '%d' found.", buildNumber));
         }
 
@@ -90,7 +90,7 @@ public class GitOriginRetriever implements OriginRetriever {
                 .filter(buildByBranchName -> buildByBranchName.getValue().hudsonBuildNumber == buildNumber)
                 .collect(Collectors.toList());
 
-        if (matchingBuilds.size() == 0) {
+        if (matchingBuilds.isEmpty()) {
             throw new OriginNotRetrievableException(String.format("No builds with build number '%d' found.", buildNumber));
         }
 

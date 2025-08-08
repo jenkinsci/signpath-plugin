@@ -15,7 +15,6 @@ import io.signpath.signpathclient.SignPathClientSimpleLogger;
 import io.signpath.signpathclient.api.model.SigningRequest;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -52,7 +51,7 @@ public class SignPathClientFacade implements SignPathFacade {
     public SubmitSigningRequestResult submitSigningRequest(SigningRequestModel submitModel) throws IOException, SignPathFacadeCallException {
         try {
             TemporaryFile outputArtifact = new TemporaryFile();
-            
+
             String requestId = this.client.submitSigningRequestAndWaitForSignedArtifact(
                     credentials.getApiToken().getPlainText(),
                     credentials.getTrustedBuildSystemToken().getPlainText(),
@@ -80,7 +79,7 @@ public class SignPathClientFacade implements SignPathFacade {
 
     @Override
     public UUID submitSigningRequestAsync(SigningRequestModel submitModel) throws SignPathFacadeCallException {
-        
+
         String requestId = this.client.submitSigningRequest(
                 credentials.getApiToken().getPlainText(),
                 credentials.getTrustedBuildSystemToken().getPlainText(),
@@ -95,17 +94,17 @@ public class SignPathClientFacade implements SignPathFacade {
                 submitModel.getParameters());
         return UUID.fromString(requestId);
     }
-    
+
     @Override
     public TemporaryFile getSignedArtifact(UUID organizationId, UUID signingRequestID) throws IOException, SignPathFacadeCallException {
         TemporaryFile outputArtifact = new TemporaryFile();
-        
+
         try {
             SigningRequest request = client.getSigningRequestWaitForFinalStatus(
                 credentials.getApiToken().getPlainText(),
                 organizationId.toString(),
                 signingRequestID.toString());
-        
+
             if(!request.isFinalStatus()) {
                 throw new SignPathFacadeCallException("Timeout expired while waiting for signing request to complete");
             }
@@ -121,7 +120,7 @@ public class SignPathClientFacade implements SignPathFacade {
             throw new SignPathFacadeCallException(ex.getMessage());
         }
     }
-    
+
     private Map<String, String> buildOriginData(SigningRequestModel submitModel){
         Map<String, String> originParameters = new HashMap<>();
         SigningRequestOriginModel origin = submitModel.getOrigin();
@@ -132,12 +131,12 @@ public class SignPathClientFacade implements SignPathFacade {
         originParameters.put("RepositoryData.CommitId", origin.getRepositoryMetadata().getCommitId());
         originParameters.put("RepositoryData.Url", origin.getRepositoryMetadata().getRepositoryUrl());
         originParameters.put("RepositoryData.SourceControlManagementType", origin.getRepositoryMetadata().getSourceControlManagementType());
-        
+
         return originParameters;
     }
-    
+
     private String buildUserAgent(){
-        
+
         return String.format("SignPath.Plugins.Jenkins/%1$s (OpenJDK %2$s; Jenkins %3$s)",
                 SignPathClientFacade.class.getPackage().getImplementationVersion(),
                 System.getProperty("java.version"),

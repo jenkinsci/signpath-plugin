@@ -1,6 +1,7 @@
 package io.jenkins.plugins.signpath;
 
 import com.cloudbees.plugins.credentials.CredentialsScope;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.TaskListener;
 import hudson.util.Secret;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestModel;
@@ -19,6 +20,7 @@ import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.Serial;
 import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
 import org.apache.commons.lang.StringUtils;
@@ -27,7 +29,12 @@ import org.apache.commons.lang.StringUtils;
  * The step-execution for the
  * @see SubmitSigningRequestStep
  */
+@SuppressFBWarnings(value = "SE_TRANSIENT_FIELD_NOT_RESTORED", justification = "legacy code")
 public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingStepExecution<String> {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
     // We do not support resuming execution and therefore can mark our fields as transient (=> not serialized)
     // If we want to support resuming, we need to remove 'transient' and make sure everything is serializable
     private transient final SubmitSigningRequestStepInput input;
@@ -59,14 +66,14 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
         PrintStream logger = taskListener.getLogger();
 
         logger.printf("Submitting signing request for organization: %s (waiting for completion: %s)%n", input.getOrganizationId(), input.getWaitForCompletion());
-        
-        logger.println(String.format("[PARAM] organizationId: %s", input.getOrganizationId()));
-        logger.println(String.format("[PARAM] projectSlug: %s", input.getProjectSlug()));
-        logger.println(String.format("[PARAM] signingPolicySlug: %s", input.getSigningPolicySlug()));
+
+        logger.printf("[PARAM] organizationId: %s%n", input.getOrganizationId());
+        logger.printf("[PARAM] projectSlug: %s%n", input.getProjectSlug());
+        logger.printf("[PARAM] signingPolicySlug: %s%n", input.getSigningPolicySlug());
         if(!StringUtils.isEmpty(input.getArtifactConfigurationSlug())) {
-            logger.println(String.format("[PARAM] artifactConfigurationSlug: %s", input.getArtifactConfigurationSlug()));
+            logger.printf("[PARAM] artifactConfigurationSlug: %s%n", input.getArtifactConfigurationSlug());
         }
-        
+
         try {
             Secret trustedBuildSystemToken = secretRetriever.retrieveSecret(input.getTrustedBuildSystemTokenCredentialId());
             Secret apiToken = secretRetriever.retrieveSecret(input.getApiTokenCredentialId(), new CredentialsScope[] { CredentialsScope.SYSTEM, CredentialsScope.GLOBAL });

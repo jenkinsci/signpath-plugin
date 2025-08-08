@@ -2,14 +2,13 @@ package io.jenkins.plugins.signpath;
 
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+
 import static org.mockito.Mockito.*;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.Kind;
 import io.jenkins.plugins.signpath.Exceptions.SecretNotFoundException;
@@ -17,7 +16,9 @@ import io.jenkins.plugins.signpath.SecretRetrieval.CredentialBasedSecretRetrieve
 import io.jenkins.plugins.signpath.TestUtils.CredentialStoreUtils;
 import io.jenkins.plugins.signpath.TestUtils.SignPathJenkinsRule;
 import org.junit.Rule;
+import org.mockito.junit.MockitoJUnitRunner;
 
+@RunWith(MockitoJUnitRunner.class)
 public class SignPathPluginGlobalConfigurationTest {
     private SignPathPluginGlobalConfiguration config;
 
@@ -29,7 +30,6 @@ public class SignPathPluginGlobalConfigurationTest {
 
     @Before
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
         config = new SignPathPluginGlobalConfiguration();
     }
 
@@ -39,7 +39,7 @@ public class SignPathPluginGlobalConfigurationTest {
         config.setApiURL(url);
         assertEquals("The API URL should match the set value.", url, config.getApiURL());
     }
-    
+
     @Test
     public void testDoCheckApiURL_Valid() {
         String validUrl = "https://api.example.com";
@@ -66,7 +66,7 @@ public class SignPathPluginGlobalConfigurationTest {
         config.setTrustedBuildSystemCredentialId(credentialId);
         assertEquals("The TBS Credential ID should match the set value.", credentialId, config.getTrustedBuildSystemCredentialId());
     }
-    
+
     @Test
     public void testDoCheckDefaultTrustedBuildSystemCredentialId_Valid() throws Exception {
         String validCredentialId = "valid-id";
@@ -96,7 +96,7 @@ public class SignPathPluginGlobalConfigurationTest {
 
     @Test
     public void testGetAndSetDefaultOrganizationId() {
-        String organizationId = "123e4567-e89b-12d3-a456-426614174000"; 
+        String organizationId = "123e4567-e89b-12d3-a456-426614174000";
         config.setOrganizationId(organizationId);
         assertEquals("The organization ID should match the set value.", organizationId, config.getOrganizationId());
     }

@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>4.87</version>
+        <version>5.18</version>
         <relativePath />
     </parent>
     <groupId>io.jenkins.plugins</groupId>
@@ -15,11 +15,8 @@
         <revision>3.2.0</revision>
         <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
         <changelist>${maven.build.timestamp}-SNAPSHOT</changelist>
-        <jenkins.baseline>2.361</jenkins.baseline> 
-        <jenkins.version>${jenkins.baseline}.4</jenkins.version>
-        <java.level>11</java.level>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <jenkins.baseline>2.479</jenkins.baseline>
+        <jenkins.version>${jenkins.baseline}.3</jenkins.version>
         <host>0.0.0.0</host>
         <port>8080</port>
     </properties>
@@ -41,13 +38,22 @@
     </licenses>
     <dependencies>
         <dependency>
-            <groupId>org.jenkins-ci.plugins.workflow</groupId>
-            <artifactId>workflow-support</artifactId>
+            <groupId>io.jenkins.plugins</groupId>
+            <artifactId>commons-lang-api</artifactId>
+            <version>2.6.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jenkins.plugins</groupId>
+            <artifactId>okhttp-api</artifactId>
         </dependency>
         <dependency>
             <groupId>io.signpath.javaclient</groupId>
             <artifactId>api-client</artifactId>
             <version>3.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins.workflow</groupId>
+            <artifactId>workflow-support</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -64,7 +70,7 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
             <artifactId>workflow-aggregator</artifactId>
-            <version>600.vb_57cdd26fdd7</version>
+            <version>608.v67378e9d3db_1</version>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
@@ -88,20 +94,18 @@
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <version>1.10.19</version>
+            <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.github.tomakehurst</groupId>
+            <groupId>org.wiremock</groupId>
             <artifactId>wiremock-standalone</artifactId>
-            <version>2.27.2</version>
+            <version>3.13.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-compress</artifactId>
-            <version>1.27.1</version>
+            <groupId>io.jenkins.plugins</groupId>
+            <artifactId>commons-compress-api</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -112,7 +116,7 @@
                 <!-- Pick up common dependencies for the selected LTS line: https://github.com/jenkinsci/bom#usage -->
                 <groupId>io.jenkins.tools.bom</groupId>
                 <artifactId>bom-${jenkins.baseline}.x</artifactId>
-                <version>2102.v854b_fec19c92</version>
+                <version>5015.vb_52d36583443</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
@@ -182,9 +186,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <!--<version>3.8.1</version>-->
                 <configuration>
-                    <release>11</release>
                     <showDeprecation>true</showDeprecation>
                     <showWarnings>true</showWarnings>
                 </configuration>

@@ -6,8 +6,6 @@ import io.jenkins.plugins.signpath.ApiIntegration.SignPathFacade;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathFacadeFactory;
 import io.signpath.signpathclient.SignPathClientSimpleLogger;
 
-import java.io.PrintStream;
-
 /**
  * @see SignPathFacadeFactory
  */

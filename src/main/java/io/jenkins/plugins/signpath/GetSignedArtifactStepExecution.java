@@ -1,6 +1,7 @@
 package io.jenkins.plugins.signpath;
 
 import com.cloudbees.plugins.credentials.CredentialsScope;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.TaskListener;
 import hudson.util.Secret;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathCredentials;
@@ -17,6 +18,7 @@ import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.Serial;
 import java.security.NoSuchAlgorithmException;
 
 /**
@@ -24,7 +26,12 @@ import java.security.NoSuchAlgorithmException;
  *
  * @see GetSignedArtifactStep
  */
+@SuppressFBWarnings(value = "SE_TRANSIENT_FIELD_NOT_RESTORED", justification = "legacy code")
 public class GetSignedArtifactStepExecution extends SynchronousNonBlockingStepExecution<Void> {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
     // We do not support resuming execution and therefore can mark our fields as transient (=> not serialized)
     // If we want to support resuming, we need to remove 'transient' and make sure everything is serializable
     private transient final GetSignedArtifactStepInput input;
