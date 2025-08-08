@@ -9,44 +9,40 @@ import io.jenkins.plugins.signpath.TestUtils.BuildDataDomainObjectMother;
 import io.jenkins.plugins.signpath.TestUtils.Some;
 import io.jenkins.plugins.signpath.TestUtils.TemporaryFileUtil;
 import org.apache.commons.lang.StringUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.experimental.theories.DataPoints;
-import org.junit.experimental.theories.FromDataPoints;
-import org.junit.experimental.theories.Theories;
-import org.junit.experimental.theories.Theory;
-import org.junit.function.ThrowingRunnable;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.function.Executable;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
-@RunWith(Theories.class)
-public class GitOriginRetrieverTest {
+@ExtendWith(MockitoExtension.class)
+class GitOriginRetrieverTest {
 
     private GitOriginRetriever sut;
 
     @Mock
     ConfigFileProvider configFileProvider;
 
-    @Mock
+    @Mock(strictness = Mock.Strictness.LENIENT)
     Run<?, ?> run;
-
-    @Rule
-    public MockitoRule mockitoRule = MockitoJUnit.rule();
 
     private BuildData buildData;
     private int buildNumber;
     private String buildUrl;
     private String repositoryUrl;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         String jenkinsRootUrl = Some.url();
         String jobUrl = Some.urlFragment();
         buildUrl = StringUtils.strip(jenkinsRootUrl, "/") + "/" + StringUtils.strip(jobUrl, "/");
@@ -64,8 +60,8 @@ public class GitOriginRetrieverTest {
         sut = new GitOriginRetriever(configFileProvider, run, jenkinsRootUrl);
     }
 
-    @Theory
-    public void retrieveOrigin() throws IOException, OriginNotRetrievableException {
+    @Test
+    void retrieveOrigin() throws IOException, OriginNotRetrievableException {
         String commitId = Some.sha1Hash();
         String branchId = Some.sha1Hash();
         String branchName = Some.stringNonEmpty();
@@ -97,8 +93,7 @@ public class GitOriginRetrieverTest {
         assertArrayEquals(jobConfigXmlContent, TemporaryFileUtil.getContentAndDispose(buildSettingsFile));
     }
 
-    @DataPoints("allBranchNames")
-    public static String[][] allBranchNames() {
+    static String[][] allBranchNames() {
         return new String[][]{
                 new String[]{"develop", "develop"},
                 new String[]{"refs/remotes/origin/master", "master"},
@@ -107,10 +102,9 @@ public class GitOriginRetrieverTest {
         };
     }
 
-    @Theory
-    public void retrieveOrigin_withRefBranchName(@FromDataPoints("allBranchNames") String[] branchNames) throws IOException, OriginNotRetrievableException {
-        String actualBranchName = branchNames[0];
-        String expectedBranchName = branchNames[1];
+    @ParameterizedTest
+    @MethodSource("allBranchNames")
+    void retrieveOrigin_withRefBranchName(String actualBranchName, String expectedBranchName) throws IOException, OriginNotRetrievableException {
         buildData.saveBuild(BuildDataDomainObjectMother.createBuild(buildNumber, Some.sha1Hash(), BuildDataDomainObjectMother.createBranch(Some.sha1Hash(), actualBranchName)));
 
         TemporaryFile jobConfigTemporaryFile = TemporaryFileUtil.create(Some.bytes());
@@ -123,66 +117,66 @@ public class GitOriginRetrieverTest {
         assertEquals(expectedBranchName, result.getRepositoryMetadata().getBranchName());
     }
 
-    @Theory
-    public void retrieveOrigin_noMatchingBuildNumber_throws() {
+    @Test
+    void retrieveOrigin_noMatchingBuildNumber_throws() {
         buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(buildNumber + 1));
 
         // ACT
-        ThrowingRunnable act = () -> sut.retrieveOrigin();
+        Executable act = () -> sut.retrieveOrigin();
 
         // ASSERT
         Throwable ex = assertThrows(OriginNotRetrievableException.class, act);
-        assertEquals(ex.getMessage(), String.format("No builds with build number '%d' found.", buildNumber));
+        assertEquals(String.format("No builds with build number '%d' found.", buildNumber), ex.getMessage());
     }
 
-    @Theory
-    public void retrieveOrigin_multipleMatchingBuildNumbers_throws() {
+    @Test
+    void retrieveOrigin_multipleMatchingBuildNumbers_throws() {
         buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(buildNumber));
         buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(buildNumber));
 
         // ACT
-        ThrowingRunnable act = () -> sut.retrieveOrigin();
+        Executable act = () -> sut.retrieveOrigin();
 
         // ASSERT
         Throwable ex = assertThrows(OriginNotRetrievableException.class, act);
-        assertEquals(ex.getMessage(), String.format("2 builds with build number '%d' found. This is not supported.", buildNumber));
+        assertEquals(String.format("2 builds with build number '%d' found. This is not supported.", buildNumber), ex.getMessage());
     }
 
-    @Theory
-    public void retrieveOrigin_multipleBranches_throws() {
+    @Test
+    void retrieveOrigin_multipleBranches_throws() {
         buildData.saveBuild(BuildDataDomainObjectMother.createBuild(buildNumber, Some.sha1Hash(), BuildDataDomainObjectMother.createRandomBranch(), BuildDataDomainObjectMother.createRandomBranch()));
 
         // ACT
-        ThrowingRunnable act = () -> sut.retrieveOrigin();
+        Executable act = () -> sut.retrieveOrigin();
 
         // ASSERT
         Throwable ex = assertThrows(OriginNotRetrievableException.class, act);
-        assertEquals(ex.getMessage(), String.format("2 builds with build number '%d' found. This is not supported.", buildNumber));
+        assertEquals(String.format("2 builds with build number '%d' found. This is not supported.", buildNumber), ex.getMessage());
     }
 
-    @Theory
-    public void retrieveOrigin_noRemoteUrls_throws() {
+    @Test
+    void retrieveOrigin_noRemoteUrls_throws() {
         buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(buildNumber));
         buildData.remoteUrls.clear();
 
         // ACT
-        ThrowingRunnable act = () -> sut.retrieveOrigin();
+        Executable act = () -> sut.retrieveOrigin();
 
         // ASSERT
         Throwable ex = assertThrows(OriginNotRetrievableException.class, act);
-        assertEquals(ex.getMessage(), String.format("No remote URLs for build with build number '%d' found.", buildNumber));
+        assertEquals(String.format("No remote URLs for build with build number '%d' found.", buildNumber), ex.getMessage());
     }
 
-    @Theory
-    public void retrieveOrigin_multipleRemoteUrls_throws() {
+    @Test
+    void retrieveOrigin_multipleRemoteUrls_throws() {
         buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(buildNumber));
         buildData.addRemoteUrl(Some.stringNonEmpty());
 
         // ACT
-        ThrowingRunnable act = () -> sut.retrieveOrigin();
+        Executable act = () -> sut.retrieveOrigin();
 
         // ASSERT
         Throwable ex = assertThrows(OriginNotRetrievableException.class, act);
-        assertEquals(ex.getMessage(), String.format("2 remote URLs for build with build number '%d' found. This is not supported.", buildNumber));
+        assertEquals(String.format("2 remote URLs for build with build number '%d' found. This is not supported.", buildNumber), ex.getMessage());
     }
 }

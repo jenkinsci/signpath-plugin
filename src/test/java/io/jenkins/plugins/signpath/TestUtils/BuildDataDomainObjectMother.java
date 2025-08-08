@@ -9,6 +9,7 @@ import org.eclipse.jgit.lib.ObjectId;
 import java.util.Arrays;
 
 public class BuildDataDomainObjectMother {
+
     public static Build createRandomBuild(int buildNumber) {
         String commitId = Some.sha1Hash();
         Branch[] branches = new Branch[] { createRandomBranch() };
