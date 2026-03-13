@@ -1,11 +1,12 @@
 package io.jenkins.plugins.signpath.ApiIntegration;
 
-import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestModel;
-import io.jenkins.plugins.signpath.ApiIntegration.Model.SubmitSigningRequestResult;
+import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestWithoutArtifactModel;
+import io.jenkins.plugins.signpath.ApiIntegration.Model.SubmitSigningRequestWithoutArtifactResult;
 import io.jenkins.plugins.signpath.Common.TemporaryFile;
 import io.jenkins.plugins.signpath.Exceptions.SignPathFacadeCallException;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.UUID;
 
 /**
@@ -14,29 +15,31 @@ import java.util.UUID;
 public interface SignPathFacade {
 
     /**
-     * Submits a signing request to SignPath, waits until it completes and then retrieves the signed artifact
+     * Submits a signing request without uploading the artifact to the Jenkins server.
+     * The artifact SHA-256 hash is passed instead; the artifact is then uploaded
+     * directly using the returned upload link.
      *
-     * @param submitModel all the (non-authentication) parameters needed for creating the signing request
-     * @return the signed artifact in form of a TemporaryFile
-     * @throws IOException                 occurs if any necessary intermediate file cannot be successfully created
+     * @param submitModel all the (non-authentication) parameters including filename and SHA-256 hex hash
+     * @return the signing request ID, upload link, and web link
      * @throws SignPathFacadeCallException occurs if any user error has been made (i.e. misconfiguration)
      */
-    SubmitSigningRequestResult submitSigningRequest(SigningRequestModel submitModel) throws IOException, SignPathFacadeCallException;
+    SubmitSigningRequestWithoutArtifactResult submitSigningRequestWithoutArtifact(SigningRequestWithoutArtifactModel submitModel) throws SignPathFacadeCallException;
 
     /**
-     * Similar to the submitSigningRequest method, but does not wait for the signing request to complete
+     * Uploads an unsigned artifact to SignPath using the upload link returned by submitSigningRequestWithoutArtifact.
      *
-     * @param submitModel all the (non-authentication) parameters needed for creating the signing request
-     * @return the signing request ID that you need to specify for downloading the signed artifact
-     * @throws SignPathFacadeCallException occurs if any user error has been made (i.e. misconfiguration)
+     * @param uploadLink     the upload URL as returned by the SubmitWithoutArtifact route
+     * @param artifactStream the artifact content to upload
+     * @throws IOException                 occurs if the artifact stream cannot be read or written to a temp file
+     * @throws SignPathFacadeCallException occurs if the upload request fails
      */
-    UUID submitSigningRequestAsync(SigningRequestModel submitModel) throws SignPathFacadeCallException;
+    void uploadUnsignedArtifact(String uploadLink, InputStream artifactStream) throws IOException, SignPathFacadeCallException;
 
     /**
      * Downloads a signed artifact from SignPath
      *
      * @param organizationId   the organization ID where the signing request resides
-     * @param signingRequestID the signing request ID as given as a result of the submitSigningRequestAsync method
+     * @param signingRequestID the signing request ID as returned by submitSigningRequestWithoutArtifact
      * @return the signed artifact in form of a TemporaryFile
      * @throws IOException                 occurs if any necessary intermediate file cannot be successfully created
      * @throws SignPathFacadeCallException occurs if any user error has been made (i.e. misconfiguration)
