@@ -40,7 +40,7 @@ public class CredentialBasedSecretRetriever implements SecretRetriever {
     public Secret retrieveSecret(String id, CredentialsScope[] allowedScopes) throws SecretNotFoundException {
         List<StringCredentials> credentials =
                 // authentication: null => SYSTEM, but with no warnings for using deprecated fields
-                CredentialsProvider.lookupCredentials(StringCredentials.class, jenkins, null, Collections.emptyList());
+                CredentialsProvider.lookupCredentialsInItemGroup(StringCredentials.class, jenkins, null, Collections.emptyList());
         CredentialsMatcher matcher = CredentialsMatchers.withId(id);
         StringCredentials credential = CredentialsMatchers.firstOrNull(credentials, matcher);
 
