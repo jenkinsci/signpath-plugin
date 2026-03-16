@@ -15,8 +15,8 @@
         <revision>3.2.0</revision>
         <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
         <changelist>${maven.build.timestamp}-SNAPSHOT</changelist>
-        <jenkins.baseline>2.361</jenkins.baseline> 
-        <jenkins.version>${jenkins.baseline}.4</jenkins.version>
+        <jenkins.baseline>2.426</jenkins.baseline>
+        <jenkins.version>${jenkins.baseline}.3</jenkins.version>
         <java.level>11</java.level>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
@@ -112,7 +112,7 @@
                 <!-- Pick up common dependencies for the selected LTS line: https://github.com/jenkinsci/bom#usage -->
                 <groupId>io.jenkins.tools.bom</groupId>
                 <artifactId>bom-${jenkins.baseline}.x</artifactId>
-                <version>2102.v854b_fec19c92</version>
+                <version>3208.vb_21177d4b_cd9</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
