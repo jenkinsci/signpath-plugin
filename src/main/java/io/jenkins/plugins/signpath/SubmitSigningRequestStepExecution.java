@@ -4,8 +4,10 @@ import com.cloudbees.plugins.credentials.CredentialsScope;
 import hudson.FilePath;
 import hudson.model.TaskListener;
 import hudson.util.Secret;
+import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestWithArtifactRetrievalLinkModel;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestWithoutArtifactModel;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestOriginModel;
+import io.jenkins.plugins.signpath.ApiIntegration.Model.SubmitSigningRequestWithArtifactRetrievalLinkResult;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SubmitSigningRequestWithoutArtifactResult;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathCredentials;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathFacade;
@@ -75,6 +77,13 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
         if (!StringUtils.isEmpty(input.getArtifactConfigurationSlug())) {
             logger.printf("[PARAM] artifactConfigurationSlug: %s%n", input.getArtifactConfigurationSlug());
         }
+        if (input.hasArtifactRetrievalUrl()) {
+            logger.printf("[PARAM] inputArtifactRetrievalUrl: %s%n", input.getInputArtifactRetrievalUrl());
+            if (input.getInputArtifactRetrievalHttpHeaders() != null && !input.getInputArtifactRetrievalHttpHeaders().isEmpty()) {
+                logger.printf("[PARAM] inputArtifactRetrievalHttpHeaders keys: %s%n",
+                        String.join(", ", input.getInputArtifactRetrievalHttpHeaders().keySet()));
+            }
+        }
 
         try {
             Secret trustedBuildSystemToken = secretRetriever.retrieveSecret(input.getTrustedBuildSystemTokenCredentialId());
@@ -107,31 +116,56 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
             }
             logger.println("SHA-256 hash file archived: " + sha256ArtifactPath);
 
-            // Submit signing request without artifact (server-side)
+            // Submit signing request and optionally wait for completion
             try (SigningRequestOriginModel originModel = originRetriever.retrieveOrigin()) {
                 String fileName = FilenameUtils.getName(input.getInputArtifactPath());
-                SigningRequestWithoutArtifactModel model = new SigningRequestWithoutArtifactModel(
-                        input.getOrganizationId(),
-                        fileName,
-                        sha256Hex,
-                        input.getProjectSlug(),
-                        input.getArtifactConfigurationSlug(),
-                        input.getSigningPolicySlug(),
-                        input.getDescription(),
-                        originModel,
-                        input.getParameters());
+                UUID signingRequestId;
+                String webLink;
 
-                SubmitSigningRequestWithoutArtifactResult submitResult = signPathFacade.submitSigningRequestWithoutArtifact(model);
-                UUID signingRequestId = submitResult.getSigningRequestId();
-                String uploadLink = submitResult.getUploadLink();
-                if (submitResult.getWebLink() != null && !submitResult.getWebLink().isEmpty()) {
-                    logger.printf("Signing request URL: %s%n", submitResult.getWebLink());
+                if (input.hasArtifactRetrievalUrl()) {
+                    // Retrieval link path: SignPath downloads the artifact from the provided URL
+                    SigningRequestWithArtifactRetrievalLinkModel model = new SigningRequestWithArtifactRetrievalLinkModel(
+                            input.getOrganizationId(),
+                            fileName,
+                            sha256Hex,
+                            input.getProjectSlug(),
+                            input.getArtifactConfigurationSlug(),
+                            input.getSigningPolicySlug(),
+                            input.getDescription(),
+                            originModel,
+                            input.getParameters(),
+                            input.getInputArtifactRetrievalUrl(),
+                            input.getInputArtifactRetrievalHttpHeaders());
+
+                    SubmitSigningRequestWithArtifactRetrievalLinkResult submitResult = signPathFacade.submitSigningRequestWithArtifactRetrievalLink(model);
+                    signingRequestId = submitResult.getSigningRequestId();
+                    webLink = submitResult.getWebLink();
+                } else {
+                    // Direct upload path: artifact is uploaded from the agent to SignPath
+                    SigningRequestWithoutArtifactModel model = new SigningRequestWithoutArtifactModel(
+                            input.getOrganizationId(),
+                            fileName,
+                            sha256Hex,
+                            input.getProjectSlug(),
+                            input.getArtifactConfigurationSlug(),
+                            input.getSigningPolicySlug(),
+                            input.getDescription(),
+                            originModel,
+                            input.getParameters());
+
+                    SubmitSigningRequestWithoutArtifactResult submitResult = signPathFacade.submitSigningRequestWithoutArtifact(model);
+                    signingRequestId = submitResult.getSigningRequestId();
+                    webLink = submitResult.getWebLink();
+
+                    // Upload the artifact to SignPath
+                    logger.printf("Uploading artifact '%s' to SignPath...%n", input.getInputArtifactPath());
+                    try (InputStream artifactStream = artifactFilePath.read()) {
+                        signPathFacade.uploadUnsignedArtifact(submitResult.getUploadLink(), artifactStream);
+                    }
                 }
 
-                // Upload the artifact to SignPath
-                logger.printf("Uploading artifact '%s' to SignPath...%n", input.getInputArtifactPath());
-                try (InputStream artifactStream = artifactFilePath.read()) {
-                    signPathFacade.uploadUnsignedArtifact(uploadLink, artifactStream);
+                if (webLink != null && !webLink.isEmpty()) {
+                    logger.printf("Signing request URL: %s%n", webLink);
                 }
 
                 if (input.getWaitForCompletion()) {
