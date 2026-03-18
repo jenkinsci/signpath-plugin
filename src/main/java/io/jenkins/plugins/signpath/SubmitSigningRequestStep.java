@@ -39,6 +39,8 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
     private boolean waitForCompletion = false;
     private String outputArtifactPath;
     private Map<String, String> parameters;
+    private String inputArtifactRetrievalUrl;
+    private Map<String, String> inputArtifactRetrievalHttpHeaders;
 
     @DataBoundConstructor
     public SubmitSigningRequestStep() {
@@ -49,6 +51,12 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
     public StepExecution start(StepContext context) throws IOException, InterruptedException, SignPathStepInvalidArgumentException {
         boolean waitForCompletion = getWaitForCompletion();
         String outputArtifactPath = waitForCompletion ? ensureNotNull(getOutputArtifactPath(), "outputArtifactPath") : null;
+
+        if (getInputArtifactRetrievalHttpHeaders() != null && !getInputArtifactRetrievalHttpHeaders().isEmpty()
+                && (getInputArtifactRetrievalUrl() == null || getInputArtifactRetrievalUrl().isEmpty())) {
+            throw new SignPathStepInvalidArgumentException("inputArtifactRetrievalHttpHeaders can only be provided together with inputArtifactRetrievalUrl");
+        }
+
         SubmitSigningRequestStepInput input = new SubmitSigningRequestStepInput(
                 ensureValidUUID(getOrganizationIdWithGlobal(), "organizationId"),
                 ensureNotNull(getTrustedBuildSystemTokenCredentialIdWithGlobal(), "trustedBuildSystemTokenCredentialId"),
@@ -60,7 +68,9 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
                 getDescription(),
                 outputArtifactPath,
                 getParameters(),
-                waitForCompletion);
+                waitForCompletion,
+                getInputArtifactRetrievalUrl(),
+                getInputArtifactRetrievalHttpHeaders());
 
         ApiConfiguration apiConfiguration = getAndValidateApiConfiguration();
         SignPathContainer container = SignPathContainer.build(context, apiConfiguration);
@@ -144,6 +154,14 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
         return parameters;
     }
 
+    public String getInputArtifactRetrievalUrl() {
+        return inputArtifactRetrievalUrl;
+    }
+
+    public Map<String, String> getInputArtifactRetrievalHttpHeaders() {
+        return inputArtifactRetrievalHttpHeaders;
+    }
+
     @DataBoundSetter
     public void setOrganizationId(String organizationId) {
         this.organizationId = organizationId;
@@ -187,6 +205,16 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
     @DataBoundSetter
     public void setParameters (Map<String, String> parameters) {
         this.parameters = parameters;
+    }
+
+    @DataBoundSetter
+    public void setInputArtifactRetrievalUrl(String inputArtifactRetrievalUrl) {
+        this.inputArtifactRetrievalUrl = inputArtifactRetrievalUrl;
+    }
+
+    @DataBoundSetter
+    public void setInputArtifactRetrievalHttpHeaders(Map<String, String> inputArtifactRetrievalHttpHeaders) {
+        this.inputArtifactRetrievalHttpHeaders = inputArtifactRetrievalHttpHeaders;
     }
 
     private void CheckDeprecatedParametersUsage(SignPathContainer container) {

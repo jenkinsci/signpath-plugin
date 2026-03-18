@@ -2,12 +2,15 @@ package io.jenkins.plugins.signpath.ApiIntegration.SignPathClient;
 //</editor-fold>
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestOriginModel;
+import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestWithArtifactRetrievalLinkModel;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestWithoutArtifactModel;
+import io.jenkins.plugins.signpath.ApiIntegration.Model.SubmitSigningRequestWithArtifactRetrievalLinkResult;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SubmitSigningRequestWithoutArtifactResult;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathCredentials;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathFacade;
 import io.jenkins.plugins.signpath.Common.TemporaryFile;
 import io.jenkins.plugins.signpath.Exceptions.SignPathFacadeCallException;
+import io.signpath.signpathclient.api.model.SigningRequestSubmitWithArtifactRetrievalLinkResponse;
 import io.signpath.signpathclient.api.model.SigningRequestSubmitWithoutArtifactResponse;
 import io.signpath.signpathclient.SignPathClientSettings;
 import io.signpath.signpathclient.SignPathClient;
@@ -69,6 +72,34 @@ public class SignPathClientFacade implements SignPathFacade {
             return new SubmitSigningRequestWithoutArtifactResult(
                     UUID.fromString(response.getSigningRequestId()),
                     response.getUploadLink(),
+                    response.getWebLink());
+        } catch (SignPathClientException ex) {
+            Logger.getLogger(SignPathClientFacade.class.getName()).log(Level.SEVERE, null, ex);
+            throw new SignPathFacadeCallException(ex.getMessage());
+        }
+    }
+
+    @Override
+    public SubmitSigningRequestWithArtifactRetrievalLinkResult submitSigningRequestWithArtifactRetrievalLink(SigningRequestWithArtifactRetrievalLinkModel submitModel) throws SignPathFacadeCallException {
+        try {
+            SigningRequestSubmitWithArtifactRetrievalLinkResponse response = this.client.submitWithArtifactRetrievalLink(
+                    credentials.getApiToken().getPlainText(),
+                    credentials.getTrustedBuildSystemToken().getPlainText(),
+                    submitModel.getOrganizationId().toString(),
+                    submitModel.getFileName(),
+                    submitModel.getSha256HexHash(),
+                    submitModel.getProjectSlug(),
+                    submitModel.getSigningPolicySlug(),
+                    submitModel.getArtifactConfigurationSlug(),
+                    submitModel.getDescription(),
+                    true,
+                    buildOriginData(submitModel.getOrigin()),
+                    submitModel.getParameters(),
+                    submitModel.getRetrievalUrl(),
+                    submitModel.getRetrievalHttpHeaders());
+
+            return new SubmitSigningRequestWithArtifactRetrievalLinkResult(
+                    UUID.fromString(response.getSigningRequestId()),
                     response.getWebLink());
         } catch (SignPathClientException ex) {
             Logger.getLogger(SignPathClientFacade.class.getName()).log(Level.SEVERE, null, ex);

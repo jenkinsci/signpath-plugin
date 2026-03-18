@@ -23,6 +23,8 @@ public class SubmitSigningRequestStepInput implements Serializable {
     private final String outputArtifactPath;
     private final boolean waitForCompletion;
     private final Map<String, String> parameters;
+    private final String inputArtifactRetrievalUrl;
+    private final Map<String, String> inputArtifactRetrievalHttpHeaders;
 
     public SubmitSigningRequestStepInput(UUID organizationId,
                                          String trustedBuildSystemTokenCredentialId,
@@ -34,7 +36,9 @@ public class SubmitSigningRequestStepInput implements Serializable {
                                          String description,
                                          String outputArtifactPath,
                                          Map<String, String> parameters,
-                                         boolean waitForCompletion) {
+                                         boolean waitForCompletion,
+                                         String inputArtifactRetrievalUrl,
+                                         Map<String, String> inputArtifactRetrievalHttpHeaders) {
         this.organizationId = organizationId;
         this.trustedBuildSystemTokenCredentialId = trustedBuildSystemTokenCredentialId;
         this.apiTokenCredentialId = apiTokenCredentialId;
@@ -46,6 +50,8 @@ public class SubmitSigningRequestStepInput implements Serializable {
         this.outputArtifactPath = outputArtifactPath;
         this.parameters = parameters;
         this.waitForCompletion = waitForCompletion;
+        this.inputArtifactRetrievalUrl = inputArtifactRetrievalUrl;
+        this.inputArtifactRetrievalHttpHeaders = inputArtifactRetrievalHttpHeaders;
     }
 
     public UUID getOrganizationId() {
@@ -90,5 +96,17 @@ public class SubmitSigningRequestStepInput implements Serializable {
     
     public Map<String, String> getParameters() {
         return parameters;
+    }
+
+    public String getInputArtifactRetrievalUrl() {
+        return inputArtifactRetrievalUrl;
+    }
+
+    public Map<String, String> getInputArtifactRetrievalHttpHeaders() {
+        return inputArtifactRetrievalHttpHeaders;
+    }
+
+    public boolean hasArtifactRetrievalUrl() {
+        return inputArtifactRetrievalUrl != null && !inputArtifactRetrievalUrl.isEmpty();
     }
 }
