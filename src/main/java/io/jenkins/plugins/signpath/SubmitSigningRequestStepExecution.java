@@ -124,6 +124,7 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
 
                 if (input.hasArtifactRetrievalUrl()) {
                     // Retrieval link path: SignPath downloads the artifact from the provided URL
+                    logger.printf("Submitting signing request with artifact retrieval URL '%s'...%n", input.getInputArtifactRetrievalUrl());
                     SigningRequestWithArtifactRetrievalLinkModel model = new SigningRequestWithArtifactRetrievalLinkModel(
                             input.getOrganizationId(),
                             fileName,
@@ -166,6 +167,8 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
 
                 if (webLink != null && !webLink.isEmpty()) {
                     logger.printf("Signing request URL: %s%n", webLink);
+                } else {
+                    logger.println("WARNING: Signing request URL was not provided by the server.");
                 }
 
                 if (input.getWaitForCompletion()) {
