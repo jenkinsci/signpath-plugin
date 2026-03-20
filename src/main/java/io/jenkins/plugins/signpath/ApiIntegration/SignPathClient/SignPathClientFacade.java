@@ -16,7 +16,7 @@ import io.signpath.signpathclient.SignPathClientSettings;
 import io.signpath.signpathclient.SignPathClient;
 import io.signpath.signpathclient.SignPathClientException;
 import io.signpath.signpathclient.SignPathClientSimpleLogger;
-import io.signpath.signpathclient.api.model.SigningRequest;
+import io.signpath.signpathclient.api.model.SigningRequestStatusResponse;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -123,7 +123,7 @@ public class SignPathClientFacade implements SignPathFacade {
         TemporaryFile outputArtifact = new TemporaryFile();
 
         try {
-            SigningRequest request = client.getSigningRequestWaitForFinalStatus(
+            SigningRequestStatusResponse request = client.waitForFinalSigningRequestStatus(
                 credentials.getApiToken().getPlainText(),
                 organizationId.toString(),
                 signingRequestID.toString());
