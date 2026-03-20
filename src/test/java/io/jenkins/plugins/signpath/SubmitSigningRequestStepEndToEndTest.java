@@ -431,10 +431,10 @@ public class SubmitSigningRequestStepEndToEndTest {
     private void stubGetSigningRequestCompleted(String organizationId, String signingRequestId, byte[] signedArtifactBytes) {
         String downloadSignedArtifact = "downloadSignedArtifact";
 
-        wireMockRule.stubFor(get(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId))
+        wireMockRule.stubFor(get(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "/Status"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withBody("{status: 'Completed', workflowStatus: 'Completed', isFinalStatus: true, signedArtifactLink: '" + getMockUrl(downloadSignedArtifact) + "'}")));
+                        .withBody("{status: 'Completed', workflowStatus: 'Completed', isFinalStatus: true}")));
 
         wireMockRule.stubFor(get(urlEqualTo("/" + downloadSignedArtifact))
                 .willReturn(aResponse()

@@ -58,7 +58,7 @@ public class GetSignedArtifactStepEndToEndTest {
         globalConfig.setTrustedBuildSystemCredentialId(trustedBuildSystemTokenCredentialId);
         globalConfig.setOrganizationId(organizationId);
         
-        wireMockRule.stubFor(get(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId))
+        wireMockRule.stubFor(get(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "/Status"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody("{status: 'Completed', workflowStatus: 'Completed', isFinalStatus: true}")));
@@ -94,7 +94,7 @@ public class GetSignedArtifactStepEndToEndTest {
         byte[] signedArtifactContent = getSignedArtifactBytes(run);
         assertArrayEquals(signedArtifactBytes, signedArtifactContent);
 
-        wireMockRule.verify(getRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId))
+        wireMockRule.verify(getRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "/Status"))
                 .withHeader("Authorization", equalTo("Bearer " + apiToken)));
     }
 
