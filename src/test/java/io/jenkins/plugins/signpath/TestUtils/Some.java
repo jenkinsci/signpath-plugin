@@ -73,14 +73,12 @@ public class Some {
         int serviceUnavailableTimeoutInSeconds = 1;
         int uploadAndDownloadRequestTimeoutInSeconds = 2;
         int waitForCompletionTimeoutInSeconds = 3;
-        int waitForPowerShellTimeoutInSeconds = 7;
         int waitBetweenReadinessChecksInSeconds = 5;
         return new ApiConfiguration(
                 new URL(Some.url()),
                 serviceUnavailableTimeoutInSeconds,
                 uploadAndDownloadRequestTimeoutInSeconds,
                 waitForCompletionTimeoutInSeconds,
-                waitForPowerShellTimeoutInSeconds,
                 waitBetweenReadinessChecksInSeconds);
     }
 }
