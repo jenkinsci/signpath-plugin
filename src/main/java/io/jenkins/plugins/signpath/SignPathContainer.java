@@ -28,8 +28,6 @@ import java.io.PrintStream;
  * implementations
  */
 public class SignPathContainer {
-    public static final String POWERSHELL_EXECUTABLE_NAME = "SignPath_PowerShellExecutableName";
-
     private final StepContext stepContext;
     private final Run<?, ?> run;
     private final TaskListener taskListener;

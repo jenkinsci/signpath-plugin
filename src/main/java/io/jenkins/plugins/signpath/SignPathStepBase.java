@@ -32,14 +32,6 @@ public abstract class SignPathStepBase extends Step {
     private int waitForCompletionTimeoutInSeconds = (int) TimeUnit.MINUTES.toSeconds(10);
     private int waitBetweenReadinessChecksInSeconds = (int) TimeUnit.SECONDS.toSeconds(5);
 
-    // we set a sane default for the PowerShell call - 30min is pretty long for most customers already
-    // if the customer ever runs into the problem that it is too short he will clearly see the exception
-    // and can raise it accordingly (or improve his infrastructure to reduce necessary timeouts)
-    // we explicitly decided together with PSA that it is not helpful to automatically calculate this overall timeout
-    // because it is very hard to say what the correct overall timeout is (due to multiple factors playing a role)
-    // also a timeout that is too high is not useful anymore
-    private int waitForPowerShellTimeoutInSeconds = (int) TimeUnit.MINUTES.toSeconds(30);
-
     private String apiUrl;
     private String trustedBuildSystemTokenCredentialId;
     private String apiTokenCredentialId = PluginConstants.DEFAULT_API_TOKEN_CREDENTIAL_ID;
@@ -82,10 +74,6 @@ public abstract class SignPathStepBase extends Step {
         return waitForCompletionTimeoutInSeconds;
     }
 
-    public int getWaitForPowerShellTimeoutInSeconds() {
-        return waitForPowerShellTimeoutInSeconds;
-    }
-    
     public int getWaitBetweenReadinessChecksInSeconds() {
         return waitBetweenReadinessChecksInSeconds;
     }
@@ -120,18 +108,12 @@ public abstract class SignPathStepBase extends Step {
         this.waitForCompletionTimeoutInSeconds = waitForCompletionTimeoutInSeconds;
     }
 
-    @DataBoundSetter
-    public void setWaitForPowerShellTimeoutInSeconds(int waitForPowerShellTimeoutInSeconds) {
-        this.waitForPowerShellTimeoutInSeconds = waitForPowerShellTimeoutInSeconds;
-    }
-
     public ApiConfiguration getAndValidateApiConfiguration() throws SignPathStepInvalidArgumentException {
         return new ApiConfiguration(
                 ensureValidURL(getApiUrlWithGlobal()),
                 getServiceUnavailableTimeoutInSeconds(),
                 getUploadAndDownloadRequestTimeoutInSeconds(),
                 getWaitForCompletionTimeoutInSeconds(),
-                getWaitForPowerShellTimeoutInSeconds(),
                 getWaitBetweenReadinessChecksInSeconds());
     }
 
