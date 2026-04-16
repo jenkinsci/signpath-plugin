@@ -172,7 +172,13 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
                 }
 
                 if (input.getWaitForCompletion()) {
-                    signPathFacade.waitForFinalSigningRequestStatus(input.getOrganizationId(), signingRequestId);
+                    if (input.hasOutputArtifactPath()) {
+                        try (TemporaryFile signedArtifact = signPathFacade.getSignedArtifact(input.getOrganizationId(), signingRequestId)) {
+                            artifactFileManager.storeArtifact(signedArtifact, input.getOutputArtifactPath());
+                        }
+                    } else {
+                        signPathFacade.waitForFinalSigningRequestStatus(input.getOrganizationId(), signingRequestId);
+                    }
                     logger.println("Signing step succeeded");
                 }
 

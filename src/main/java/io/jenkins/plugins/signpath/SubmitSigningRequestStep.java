@@ -36,6 +36,7 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
     private String signingPolicySlug;
     private String inputArtifactPath;
     private String description;
+    private String outputArtifactPath;
     private boolean waitForCompletion = false;
     private Map<String, String> parameters;
     private String inputArtifactRetrievalUrl;
@@ -48,6 +49,10 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
 
     @Override
     public StepExecution start(StepContext context) throws IOException, InterruptedException, SignPathStepInvalidArgumentException {
+        if (getOutputArtifactPath() != null && !getOutputArtifactPath().isEmpty() && !getWaitForCompletion()) {
+            throw new SignPathStepInvalidArgumentException("outputArtifactPath can only be set if waitForCompletion is true");
+        }
+
         if (getInputArtifactRetrievalHttpHeaders() != null && !getInputArtifactRetrievalHttpHeaders().isEmpty()
                 && (getInputArtifactRetrievalUrl() == null || getInputArtifactRetrievalUrl().isEmpty())) {
             throw new SignPathStepInvalidArgumentException("inputArtifactRetrievalHttpHeaders can only be provided together with inputArtifactRetrievalUrl");
@@ -62,6 +67,7 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
                 ensureNotNull(getSigningPolicySlug(), "signingPolicySlug"),
                 ensureNotNull(getInputArtifactPath(), "inputArtifactPath"),
                 getDescription(),
+                getOutputArtifactPath(),
                 getParameters(),
                 getWaitForCompletion(),
                 getInputArtifactRetrievalUrl(),
@@ -135,6 +141,10 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
         return description;
     }
 
+    public String getOutputArtifactPath() {
+        return outputArtifactPath;
+    }
+
     public boolean getWaitForCompletion() {
         return waitForCompletion;
     }
@@ -179,6 +189,11 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
     @DataBoundSetter
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    @DataBoundSetter
+    public void setOutputArtifactPath(String outputArtifactPath) {
+        this.outputArtifactPath = outputArtifactPath;
     }
 
     @DataBoundSetter
