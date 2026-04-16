@@ -49,6 +49,15 @@ public interface SignPathFacade {
     void uploadUnsignedArtifact(String uploadLink, InputStream artifactStream) throws IOException, SignPathFacadeCallException;
 
     /**
+     * Waits for a signing request to reach a final status without downloading the artifact.
+     *
+     * @param organizationId   the organization ID where the signing request resides
+     * @param signingRequestId the signing request ID as returned by submitSigningRequest
+     * @throws SignPathFacadeCallException occurs if the request fails or times out
+     */
+    void waitForFinalSigningRequestStatus(UUID organizationId, UUID signingRequestId) throws SignPathFacadeCallException;
+
+    /**
      * Downloads a signed artifact from SignPath
      *
      * @param organizationId   the organization ID where the signing request resides

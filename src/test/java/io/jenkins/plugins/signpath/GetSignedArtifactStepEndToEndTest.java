@@ -69,7 +69,6 @@ public class GetSignedArtifactStepEndToEndTest {
                         .withBody(signedArtifactBytes)));
 
         WorkflowJob workflowJob = createWorkflowJob(
-            apiUrl,
             trustedBuildSystemTokenCredentialId,
             apiTokenCredentialId,
             organizationId,
@@ -116,13 +115,12 @@ public class GetSignedArtifactStepEndToEndTest {
         assertTrue(run.getLog().contains("SignPathStepInvalidArgumentException"));
     }
 
-    private WorkflowJob createWorkflowJob(String apiUrl,
-                                          String trustedBuildSystemTokenCredentialId,
+    private WorkflowJob createWorkflowJob(String trustedBuildSystemTokenCredentialId,
                                           String apiTokenCredentialId,
                                           String organizationId,
                                           String signingRequestId) throws IOException {
         return j.createWorkflow("SignPath",
-                "getSignedArtifact(apiUrl: '" + apiUrl + "', " +
+                "getSignedArtifact(" +
                         "outputArtifactPath: 'signed.exe', " +
                         "trustedBuildSystemTokenCredentialId: '" + trustedBuildSystemTokenCredentialId + "'," +
                         "apiTokenCredentialId: '" + apiTokenCredentialId + "'," +

@@ -37,7 +37,6 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
     private String inputArtifactPath;
     private String description;
     private boolean waitForCompletion = false;
-    private String outputArtifactPath;
     private Map<String, String> parameters;
     private String inputArtifactRetrievalUrl;
     private Map<String, String> inputArtifactRetrievalHttpHeaders;
@@ -49,9 +48,6 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
 
     @Override
     public StepExecution start(StepContext context) throws IOException, InterruptedException, SignPathStepInvalidArgumentException {
-        boolean waitForCompletion = getWaitForCompletion();
-        String outputArtifactPath = waitForCompletion ? ensureNotNull(getOutputArtifactPath(), "outputArtifactPath") : null;
-
         if (getInputArtifactRetrievalHttpHeaders() != null && !getInputArtifactRetrievalHttpHeaders().isEmpty()
                 && (getInputArtifactRetrievalUrl() == null || getInputArtifactRetrievalUrl().isEmpty())) {
             throw new SignPathStepInvalidArgumentException("inputArtifactRetrievalHttpHeaders can only be provided together with inputArtifactRetrievalUrl");
@@ -66,16 +62,13 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
                 ensureNotNull(getSigningPolicySlug(), "signingPolicySlug"),
                 ensureNotNull(getInputArtifactPath(), "inputArtifactPath"),
                 getDescription(),
-                outputArtifactPath,
                 getParameters(),
-                waitForCompletion,
+                getWaitForCompletion(),
                 getInputArtifactRetrievalUrl(),
                 getInputArtifactRetrievalHttpHeaders());
 
         ApiConfiguration apiConfiguration = getAndValidateApiConfiguration();
         SignPathContainer container = SignPathContainer.build(context, apiConfiguration);
-
-        CheckDeprecatedParametersUsage(container);
 
         return new SubmitSigningRequestStepExecution(input,
                 container.getSecretRetriever(),
@@ -146,10 +139,6 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
         return waitForCompletion;
     }
 
-    public String getOutputArtifactPath() {
-        return outputArtifactPath;
-    }
-    
     public Map<String, String> getParameters () {
         return parameters;
     }
@@ -198,11 +187,6 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
     }
 
     @DataBoundSetter
-    public void setOutputArtifactPath(String outputArtifactPath) {
-        this.outputArtifactPath = outputArtifactPath;
-    }
-    
-    @DataBoundSetter
     public void setParameters (Map<String, String> parameters) {
         this.parameters = parameters;
     }
@@ -217,9 +201,4 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
         this.inputArtifactRetrievalHttpHeaders = inputArtifactRetrievalHttpHeaders;
     }
 
-    private void CheckDeprecatedParametersUsage(SignPathContainer container) {
-        if (this.getApiUrl() != null && !this.getApiUrl().isEmpty()) {
-            logStepParameterDeprecationWarning(container.getTaskListener(), "apiUrl", "Api URL");
-        }
-    }
 }

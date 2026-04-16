@@ -119,6 +119,22 @@ public class SignPathClientFacade implements SignPathFacade {
     }
 
     @Override
+    public void waitForFinalSigningRequestStatus(UUID organizationId, UUID signingRequestId) throws SignPathFacadeCallException {
+        try {
+            SigningRequestStatusResponse statusResponse = client.waitForFinalSigningRequestStatus(
+                    credentials.getApiToken().getPlainText(),
+                    organizationId.toString(),
+                    signingRequestId.toString());
+            if (!statusResponse.isFinalStatus()) {
+                throw new SignPathFacadeCallException("Timeout expired while waiting for signing request to complete");
+            }
+        } catch (SignPathClientException ex) {
+            Logger.getLogger(SignPathClientFacade.class.getName()).log(Level.SEVERE, null, ex);
+            throw new SignPathFacadeCallException(ex.getMessage());
+        }
+    }
+
+    @Override
     public TemporaryFile getSignedArtifact(UUID organizationId, UUID signingRequestID) throws IOException, SignPathFacadeCallException {
         TemporaryFile outputArtifact = new TemporaryFile();
 

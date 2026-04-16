@@ -20,7 +20,6 @@ public class SubmitSigningRequestStepInput implements Serializable {
     private final String signingPolicySlug;
     private final String inputArtifactPath;
     private final String description;
-    private final String outputArtifactPath;
     private final boolean waitForCompletion;
     private final Map<String, String> parameters;
     private final String inputArtifactRetrievalUrl;
@@ -34,7 +33,6 @@ public class SubmitSigningRequestStepInput implements Serializable {
                                          String signingPolicySlug,
                                          String inputArtifactPath,
                                          String description,
-                                         String outputArtifactPath,
                                          Map<String, String> parameters,
                                          boolean waitForCompletion,
                                          String inputArtifactRetrievalUrl,
@@ -47,7 +45,6 @@ public class SubmitSigningRequestStepInput implements Serializable {
         this.signingPolicySlug = signingPolicySlug;
         this.inputArtifactPath = inputArtifactPath;
         this.description = description;
-        this.outputArtifactPath = outputArtifactPath;
         this.parameters = parameters;
         this.waitForCompletion = waitForCompletion;
         this.inputArtifactRetrievalUrl = inputArtifactRetrievalUrl;
@@ -90,10 +87,6 @@ public class SubmitSigningRequestStepInput implements Serializable {
         return description;
     }
 
-    public String getOutputArtifactPath() {
-        return outputArtifactPath;
-    }
-    
     public Map<String, String> getParameters() {
         return parameters;
     }
