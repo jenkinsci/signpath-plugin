@@ -3,15 +3,10 @@ package io.jenkins.plugins.signpath;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import hudson.Launcher;
-import hudson.model.FingerprintMap;
+import hudson.FilePath;
 import hudson.model.Result;
-import hudson.model.TaskListener;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.plugins.git.util.BuildData;
-import io.jenkins.plugins.signpath.Artifacts.DefaultArtifactFileManager;
-import io.jenkins.plugins.signpath.Common.TemporaryFile;
-import io.jenkins.plugins.signpath.Exceptions.ArtifactNotFoundException;
 import io.jenkins.plugins.signpath.TestUtils.*;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -22,6 +17,7 @@ import org.junit.experimental.theories.Theory;
 import org.junit.runner.RunWith;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import jenkins.model.GlobalConfiguration;
@@ -90,7 +86,7 @@ public class GetSignedArtifactStepEndToEndTest {
             fail();
         }
 
-        byte[] signedArtifactContent = getSignedArtifactBytes(run);
+        byte[] signedArtifactContent = getSignedArtifactBytes(workflowJob);
         assertArrayEquals(signedArtifactBytes, signedArtifactContent);
 
         wireMockRule.verify(getRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "/Status"))
@@ -139,12 +135,11 @@ public class GetSignedArtifactStepEndToEndTest {
         return String.format("http://localhost:%d/%s", MockServerPort, postfix);
     }
 
-    private byte[] getSignedArtifactBytes(WorkflowRun run) throws IOException, ArtifactNotFoundException {
-        Launcher launcher = j.createLocalLauncher();
-        TaskListener listener = j.createTaskListener();
-        FingerprintMap fingerprintMap = j.jenkins.getFingerprintMap();
-        DefaultArtifactFileManager artifactFileManager = new DefaultArtifactFileManager(fingerprintMap, run, launcher, listener);
-        TemporaryFile signedArtifact = artifactFileManager.retrieveArtifact("signed.exe");
-        return TemporaryFileUtil.getContentAndDispose(signedArtifact);
+    private byte[] getSignedArtifactBytes(WorkflowJob workflowJob) throws IOException, InterruptedException {
+        FilePath workspace = j.jenkins.getWorkspaceFor(workflowJob);
+        assert workspace != null;
+        try (InputStream in = workspace.child("signed.exe").read()) {
+            return in.readAllBytes();
+        }
     }
 }

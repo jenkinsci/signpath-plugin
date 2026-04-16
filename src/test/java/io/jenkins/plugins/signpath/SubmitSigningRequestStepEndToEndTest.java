@@ -4,6 +4,7 @@ import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.github.tomakehurst.wiremock.http.Request;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.FingerprintMap;
 import hudson.model.Result;
@@ -28,6 +29,7 @@ import org.junit.runner.RunWith;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Base64;
@@ -182,7 +184,7 @@ public class SubmitSigningRequestStepEndToEndTest {
         assertTrue(run.getLog().contains("<returnValue>:\"" + signingRequestId + "\""));
 
         // Signed artifact must be stored at the specified outputArtifactPath
-        byte[] actualSignedArtifactBytes = getSignedArtifactBytes(run);
+        byte[] actualSignedArtifactBytes = getSignedArtifactBytes(workflowJob);
         assertArrayEquals(signedArtifactBytes, actualSignedArtifactBytes);
 
         // Status and download endpoints must both have been called
@@ -669,13 +671,12 @@ public class SubmitSigningRequestStepEndToEndTest {
 
     // ---- Assertions ----
 
-    private byte[] getSignedArtifactBytes(WorkflowRun run) throws IOException, ArtifactNotFoundException {
-        Launcher launcher = j.createLocalLauncher();
-        TaskListener listener = j.createTaskListener();
-        FingerprintMap fingerprintMap = j.jenkins.getFingerprintMap();
-        DefaultArtifactFileManager artifactFileManager = new DefaultArtifactFileManager(fingerprintMap, run, launcher, listener);
-        TemporaryFile signedArtifact = artifactFileManager.retrieveArtifact("signed.exe");
-        return TemporaryFileUtil.getContentAndDispose(signedArtifact);
+    private byte[] getSignedArtifactBytes(WorkflowJob workflowJob) throws IOException, InterruptedException {
+        FilePath workspace = j.jenkins.getWorkspaceFor(workflowJob);
+        assert workspace != null;
+        try (InputStream in = workspace.child("signed.exe").read()) {
+            return in.readAllBytes();
+        }
     }
 
     private void assertSignedArtifactNotArchived(WorkflowRun run) throws IOException {

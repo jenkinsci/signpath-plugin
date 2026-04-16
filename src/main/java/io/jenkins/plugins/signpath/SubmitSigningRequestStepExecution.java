@@ -25,6 +25,7 @@ import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -173,8 +174,13 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
 
                 if (input.getWaitForCompletion()) {
                     if (input.hasOutputArtifactPath()) {
+                        // signedArtifact is a temporary download buffer on the controller, the try block ensures it is
+                        // cleaned up after its contents are copied to the persistent workspace file at outputArtifactPath.
                         try (TemporaryFile signedArtifact = signPathFacade.getSignedArtifact(input.getOrganizationId(), signingRequestId)) {
-                            artifactFileManager.storeArtifact(signedArtifact, input.getOutputArtifactPath());
+                            FilePath outputPath = workspace.child(input.getOutputArtifactPath());
+                            try (InputStream signedArtifactStream = new FileInputStream(signedArtifact.getFile())) {
+                                outputPath.copyFrom(signedArtifactStream);
+                            }
                         }
                     } else {
                         signPathFacade.waitForFinalSigningRequestStatus(input.getOrganizationId(), signingRequestId);
