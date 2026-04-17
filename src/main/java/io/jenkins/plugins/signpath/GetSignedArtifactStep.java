@@ -51,7 +51,6 @@ public class GetSignedArtifactStep extends SignPathStepBase {
         SignPathContainer container = SignPathContainer.build(context, apiConfiguration);
         return new GetSignedArtifactStepExecution(input,
                 container.getSecretRetriever(),
-                container.getArtifactFileManager(),
                 container.getSignPathFacadeFactory(),
                 container.getTaskListener(),
                 container.getStepContext());

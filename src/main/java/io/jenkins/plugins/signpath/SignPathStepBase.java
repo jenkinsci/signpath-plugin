@@ -4,14 +4,10 @@ import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.signpath.Common.PluginConstants;
 import io.jenkins.plugins.signpath.Exceptions.SignPathStepInvalidArgumentException;
 import jenkins.model.GlobalConfiguration;
-import jenkins.model.Jenkins;
 
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import hudson.model.TaskListener;
-
-import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.UUID;
@@ -32,20 +28,8 @@ public abstract class SignPathStepBase extends Step {
     private int waitForCompletionTimeoutInSeconds = (int) TimeUnit.MINUTES.toSeconds(10);
     private int waitBetweenReadinessChecksInSeconds = (int) TimeUnit.SECONDS.toSeconds(5);
 
-    private String apiUrl;
     private String trustedBuildSystemTokenCredentialId;
     private String apiTokenCredentialId = PluginConstants.DEFAULT_API_TOKEN_CREDENTIAL_ID;
-
-    public String getApiUrl() {
-        return apiUrl;
-    }
-
-    public String getApiUrlWithGlobal() throws SignPathStepInvalidArgumentException {
-        return getWithGlobalConfig(
-            apiUrl,
-            SignPathPluginGlobalConfiguration::getApiURL,
-            "apiUrl", false);
-    }
 
     public String getTrustedBuildSystemTokenCredentialId() {
         return trustedBuildSystemTokenCredentialId;
@@ -79,11 +63,6 @@ public abstract class SignPathStepBase extends Step {
     }
 
     @DataBoundSetter
-    public void setApiUrl(String apiUrl) {
-        this.apiUrl = apiUrl;
-    }
-
-    @DataBoundSetter
     public void setTrustedBuildSystemTokenCredentialId(String trustedBuildSystemTokenCredentialId) {
         this.trustedBuildSystemTokenCredentialId = trustedBuildSystemTokenCredentialId;
     }
@@ -109,8 +88,12 @@ public abstract class SignPathStepBase extends Step {
     }
 
     public ApiConfiguration getAndValidateApiConfiguration() throws SignPathStepInvalidArgumentException {
+        String apiUrl = getSignPathConfig().getApiURL();
+        if (apiUrl == null || apiUrl.isEmpty()) {
+            throw new SignPathStepInvalidArgumentException("apiUrl must be configured in Jenkins system configuration under 'Code Signing with SignPath'");
+        }
         return new ApiConfiguration(
-                ensureValidURL(getApiUrlWithGlobal()),
+                ensureValidURL(apiUrl),
                 getServiceUnavailableTimeoutInSeconds(),
                 getUploadAndDownloadRequestTimeoutInSeconds(),
                 getWaitForCompletionTimeoutInSeconds(),
@@ -162,17 +145,6 @@ public abstract class SignPathStepBase extends Step {
 
         // here it doesn't matter which value we return, as they are identical
         return stepLevelValue;
-    }
-
-    protected void logStepParameterDeprecationWarning(TaskListener listener, String parameterName, String globalConfigName) {
-        listener
-            .getLogger()
-            .println(
-                String.format(
-                    "WARNING: The '%s' parameter is deprecated and will be removed in a future release." +
-                    " Please use Jenkins system configuration 'Code Signing with SignPath'->'%s' instead.",
-                    parameterName,
-                    globalConfigName));
     }
 
     protected URL ensureValidURL(String apiUrl) throws SignPathStepInvalidArgumentException {

@@ -93,7 +93,11 @@ public class SubmitSigningRequestStepInput implements Serializable {
     public String getOutputArtifactPath() {
         return outputArtifactPath;
     }
-    
+
+    public boolean hasOutputArtifactPath() {
+        return outputArtifactPath != null && !outputArtifactPath.isEmpty();
+    }
+
     public Map<String, String> getParameters() {
         return parameters;
     }
