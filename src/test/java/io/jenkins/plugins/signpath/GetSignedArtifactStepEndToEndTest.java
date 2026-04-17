@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 @RunWith(Theories.class)
 public class GetSignedArtifactStepEndToEndTest {
     private static final int MockServerPort = 51000;
+    private static final String SIGNED_ARTIFACT_PATH = "signed.exe";
 
     @Rule
     public final SignPathJenkinsRule j = new SignPathJenkinsRule();
@@ -117,7 +118,7 @@ public class GetSignedArtifactStepEndToEndTest {
                                           String signingRequestId) throws IOException {
         return j.createWorkflow("SignPath",
                 "getSignedArtifact(" +
-                        "outputArtifactPath: 'signed.exe', " +
+                        "outputArtifactPath: '" + SIGNED_ARTIFACT_PATH + "', " +
                         "trustedBuildSystemTokenCredentialId: '" + trustedBuildSystemTokenCredentialId + "'," +
                         "apiTokenCredentialId: '" + apiTokenCredentialId + "'," +
                         "organizationId: '" + organizationId + "'," +
@@ -138,7 +139,7 @@ public class GetSignedArtifactStepEndToEndTest {
     private byte[] getSignedArtifactBytes(WorkflowJob workflowJob) throws IOException, InterruptedException {
         FilePath workspace = j.jenkins.getWorkspaceFor(workflowJob);
         assert workspace != null;
-        try (InputStream in = workspace.child("signed.exe").read()) {
+        try (InputStream in = workspace.child(SIGNED_ARTIFACT_PATH).read()) {
             return in.readAllBytes();
         }
     }

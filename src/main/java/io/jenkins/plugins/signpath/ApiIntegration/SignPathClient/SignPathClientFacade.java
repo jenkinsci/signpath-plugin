@@ -139,14 +139,7 @@ public class SignPathClientFacade implements SignPathFacade {
         TemporaryFile outputArtifact = new TemporaryFile();
 
         try {
-            SigningRequestStatusResponse request = client.waitForFinalSigningRequestStatus(
-                credentials.getApiToken().getPlainText(),
-                organizationId.toString(),
-                signingRequestID.toString());
-
-            if(!request.isFinalStatus()) {
-                throw new SignPathFacadeCallException("Timeout expired while waiting for signing request to complete");
-            }
+            waitForFinalSigningRequestStatus(organizationId, signingRequestID);
 
             client.downloadSignedArtifact(
                     credentials.getApiToken().getPlainText(),

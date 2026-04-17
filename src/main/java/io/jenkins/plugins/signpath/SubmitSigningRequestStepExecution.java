@@ -172,19 +172,24 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
                     logger.println("WARNING: Signing request URL was not provided by the server.");
                 }
 
-                if (input.getWaitForCompletion()) {
-                    if (input.hasOutputArtifactPath()) {
-                        // signedArtifact is a temporary download buffer on the controller, the try block ensures it is
-                        // cleaned up after its contents are copied to the persistent workspace file at outputArtifactPath.
-                        try (TemporaryFile signedArtifact = signPathFacade.getSignedArtifact(input.getOrganizationId(), signingRequestId)) {
-                            FilePath outputPath = workspace.child(input.getOutputArtifactPath());
-                            try (InputStream signedArtifactStream = new FileInputStream(signedArtifact.getFile())) {
-                                outputPath.copyFrom(signedArtifactStream);
-                            }
+                // waitForFinalSigningRequestStatus is skipped when outputArtifactPath is set because
+                // getSignedArtifact below already waits for the final status internally.
+                if (input.getWaitForCompletion() && !input.hasOutputArtifactPath()) {
+                    signPathFacade.waitForFinalSigningRequestStatus(input.getOrganizationId(), signingRequestId);
+                }
+
+                if (input.hasOutputArtifactPath()) {
+                    // signedArtifact is a temporary download buffer on the controller, the try block ensures it is
+                    // cleaned up after its contents are copied to the persistent workspace file at outputArtifactPath.
+                    try (TemporaryFile signedArtifact = signPathFacade.getSignedArtifact(input.getOrganizationId(), signingRequestId)) {
+                        FilePath outputPath = workspace.child(input.getOutputArtifactPath());
+                        try (InputStream signedArtifactStream = new FileInputStream(signedArtifact.getFile())) {
+                            outputPath.copyFrom(signedArtifactStream);
                         }
-                    } else {
-                        signPathFacade.waitForFinalSigningRequestStatus(input.getOrganizationId(), signingRequestId);
                     }
+                }
+
+                if (input.getWaitForCompletion()) {
                     logger.println("Signing step succeeded");
                 }
 
