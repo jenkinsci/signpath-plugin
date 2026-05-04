@@ -17,7 +17,13 @@ import io.jenkins.plugins.signpath.Artifacts.ComputeArtifactHashCallable;
 import io.jenkins.plugins.signpath.Common.TemporaryFile;
 import io.jenkins.plugins.signpath.Exceptions.*;
 import io.jenkins.plugins.signpath.OriginRetrieval.OriginRetriever;
+import io.jenkins.plugins.signpath.PipelineData.PipelineDataCollector;
+import io.jenkins.plugins.signpath.PipelineData.PipelineDataExtractionResult;
+import io.jenkins.plugins.signpath.PipelineData.PipelineDataInputs;
+import io.jenkins.plugins.signpath.PipelineData.PipelineDataJsonSerializer;
 import io.jenkins.plugins.signpath.SecretRetrieval.SecretRetriever;
+import hudson.model.Run;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FilenameUtils;
@@ -85,6 +91,12 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
                         String.join(", ", input.getInputArtifactRetrievalHttpHeaders().keySet()));
             }
         }
+
+        // SIGN-8500: collect Build/SourceCode metadata in the canonical SignPath
+        // PipelineData shape and log it. The existing OriginRetriever flow continues
+        // to drive the wire request; this is metadata reporting that paves the way
+        // for SIGN-8500's integration ticket and is non-fatal on failure.
+        logPipelineData(logger);
 
         try {
             Secret trustedBuildSystemToken = secretRetriever.retrieveSecret(input.getTrustedBuildSystemTokenCredentialId());
@@ -200,6 +212,33 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
                  DecoderException ex) {
             logger.printf("%nSigning step failed: %s%n", ex.getMessage());
             throw new SignPathStepFailedException("Signing step failed: " + ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * SIGN-8500. Builds the canonical SignPath PipelineData payload for this run and
+     * logs it (or, when refuse-to-guess fires, the recorded skip reasons). Failures
+     * here MUST NOT break the signing flow — wrapped in a wide try/catch.
+     */
+    private void logPipelineData(PrintStream logger) {
+        try {
+            Run<?, ?> run = getContext().get(Run.class);
+            if (!(run instanceof WorkflowRun)) {
+                return;
+            }
+            PipelineDataInputs inputs = PipelineDataInputs.from((WorkflowRun) run);
+            PipelineDataExtractionResult result = new PipelineDataCollector().collect(inputs);
+            if (result.getData() != null) {
+                logger.println("[SignPath] PipelineData:");
+                logger.println(PipelineDataJsonSerializer.toPrettyJson(result.getData()));
+            } else {
+                logger.println("[SignPath] PipelineData not emitted; skip reasons:");
+                for (String reason : result.getSkipReasons()) {
+                    logger.println("  - " + reason);
+                }
+            }
+        } catch (Throwable t) {
+            logger.printf("[SignPath] PipelineData collection failed (non-fatal): %s%n", t.getMessage());
         }
     }
 }
