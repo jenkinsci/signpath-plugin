@@ -1,5 +1,6 @@
 package io.jenkins.plugins.signpath.ApiIntegration.Model;
 
+import java.io.File;
 import java.util.Map;
 import java.util.UUID;
 
@@ -19,6 +20,7 @@ public class SigningRequestWithArtifactRetrievalLinkModel {
     private final Map<String, String> parameters;
     private final String retrievalUrl;
     private final Map<String, String> retrievalHttpHeaders;
+    private final File pipelineDataFile;
 
     public SigningRequestWithArtifactRetrievalLinkModel(UUID organizationId,
                                                         String fileName,
@@ -30,7 +32,8 @@ public class SigningRequestWithArtifactRetrievalLinkModel {
                                                         SigningRequestOriginModel origin,
                                                         Map<String, String> parameters,
                                                         String retrievalUrl,
-                                                        Map<String, String> retrievalHttpHeaders) {
+                                                        Map<String, String> retrievalHttpHeaders,
+                                                        File pipelineDataFile) {
         this.organizationId = organizationId;
         this.fileName = fileName;
         this.sha256HexHash = sha256HexHash;
@@ -42,6 +45,7 @@ public class SigningRequestWithArtifactRetrievalLinkModel {
         this.parameters = parameters;
         this.retrievalUrl = retrievalUrl;
         this.retrievalHttpHeaders = retrievalHttpHeaders;
+        this.pipelineDataFile = pipelineDataFile;
     }
 
     public UUID getOrganizationId() {
@@ -86,5 +90,9 @@ public class SigningRequestWithArtifactRetrievalLinkModel {
 
     public Map<String, String> getRetrievalHttpHeaders() {
         return retrievalHttpHeaders;
+    }
+
+    public File getPipelineDataFile() {
+        return pipelineDataFile;
     }
 }

@@ -1,5 +1,6 @@
 package io.jenkins.plugins.signpath.ApiIntegration.Model;
 
+import java.io.File;
 import java.util.Map;
 import java.util.UUID;
 
@@ -17,6 +18,7 @@ public class SigningRequestWithoutArtifactModel {
     private final String description;
     private final SigningRequestOriginModel origin;
     private final Map<String, String> parameters;
+    private final File pipelineDataFile;
 
     public SigningRequestWithoutArtifactModel(UUID organizationId,
                                               String fileName,
@@ -26,7 +28,8 @@ public class SigningRequestWithoutArtifactModel {
                                               String signingPolicySlug,
                                               String description,
                                               SigningRequestOriginModel origin,
-                                              Map<String, String> parameters) {
+                                              Map<String, String> parameters,
+                                              File pipelineDataFile) {
         this.organizationId = organizationId;
         this.fileName = fileName;
         this.sha256HexHash = sha256HexHash;
@@ -36,6 +39,7 @@ public class SigningRequestWithoutArtifactModel {
         this.description = description;
         this.origin = origin;
         this.parameters = parameters;
+        this.pipelineDataFile = pipelineDataFile;
     }
 
     public UUID getOrganizationId() {
@@ -72,5 +76,9 @@ public class SigningRequestWithoutArtifactModel {
 
     public Map<String, String> getParameters() {
         return parameters;
+    }
+
+    public File getPipelineDataFile() {
+        return pipelineDataFile;
     }
 }

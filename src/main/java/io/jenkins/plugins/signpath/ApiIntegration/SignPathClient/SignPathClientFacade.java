@@ -67,7 +67,8 @@ public class SignPathClientFacade implements SignPathFacade {
                     submitModel.getDescription(),
                     true,
                     buildOriginData(submitModel.getOrigin()),
-                    submitModel.getParameters());
+                    submitModel.getParameters(),
+                    submitModel.getPipelineDataFile());
 
             return new SubmitSigningRequestWithoutArtifactResult(
                     UUID.fromString(response.getSigningRequestId()),
@@ -96,7 +97,8 @@ public class SignPathClientFacade implements SignPathFacade {
                     buildOriginData(submitModel.getOrigin()),
                     submitModel.getParameters(),
                     submitModel.getRetrievalUrl(),
-                    submitModel.getRetrievalHttpHeaders());
+                    submitModel.getRetrievalHttpHeaders(),
+                    submitModel.getPipelineDataFile());
 
             return new SubmitSigningRequestWithArtifactRetrievalLinkResult(
                     UUID.fromString(response.getSigningRequestId()),
@@ -154,6 +156,14 @@ public class SignPathClientFacade implements SignPathFacade {
     }
 
     private Map<String, String> buildOriginData(SigningRequestOriginModel origin) {
+        // Returning null tells the Java client lib to skip the Origin.* multipart
+        // parts entirely. The SignPath API rejects requests that carry both
+        // Origin and PipelineData, so callers pass null here when PipelineData
+        // is being sent instead.
+        if (origin == null) {
+            return null;
+        }
+
         Map<String, String> originParameters = new HashMap<>();
 
         originParameters.put("BuildData.Url", origin.getBuildUrl());

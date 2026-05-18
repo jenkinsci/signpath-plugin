@@ -2,6 +2,7 @@ package io.jenkins.plugins.signpath;
 
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import hudson.FilePath;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.util.Secret;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestWithArtifactRetrievalLinkModel;
@@ -17,11 +18,15 @@ import io.jenkins.plugins.signpath.Artifacts.ComputeArtifactHashCallable;
 import io.jenkins.plugins.signpath.Common.TemporaryFile;
 import io.jenkins.plugins.signpath.Exceptions.*;
 import io.jenkins.plugins.signpath.OriginRetrieval.OriginRetriever;
+import io.jenkins.plugins.signpath.PipelineData.PipelineDataCollector;
+import io.jenkins.plugins.signpath.PipelineData.PipelineDataJsonSerializer;
+import io.jenkins.plugins.signpath.PipelineData.Model.PipelineDataDto;
 import io.jenkins.plugins.signpath.SecretRetrieval.SecretRetriever;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
 
@@ -86,7 +91,7 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
             }
         }
 
-        try {
+        try (TemporaryFile pipelineDataTempFile = preparePipelineDataFile(logger)) {
             Secret trustedBuildSystemToken = secretRetriever.retrieveSecret(input.getTrustedBuildSystemTokenCredentialId());
             Secret apiToken = secretRetriever.retrieveSecret(input.getApiTokenCredentialId(), new CredentialsScope[]{CredentialsScope.SYSTEM, CredentialsScope.GLOBAL});
             SignPathCredentials credentials = new SignPathCredentials(apiToken, trustedBuildSystemToken);
@@ -117,8 +122,15 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
             }
             logger.println("SHA-256 hash file archived: " + sha256ArtifactPath);
 
-            // Submit signing request and optionally wait for completion
-            try (SigningRequestOriginModel originModel = originRetriever.retrieveOrigin()) {
+            java.io.File pipelineDataFile = pipelineDataTempFile == null ? null : pipelineDataTempFile.getFile();
+
+            // Submit signing request and optionally wait for completion. The SignPath
+            // API rejects requests that carry both Origin and PipelineData, so we
+            // only retrieve the legacy Origin payload when PipelineData was not built.
+            try (SigningRequestOriginModel originModel = (pipelineDataFile != null) ? null : originRetriever.retrieveOrigin()) {
+                if (originModel == null) {
+                    logger.println("[SignPath] Attaching PipelineData to signing request.");
+                }
                 String fileName = FilenameUtils.getName(input.getInputArtifactPath());
                 UUID signingRequestId;
                 String webLink;
@@ -137,7 +149,8 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
                             originModel,
                             input.getParameters(),
                             input.getInputArtifactRetrievalUrl(),
-                            input.getInputArtifactRetrievalHttpHeaders());
+                            input.getInputArtifactRetrievalHttpHeaders(),
+                            pipelineDataFile);
 
                     SubmitSigningRequestWithArtifactRetrievalLinkResult submitResult = signPathFacade.submitSigningRequestWithArtifactRetrievalLink(model);
                     signingRequestId = submitResult.getSigningRequestId();
@@ -153,7 +166,8 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
                             input.getSigningPolicySlug(),
                             input.getDescription(),
                             originModel,
-                            input.getParameters());
+                            input.getParameters(),
+                            pipelineDataFile);
 
                     SubmitSigningRequestWithoutArtifactResult submitResult = signPathFacade.submitSigningRequestWithoutArtifact(model);
                     signingRequestId = submitResult.getSigningRequestId();
@@ -200,6 +214,40 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
                  DecoderException ex) {
             logger.printf("%nSigning step failed: %s%n", ex.getMessage());
             throw new SignPathStepFailedException("Signing step failed: " + ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * Builds the SignPath {@code PipelineData} JSON for this run and writes it to a
+     * temporary file the caller passes to the submit call. Returns {@code null} if
+     * PipelineData cannot be reliably built; the signing request is still submitted
+     * in that case.
+     *
+     * <p>Wrapped in a broad try/catch so any unexpected failure here logs a warning
+     * but never breaks the signing flow.</p>
+     */
+    private TemporaryFile preparePipelineDataFile(PrintStream logger) {
+        try {
+            Run<?, ?> run = getContext().get(Run.class);
+            if (!(run instanceof WorkflowRun)) {
+                logger.println("[SignPath] PipelineData not emitted: only WorkflowRun is supported.");
+                return null;
+            }
+            PipelineDataDto dto = new PipelineDataCollector(logger).collect((WorkflowRun) run);
+            if (dto == null) {
+                return null;
+            }
+            String json = PipelineDataJsonSerializer.toJson(dto);
+            // TODO: remove before publishing — diagnostic dump of the PipelineData JSON
+            //  being sent to SignPath. Helpful while validating SIGN-8581 against real
+            //  pipelines; must NOT ship in a release.
+            logger.println("[SignPath] PipelineData JSON: " + json);
+            TemporaryFile file = new TemporaryFile();
+            Files.write(file.getFile().toPath(), json.getBytes(StandardCharsets.UTF_8));
+            return file;
+        } catch (Throwable t) {
+            logger.printf("[SignPath] PipelineData preparation failed (non-fatal): %s%n", t.getMessage());
+            return null;
         }
     }
 }
