@@ -43,7 +43,6 @@ public class GetSignedArtifactStep extends SignPathStepBase {
         GetSignedArtifactStepInput input =  new GetSignedArtifactStepInput(
                 ensureValidUUID(getOrganizationIdWithGlobal(), "organizationId"),
                 ensureValidUUID(getSigningRequestId(), "signingRequestId"),
-                ensureNotNull(getTrustedBuildSystemTokenCredentialId(), "trustedBuildSystemTokenCredentialId"),
                 ensureNotNull(getApiTokenCredentialId(), "apiTokenCredentialId"),
                 ensureNotNull(getOutputArtifactPath(), "outputArtifactPath"));
 
@@ -51,7 +50,7 @@ public class GetSignedArtifactStep extends SignPathStepBase {
         SignPathContainer container = SignPathContainer.build(context, apiConfiguration);
         return new GetSignedArtifactStepExecution(input,
                 container.getSecretRetriever(),
-                container.getSignPathFacadeFactory(),
+                container.getPipelineConnectorFacadeFactory(),
                 container.getTaskListener(),
                 container.getStepContext());
     }

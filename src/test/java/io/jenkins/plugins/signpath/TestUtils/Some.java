@@ -76,6 +76,7 @@ public class Some {
         int waitBetweenReadinessChecksInSeconds = 5;
         return new ApiConfiguration(
                 new URL(Some.url()),
+                Some.stringNonEmpty(),
                 serviceUnavailableTimeoutInSeconds,
                 uploadAndDownloadRequestTimeoutInSeconds,
                 waitForCompletionTimeoutInSeconds,

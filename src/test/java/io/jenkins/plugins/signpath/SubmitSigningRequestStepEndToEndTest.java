@@ -2,7 +2,6 @@ package io.jenkins.plugins.signpath;
 
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
-import com.github.tomakehurst.wiremock.http.Request;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -10,15 +9,12 @@ import hudson.model.FingerprintMap;
 import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.model.queue.QueueTaskFuture;
-import hudson.plugins.git.util.BuildData;
 import io.jenkins.plugins.signpath.Artifacts.DefaultArtifactFileManager;
 import io.jenkins.plugins.signpath.Common.TemporaryFile;
 import io.jenkins.plugins.signpath.Exceptions.ArtifactNotFoundException;
 import io.jenkins.plugins.signpath.TestUtils.*;
-import jenkins.model.JenkinsLocationConfiguration;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.experimental.theories.DataPoints;
 import org.junit.experimental.theories.FromDataPoints;
@@ -31,7 +27,6 @@ import org.apache.commons.codec.digest.DigestUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.Base64;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -44,6 +39,9 @@ public class SubmitSigningRequestStepEndToEndTest {
     private static final String UNSIGNED_ARTIFACT_PATH = "unsigned.exe";
     private static final String SIGNED_ARTIFACT_PATH = "signed.exe";
     private static final String SHA256_ARTIFACT_PATH = UNSIGNED_ARTIFACT_PATH + ".sha256";
+    private static final String ENDPOINT_SLUG = "JenkinsOnPrem";
+    // The workflow job is always created with this name, so run.getParent().getFullName() is deterministic.
+    private static final String JOB_FULL_NAME = "SignPath";
 
     @Rule
     public final SignPathJenkinsRule j = new SignPathJenkinsRule();
@@ -53,8 +51,6 @@ public class SubmitSigningRequestStepEndToEndTest {
 
     @Theory
     public void submitSigningRequest(@FromDataPoints("allBooleans") boolean withOptionalFields) throws Exception {
-        String trustedBuildSystemTokenCredentialId = Some.stringNonEmpty();
-        String trustedBuildSystemToken = Some.stringNonEmpty();
         String unsignedArtifactString = Some.stringNonEmpty();
         String apiTokenCredentialId = Some.stringNonEmpty();
         String apiToken = Some.stringNonEmpty();
@@ -69,65 +65,48 @@ public class SubmitSigningRequestStepEndToEndTest {
 
         CredentialsStore credentialStore = CredentialStoreUtils.getCredentialStore(j.jenkins);
         assert credentialStore != null;
-        CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, trustedBuildSystemTokenCredentialId, trustedBuildSystemToken);
         CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, apiTokenCredentialId, apiToken);
 
-        String apiUrl = getMockUrl();
-        String uploadPath = "/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "/UploadUnsignedArtifact";
+        stubConnectorSubmit(organizationId, signingRequestId);
+        stubConnectorStatus(organizationId, signingRequestId);
 
-        stubSubmitWithoutArtifact(organizationId, signingRequestId, getMockUrl(uploadPath.substring(1)));
-        stubUploadUnsignedArtifact(uploadPath);
-        stubGetSigningRequestStatus(organizationId, signingRequestId);
+        configureGlobalConfig();
 
-        SignPathPluginGlobalConfiguration globalConfig = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
-        globalConfig.setApiURL(apiUrl);
-        globalConfig.setTrustedBuildSystemCredentialId(trustedBuildSystemTokenCredentialId);
         WorkflowJob workflowJob = withOptionalFields
-                ? createWorkflowJobWithOptionalParameters(trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, artifactConfigurationSlug, description, userDefinedParamName, userDefinedParamValue, true)
-                : createWorkflowJob(trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, true);
-
-        String remoteUrl = Some.url();
-        BuildData buildData = new BuildData(Some.stringNonEmpty());
-        buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(1));
-        buildData.addRemoteUrl(remoteUrl);
+                ? createWorkflowJobWithOptionalParameters(apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, artifactConfigurationSlug, description, userDefinedParamName, userDefinedParamValue, true)
+                : createWorkflowJob(apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, true);
 
         // ACT
-        QueueTaskFuture<WorkflowRun> runFuture = workflowJob.scheduleBuild2(0, buildData);
+        QueueTaskFuture<WorkflowRun> runFuture = workflowJob.scheduleBuild2(0);
         assert runFuture != null;
         WorkflowRun run = runFuture.get();
 
         // ASSERT
-        if (run.getResult() != Result.SUCCESS) {
-            assertEquals("", run.getLog() + run.getResult());
-            fail();
-        }
-
+        assertSuccess(run);
         assertTrue(run.getLog().contains("<returnValue>:\"" + signingRequestId + "\""));
 
-        // Signed artifact must NOT be archived automatically on Jenkins
-        assertSignedArtifactNotArchived(run);
+        // Both the unsigned artifact and its .sha256 sidecar must be archived so the connector can pull them.
+        assertArtifactArchived(run, UNSIGNED_ARTIFACT_PATH);
+        assertArtifactArchived(run, SHA256_ARTIFACT_PATH);
+        // Signed artifact must NOT be archived automatically
+        assertArtifactNotArchived(run, SIGNED_ARTIFACT_PATH);
 
         // Status endpoint must have been polled (waitForCompletion was true)
-        wireMockRule.verify(getRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "/Status")));
+        wireMockRule.verify(getRequestedFor(urlEqualTo(statusRoute(organizationId, signingRequestId))));
 
+        assertConnectorSubmitRequest(apiToken, organizationId, projectSlug, signingPolicySlug);
         if (withOptionalFields) {
-            assertSubmitWithoutArtifactRequest(apiToken, trustedBuildSystemToken, unsignedArtifactString,
-                    remoteUrl, organizationId, projectSlug, signingPolicySlug,
-                    artifactConfigurationSlug, userDefinedParamName, userDefinedParamValue, description);
-        } else {
-            assertSubmitWithoutArtifactRequest(apiToken, trustedBuildSystemToken, unsignedArtifactString,
-                    remoteUrl, organizationId, projectSlug, signingPolicySlug);
+            wireMockRule.verify(postRequestedFor(urlEqualTo(submitRoute(organizationId)))
+                    .withRequestBody(containing("\"SignPathArtifactConfigurationSlug\":\"" + artifactConfigurationSlug + "\""))
+                    .withRequestBody(containing("\"SigningRequestDescription\":\"" + description + "\""))
+                    .withRequestBody(containing("\"Name\":\"" + userDefinedParamName + "\""))
+                    .withRequestBody(containing("\"Value\":\"" + userDefinedParamValue + "\"")));
         }
-        assertUploadRequest(uploadPath, unsignedArtifactString);
-        // The old artifact-with-file route must NOT have been called
-        wireMockRule.verify(exactly(0), postRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests")));
     }
 
     @Theory
     public void submitSigningRequest_withOutputArtifactPath() throws Exception {
         byte[] signedArtifactBytes = Some.bytes();
-        String trustedBuildSystemTokenCredentialId = Some.stringNonEmpty();
-        String trustedBuildSystemToken = Some.stringNonEmpty();
         String unsignedArtifactString = Some.stringNonEmpty();
         String apiTokenCredentialId = Some.stringNonEmpty();
         String apiToken = Some.stringNonEmpty();
@@ -138,26 +117,18 @@ public class SubmitSigningRequestStepEndToEndTest {
 
         CredentialsStore credentialStore = CredentialStoreUtils.getCredentialStore(j.jenkins);
         assert credentialStore != null;
-        CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, trustedBuildSystemTokenCredentialId, trustedBuildSystemToken);
         CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, apiTokenCredentialId, apiToken);
 
-        String apiUrl = getMockUrl();
-        String uploadPath = "/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "/UploadUnsignedArtifact";
+        stubConnectorSubmit(organizationId, signingRequestId);
+        stubConnectorStatus(organizationId, signingRequestId);
+        stubConnectorSignedArtifact(organizationId, signingRequestId, signedArtifactBytes);
 
-        stubSubmitWithoutArtifact(organizationId, signingRequestId, getMockUrl(uploadPath.substring(1)));
-        stubUploadUnsignedArtifact(uploadPath);
-        stubGetSigningRequestStatus(organizationId, signingRequestId);
-        stubGetSignedArtifact(organizationId, signingRequestId, signedArtifactBytes);
-
-        SignPathPluginGlobalConfiguration globalConfig = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
-        globalConfig.setApiURL(apiUrl);
-        globalConfig.setTrustedBuildSystemCredentialId(trustedBuildSystemTokenCredentialId);
+        configureGlobalConfig();
 
         WorkflowJob workflowJob = j.createWorkflow("SignPath",
                 "writeFile text: '" + unsignedArtifactString + "', file: '" + UNSIGNED_ARTIFACT_PATH + "'; " +
                         "echo '<returnValue>:\"'+ submitSigningRequest(" +
                         "inputArtifactPath: '" + UNSIGNED_ARTIFACT_PATH + "', " +
-                        "trustedBuildSystemTokenCredentialId: '" + trustedBuildSystemTokenCredentialId + "'," +
                         "apiTokenCredentialId: '" + apiTokenCredentialId + "'," +
                         "organizationId: '" + organizationId + "'," +
                         "projectSlug: '" + projectSlug + "'," +
@@ -168,22 +139,13 @@ public class SubmitSigningRequestStepEndToEndTest {
                         "uploadAndDownloadRequestTimeoutInSeconds: 10," +
                         "waitForCompletionTimeoutInSeconds: 10) + '\"';");
 
-        String remoteUrl = Some.url();
-        BuildData buildData = new BuildData(Some.stringNonEmpty());
-        buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(1));
-        buildData.addRemoteUrl(remoteUrl);
-
         // ACT
-        QueueTaskFuture<WorkflowRun> runFuture = workflowJob.scheduleBuild2(0, buildData);
+        QueueTaskFuture<WorkflowRun> runFuture = workflowJob.scheduleBuild2(0);
         assert runFuture != null;
         WorkflowRun run = runFuture.get();
 
         // ASSERT
-        if (run.getResult() != Result.SUCCESS) {
-            assertEquals("", run.getLog() + run.getResult());
-            fail();
-        }
-
+        assertSuccess(run);
         assertTrue(run.getLog().contains("<returnValue>:\"" + signingRequestId + "\""));
 
         // Signed artifact must be stored at the specified outputArtifactPath
@@ -191,15 +153,13 @@ public class SubmitSigningRequestStepEndToEndTest {
         assertArrayEquals(signedArtifactBytes, actualSignedArtifactBytes);
 
         // Status and download endpoints must both have been called
-        wireMockRule.verify(getRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "/Status")));
-        wireMockRule.verify(getRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "/SignedArtifact")));
+        wireMockRule.verify(getRequestedFor(urlEqualTo(statusRoute(organizationId, signingRequestId))));
+        wireMockRule.verify(getRequestedFor(urlEqualTo(signedArtifactRoute(organizationId, signingRequestId))));
     }
 
     @Theory
     public void submitSigningRequest_withoutWaitForCompletion(@FromDataPoints("allBooleans") boolean withOptionalFields) throws Exception {
         String unsignedArtifactString = Some.stringNonEmpty();
-        String trustedBuildSystemTokenCredentialId = Some.stringNonEmpty();
-        String trustedBuildSystemToken = Some.stringNonEmpty();
         String apiTokenCredentialId = Some.stringNonEmpty();
         String apiToken = Some.stringNonEmpty();
         String projectSlug = Some.stringNonEmpty();
@@ -213,60 +173,33 @@ public class SubmitSigningRequestStepEndToEndTest {
 
         CredentialsStore credentialStore = CredentialStoreUtils.getCredentialStore(j.jenkins);
         assert credentialStore != null;
-        CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, trustedBuildSystemTokenCredentialId, trustedBuildSystemToken);
         CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, apiTokenCredentialId, apiToken);
 
-        String apiUrl = getMockUrl();
-        String uploadPath = "/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "/UploadUnsignedArtifact";
+        stubConnectorSubmit(organizationId, signingRequestId);
 
-        stubSubmitWithoutArtifact(organizationId, signingRequestId, getMockUrl(uploadPath.substring(1)));
-        stubUploadUnsignedArtifact(uploadPath);
-
-        SignPathPluginGlobalConfiguration globalConfig = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
-        globalConfig.setApiURL(apiUrl);
-        globalConfig.setTrustedBuildSystemCredentialId(trustedBuildSystemTokenCredentialId);
+        configureGlobalConfig();
 
         WorkflowJob workflowJob = withOptionalFields
-                ? createWorkflowJobWithOptionalParameters(trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, artifactConfigurationSlug, description, userDefinedParamName, userDefinedParamValue, false)
-                : createWorkflowJob(trustedBuildSystemTokenCredentialId, apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, false);
-
-        String remoteUrl = Some.url();
-        BuildData buildData = new BuildData(Some.stringNonEmpty());
-        buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(1));
-        buildData.addRemoteUrl(remoteUrl);
+                ? createWorkflowJobWithOptionalParameters(apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, artifactConfigurationSlug, description, userDefinedParamName, userDefinedParamValue, false)
+                : createWorkflowJob(apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString, false);
 
         // ACT
-        QueueTaskFuture<WorkflowRun> runFuture = workflowJob.scheduleBuild2(0, buildData);
+        QueueTaskFuture<WorkflowRun> runFuture = workflowJob.scheduleBuild2(0);
         assert runFuture != null;
         WorkflowRun run = runFuture.get();
 
         // ASSERT
-        if (run.getResult() != Result.SUCCESS) {
-            assertEquals("", run.getLog() + run.getResult());
-            fail();
-        }
-
+        assertSuccess(run);
         assertTrue(run.getLog().contains("<returnValue>:\"" + signingRequestId + "\""));
 
-        if (withOptionalFields) {
-            assertSubmitWithoutArtifactRequest(apiToken, trustedBuildSystemToken, unsignedArtifactString,
-                    remoteUrl, organizationId, projectSlug, signingPolicySlug,
-                    artifactConfigurationSlug, userDefinedParamName, userDefinedParamValue, description);
-        } else {
-            assertSubmitWithoutArtifactRequest(apiToken, trustedBuildSystemToken, unsignedArtifactString,
-                    remoteUrl, organizationId, projectSlug, signingPolicySlug);
-        }
-        assertUploadRequest(uploadPath, unsignedArtifactString);
-        wireMockRule.verify(exactly(0), postRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests")));
+        assertConnectorSubmitRequest(apiToken, organizationId, projectSlug, signingPolicySlug);
         // Status endpoint must NOT have been polled (waitForCompletion was false)
-        wireMockRule.verify(exactly(0), getRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "/Status")));
+        wireMockRule.verify(exactly(0), getRequestedFor(urlEqualTo(statusRoute(organizationId, signingRequestId))));
     }
 
     @Theory
-    public void submitSigningRequest_onlyHashFileIsUploadedToJenkins() throws Exception {
+    public void submitSigningRequest_artifactAndSidecarAreArchived() throws Exception {
         String unsignedArtifactString = Some.stringNonEmpty();
-        String trustedBuildSystemTokenCredentialId = Some.stringNonEmpty();
-        String trustedBuildSystemToken = Some.stringNonEmpty();
         String apiTokenCredentialId = Some.stringNonEmpty();
         String apiToken = Some.stringNonEmpty();
         String organizationId = Some.uuid().toString();
@@ -274,69 +207,45 @@ public class SubmitSigningRequestStepEndToEndTest {
 
         CredentialsStore credentialStore = CredentialStoreUtils.getCredentialStore(j.jenkins);
         assert credentialStore != null;
-        CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, trustedBuildSystemTokenCredentialId, trustedBuildSystemToken);
         CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, apiTokenCredentialId, apiToken);
 
-        String apiUrl = getMockUrl();
-        String uploadPath = "/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "/UploadUnsignedArtifact";
+        stubConnectorSubmit(organizationId, signingRequestId);
 
-        stubSubmitWithoutArtifact(organizationId, signingRequestId, getMockUrl(uploadPath.substring(1)));
-        stubUploadUnsignedArtifact(uploadPath);
+        configureGlobalConfig();
 
-        SignPathPluginGlobalConfiguration globalConfig = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
-        globalConfig.setApiURL(apiUrl);
-        globalConfig.setTrustedBuildSystemCredentialId(trustedBuildSystemTokenCredentialId);
-
-        WorkflowJob workflowJob = createWorkflowJob(trustedBuildSystemTokenCredentialId, apiTokenCredentialId,
+        WorkflowJob workflowJob = createWorkflowJob(apiTokenCredentialId,
                 organizationId, Some.stringNonEmpty(), Some.stringNonEmpty(), unsignedArtifactString, false);
 
-        BuildData buildData = new BuildData(Some.stringNonEmpty());
-        buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(1));
-        buildData.addRemoteUrl(Some.url());
-
         // ACT
-        QueueTaskFuture<WorkflowRun> runFuture = workflowJob.scheduleBuild2(0, buildData);
+        QueueTaskFuture<WorkflowRun> runFuture = workflowJob.scheduleBuild2(0);
         assert runFuture != null;
         WorkflowRun run = runFuture.get();
 
         // ASSERT
-        if (run.getResult() != Result.SUCCESS) {
-            assertEquals("", run.getLog() + run.getResult());
-            fail();
-        }
+        assertSuccess(run);
 
         Launcher launcher = j.createLocalLauncher();
         TaskListener listener = j.createTaskListener();
         FingerprintMap fingerprintMap = j.jenkins.getFingerprintMap();
         DefaultArtifactFileManager artifactFileManager = new DefaultArtifactFileManager(fingerprintMap, run, launcher, listener);
 
-        // REVIEW: simplify and unify hashing functionality (see other comments about hashing)
-        // The .sha256 file MUST be archived on Jenkins
+        // The .sha256 sidecar MUST be archived on Jenkins and contain the base64-encoded SHA-256 of the artifact
         TemporaryFile hashFile = artifactFileManager.retrieveArtifact(SHA256_ARTIFACT_PATH);
         byte[] hashFileContent = TemporaryFileUtil.getContentAndDispose(hashFile);
         String sha256Base64 = new String(hashFileContent, StandardCharsets.UTF_8);
-
-        // Verify the content is a valid base64-encoded SHA-256 hash (44 chars with padding)
         byte[] decodedHash = Base64.getDecoder().decode(sha256Base64);
         assertEquals(32, decodedHash.length);
-
-        // Verify the hash matches the artifact content
         byte[] expectedSha256Bytes = DigestUtils.sha256(unsignedArtifactString.getBytes(StandardCharsets.UTF_8));
         assertArrayEquals(expectedSha256Bytes, decodedHash);
 
-        // The original unsigned artifact must NOT be archived on Jenkins
-        try {
-            artifactFileManager.retrieveArtifact(UNSIGNED_ARTIFACT_PATH);
-            fail("Expected ArtifactNotFoundException: the original artifact should not be uploaded to Jenkins");
-        } catch (ArtifactNotFoundException expected) {
-            // correct: the artifact is not on Jenkins
-        }
+        // The unsigned artifact itself MUST also be archived (the connector pulls it from Jenkins).
+        TemporaryFile artifactFile = artifactFileManager.retrieveArtifact(UNSIGNED_ARTIFACT_PATH);
+        byte[] artifactContent = TemporaryFileUtil.getContentAndDispose(artifactFile);
+        assertArrayEquals(unsignedArtifactString.getBytes(StandardCharsets.UTF_8), artifactContent);
     }
 
     @Theory
     public void submitSigningRequest_withArtifactRetrievalUrl(@FromDataPoints("allBooleans") boolean waitForCompletion) throws Exception {
-        String trustedBuildSystemTokenCredentialId = Some.stringNonEmpty();
-        String trustedBuildSystemToken = Some.stringNonEmpty();
         String unsignedArtifactString = Some.stringNonEmpty();
         String apiTokenCredentialId = Some.stringNonEmpty();
         String apiToken = Some.stringNonEmpty();
@@ -350,73 +259,54 @@ public class SubmitSigningRequestStepEndToEndTest {
 
         CredentialsStore credentialStore = CredentialStoreUtils.getCredentialStore(j.jenkins);
         assert credentialStore != null;
-        CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, trustedBuildSystemTokenCredentialId, trustedBuildSystemToken);
         CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, apiTokenCredentialId, apiToken);
 
-        String apiUrl = getMockUrl();
-
-        stubSubmitWithArtifactRetrievalLink(organizationId, signingRequestId);
+        stubConnectorSubmit(organizationId, signingRequestId);
         if (waitForCompletion) {
-            stubGetSigningRequestStatus(organizationId, signingRequestId);
+            stubConnectorStatus(organizationId, signingRequestId);
         }
 
-        SignPathPluginGlobalConfiguration globalConfig = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
-        globalConfig.setApiURL(apiUrl);
-        globalConfig.setTrustedBuildSystemCredentialId(trustedBuildSystemTokenCredentialId);
+        configureGlobalConfig();
 
         WorkflowJob workflowJob = createWorkflowJobWithArtifactRetrievalUrl(
-                trustedBuildSystemTokenCredentialId, apiTokenCredentialId,
-                organizationId, projectSlug, signingPolicySlug, unsignedArtifactString,
+                apiTokenCredentialId, organizationId, projectSlug, signingPolicySlug, unsignedArtifactString,
                 retrievalUrl, retrievalHeaderName, retrievalHeaderValue, waitForCompletion);
 
-        String remoteUrl = Some.url();
-        BuildData buildData = new BuildData(Some.stringNonEmpty());
-        buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(1));
-        buildData.addRemoteUrl(remoteUrl);
-
         // ACT
-        QueueTaskFuture<WorkflowRun> runFuture = workflowJob.scheduleBuild2(0, buildData);
+        QueueTaskFuture<WorkflowRun> runFuture = workflowJob.scheduleBuild2(0);
         assert runFuture != null;
         WorkflowRun run = runFuture.get();
 
         // ASSERT
-        if (run.getResult() != Result.SUCCESS) {
-            assertEquals("", run.getLog() + run.getResult());
-            fail();
-        }
-
+        assertSuccess(run);
         assertTrue(run.getLog().contains("<returnValue>:\"" + signingRequestId + "\""));
 
         if (waitForCompletion) {
-            // Signed artifact must NOT be archived automatically - customer uses getSignedArtifact step
-            assertSignedArtifactNotArchived(run);
-            wireMockRule.verify(getRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "/Status")));
+            assertArtifactNotArchived(run, SIGNED_ARTIFACT_PATH);
+            wireMockRule.verify(getRequestedFor(urlEqualTo(statusRoute(organizationId, signingRequestId))));
         }
 
-        String sha256Hex = DigestUtils.sha256Hex(unsignedArtifactString.getBytes(StandardCharsets.UTF_8));
-        assertSubmitWithArtifactRetrievalLinkRequest(
-                apiToken, trustedBuildSystemToken, organizationId, projectSlug, signingPolicySlug,
-                sha256Hex, retrievalUrl, retrievalHeaderName);
+        // In retrieval-URL mode only the sidecar is archived; the artifact itself is not.
+        assertArtifactArchived(run, SHA256_ARTIFACT_PATH);
+        assertArtifactNotArchived(run, UNSIGNED_ARTIFACT_PATH);
+
+        wireMockRule.verify(postRequestedFor(urlEqualTo(submitRoute(organizationId)))
+                .withHeader("Authorization", equalTo("Bearer " + apiToken))
+                .withRequestBody(containing("\"InputArtifactRetrievalUrl\":\"" + retrievalUrl + "\""))
+                .withRequestBody(containing("\"InputArtifactRetrievalHttpHeaders\"")));
 
         // The header value must NOT appear in the build log (sensitive data)
         assertFalse("Header value must not be logged", run.getLog().contains(retrievalHeaderValue));
-
-        // Neither the old upload-based routes nor the direct upload must have been called
-        wireMockRule.verify(exactly(0), postRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests/SubmitWithoutArtifact")));
-        wireMockRule.verify(exactly(0), postRequestedFor(urlPathMatching("/v1/" + organizationId + "/SigningRequests/.*/UploadUnsignedArtifact")));
     }
 
     @Theory
     public void submitSigningRequest_withOutputArtifactPathButNoWaitForCompletion_fails() throws Exception {
-        SignPathPluginGlobalConfiguration globalConfig = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
-        globalConfig.setApiURL(getMockUrl());
-        globalConfig.setTrustedBuildSystemCredentialId(Some.stringNonEmpty());
+        configureGlobalConfig();
 
         WorkflowJob workflowJob = j.createWorkflow("SignPath",
                 "writeFile text: 'content', file: '" + UNSIGNED_ARTIFACT_PATH + "'; " +
                         "submitSigningRequest(" +
                         "inputArtifactPath: '" + UNSIGNED_ARTIFACT_PATH + "', " +
-                        "trustedBuildSystemTokenCredentialId: '" + Some.stringNonEmpty() + "'," +
                         "apiTokenCredentialId: '" + Some.stringNonEmpty() + "'," +
                         "organizationId: '" + Some.uuid() + "'," +
                         "projectSlug: '" + Some.stringNonEmpty() + "'," +
@@ -424,12 +314,8 @@ public class SubmitSigningRequestStepEndToEndTest {
                         "waitForCompletion: false," +
                         "outputArtifactPath: '" + SIGNED_ARTIFACT_PATH + "');");
 
-        BuildData buildData = new BuildData(Some.stringNonEmpty());
-        buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(1));
-        buildData.addRemoteUrl(Some.url());
-
         // ACT
-        QueueTaskFuture<WorkflowRun> runFuture = workflowJob.scheduleBuild2(0, buildData);
+        QueueTaskFuture<WorkflowRun> runFuture = workflowJob.scheduleBuild2(0);
         assert runFuture != null;
         WorkflowRun run = runFuture.get();
 
@@ -440,27 +326,20 @@ public class SubmitSigningRequestStepEndToEndTest {
 
     @Theory
     public void submitSigningRequest_withRetrievalHttpHeadersButNoUrl_fails() throws Exception {
-        SignPathPluginGlobalConfiguration globalConfig = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
-        globalConfig.setApiURL(getMockUrl());
-        globalConfig.setTrustedBuildSystemCredentialId(Some.stringNonEmpty());
+        configureGlobalConfig();
 
         WorkflowJob workflowJob = j.createWorkflow("SignPath",
                 "writeFile text: 'content', file: '" + UNSIGNED_ARTIFACT_PATH + "'; " +
                         "submitSigningRequest(" +
                         "inputArtifactPath: '" + UNSIGNED_ARTIFACT_PATH + "', " +
-                        "trustedBuildSystemTokenCredentialId: '" + Some.stringNonEmpty() + "'," +
                         "apiTokenCredentialId: '" + Some.stringNonEmpty() + "'," +
                         "organizationId: '" + Some.uuid() + "'," +
                         "projectSlug: '" + Some.stringNonEmpty() + "'," +
                         "signingPolicySlug: '" + Some.stringNonEmpty() + "'," +
                         "inputArtifactRetrievalHttpHeaders: [ Authorization: 'Bearer token' ]);");
 
-        BuildData buildData = new BuildData(Some.stringNonEmpty());
-        buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(1));
-        buildData.addRemoteUrl(Some.url());
-
         // ACT
-        QueueTaskFuture<WorkflowRun> runFuture = workflowJob.scheduleBuild2(0, buildData);
+        QueueTaskFuture<WorkflowRun> runFuture = workflowJob.scheduleBuild2(0);
         assert runFuture != null;
         WorkflowRun run = runFuture.get();
 
@@ -471,17 +350,12 @@ public class SubmitSigningRequestStepEndToEndTest {
 
     @Theory
     public void submitSigningRequest_withMissingField_fails() throws Exception {
-        SignPathPluginGlobalConfiguration globalConfig = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
-        globalConfig.setApiURL(getMockUrl());
+        configureGlobalConfig();
 
         WorkflowJob workflowJob = j.createWorkflow("SignPath", "submitSigningRequest();");
 
-        BuildData buildData = new BuildData(Some.stringNonEmpty());
-        buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(1));
-        buildData.addRemoteUrl(Some.url());
-
         // ACT
-        QueueTaskFuture<WorkflowRun> runFuture = workflowJob.scheduleBuild2(0, buildData);
+        QueueTaskFuture<WorkflowRun> runFuture = workflowJob.scheduleBuild2(0);
         assert runFuture != null;
         WorkflowRun run = runFuture.get();
 
@@ -491,111 +365,78 @@ public class SubmitSigningRequestStepEndToEndTest {
     }
 
     @Theory
-    public void submitSigningRequest_withApiUrlParam_fails() throws Exception {
+    public void submitSigningRequest_withMissingConnectorEndpointSlug_fails() throws Exception {
+        String apiTokenCredentialId = Some.stringNonEmpty();
+        String apiToken = Some.stringNonEmpty();
+        CredentialsStore credentialStore = CredentialStoreUtils.getCredentialStore(j.jenkins);
+        assert credentialStore != null;
+        CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, apiTokenCredentialId, apiToken);
+
+        // Connector URL configured but no endpoint slug (globally or at the step level)
         SignPathPluginGlobalConfiguration globalConfig = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
-        globalConfig.setApiURL(getMockUrl());
-        globalConfig.setTrustedBuildSystemCredentialId(Some.stringNonEmpty());
+        globalConfig.setConnectorURL(getMockUrl());
 
-        WorkflowJob workflowJob = j.createWorkflow("SignPath",
-                "writeFile text: 'content', file: '" + UNSIGNED_ARTIFACT_PATH + "'; " +
-                        "submitSigningRequest(" +
-                        "apiUrl: '" + getMockUrl() + "'," +
-                        "inputArtifactPath: '" + UNSIGNED_ARTIFACT_PATH + "'," +
-                        "trustedBuildSystemTokenCredentialId: '" + Some.stringNonEmpty() + "'," +
-                        "apiTokenCredentialId: '" + Some.stringNonEmpty() + "'," +
-                        "organizationId: '" + Some.uuid() + "'," +
-                        "projectSlug: '" + Some.stringNonEmpty() + "'," +
-                        "signingPolicySlug: '" + Some.stringNonEmpty() + "');");
-
-        BuildData buildData = new BuildData(Some.stringNonEmpty());
-        buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(1));
-        buildData.addRemoteUrl(Some.url());
+        WorkflowJob workflowJob = createWorkflowJob(apiTokenCredentialId, Some.uuid().toString(),
+                Some.stringNonEmpty(), Some.stringNonEmpty(), Some.stringNonEmpty(), false);
 
         // ACT
-        QueueTaskFuture<WorkflowRun> runFuture = workflowJob.scheduleBuild2(0, buildData);
-        assert runFuture != null;
-        WorkflowRun run = runFuture.get();
-
-        // ASSERT - apiUrl is no longer a valid parameter; the step should fail
-        assertEquals(Result.FAILURE, run.getResult());
-    }
-
-    @DataPoints("allInvalidRootUrls")
-    public static String[] allInvalidRootUrls() {
-        return new String[]{"", "not a valid url"};
-    }
-
-    @Theory
-    public void submitSigningRequest_withWrongOrMissingRootUrl_fails(@FromDataPoints("allInvalidRootUrls") String rootUrl) throws Exception {
-        String organizationId = Some.uuid().toString();
-
-        SignPathPluginGlobalConfiguration globalConfig = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
-        String mockUrl = getMockUrl();
-        String tbsToken = Some.stringNonEmpty();
-        globalConfig.setApiURL(mockUrl);
-        globalConfig.setTrustedBuildSystemCredentialId(tbsToken);
-
-        WorkflowJob workflowJob = createWorkflowJob(tbsToken, Some.stringNonEmpty(), organizationId, Some.stringNonEmpty(), Some.stringNonEmpty(), Some.stringNonEmpty(), false);
-
-        BuildData buildData = new BuildData(Some.stringNonEmpty());
-        buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(1));
-        buildData.addRemoteUrl(Some.url());
-
-        // we set a missing root-url
-        JenkinsLocationConfiguration.get().setUrl(rootUrl);
-
-        // ACT
-        QueueTaskFuture<WorkflowRun> runFuture = workflowJob.scheduleBuild2(0, buildData);
+        QueueTaskFuture<WorkflowRun> runFuture = workflowJob.scheduleBuild2(0);
         assert runFuture != null;
         WorkflowRun run = runFuture.get();
 
         // ASSERT
         assertEquals(Result.FAILURE, run.getResult());
-        assertTrue(run.getLog(), run.getLog().contains("SignPathStepInvalidArgumentException"));
-        wireMockRule.verify(exactly(0), postRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests/SubmitWithoutArtifact")));
+        assertTrue(run.getLog().contains("connectorEndpointSlug"));
     }
 
     // ---- WireMock stubs ----
 
-    private void stubSubmitWithoutArtifact(String organizationId, String signingRequestId, String uploadLink) {
-        wireMockRule.stubFor(post(urlEqualTo("/v1/" + organizationId + "/SigningRequests/SubmitWithoutArtifact"))
+    private void stubConnectorSubmit(String organizationId, String signingRequestId) {
+        wireMockRule.stubFor(post(urlEqualTo(submitRoute(organizationId)))
                 .willReturn(aResponse()
                         .withStatus(201)
                         .withHeader("Content-Type", "application/json")
-                        .withBody("{\"signingRequestId\": \"" + signingRequestId + "\", \"uploadLink\": \"" + uploadLink + "\"}")));
+                        .withBody("{\"SigningRequestId\": \"" + signingRequestId + "\", \"SigningRequestUrl\": \""
+                                + getMockUrl("web/" + signingRequestId) + "\", \"Logs\": []}")));
     }
 
-    private void stubSubmitWithArtifactRetrievalLink(String organizationId, String signingRequestId) {
-        wireMockRule.stubFor(post(urlEqualTo("/v1/" + organizationId + "/SigningRequests/SubmitWithArtifactRetrievalLink"))
+    private void stubConnectorStatus(String organizationId, String signingRequestId) {
+        wireMockRule.stubFor(get(urlEqualTo(statusRoute(organizationId, signingRequestId)))
                 .willReturn(aResponse()
-                        .withStatus(201)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("{\"signingRequestId\": \"" + signingRequestId + "\", \"webLink\": \"" + getMockUrl("web/" + signingRequestId) + "\"}")));
+                        .withStatus(200)
+                        .withBody("{Status: 'Completed', IsFinalStatus: true, WebLink: 'https://app.signpath.io/sr'}")));
     }
 
-    private void stubUploadUnsignedArtifact(String uploadPath) {
-        wireMockRule.stubFor(post(urlEqualTo(uploadPath))
-                .willReturn(aResponse().withStatus(202)));
-    }
-
-    private void stubGetSignedArtifact(String organizationId, String signingRequestId, byte[] signedArtifactBytes) {
-        wireMockRule.stubFor(get(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "/SignedArtifact"))
+    private void stubConnectorSignedArtifact(String organizationId, String signingRequestId, byte[] signedArtifactBytes) {
+        wireMockRule.stubFor(get(urlEqualTo(signedArtifactRoute(organizationId, signingRequestId)))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody(signedArtifactBytes)));
     }
 
-    private void stubGetSigningRequestStatus(String organizationId, String signingRequestId) {
-        wireMockRule.stubFor(get(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "/Status"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withBody("{status: 'Completed', workflowStatus: 'Completed', isFinalStatus: true}")));
+    // ---- Routes ----
+
+    private static String submitRoute(String organizationId) {
+        return "/Jenkins/" + ENDPOINT_SLUG + "/" + organizationId + "/SigningRequests";
+    }
+
+    private static String statusRoute(String organizationId, String signingRequestId) {
+        return submitRoute(organizationId) + "/" + signingRequestId + "/Status";
+    }
+
+    private static String signedArtifactRoute(String organizationId, String signingRequestId) {
+        return submitRoute(organizationId) + "/" + signingRequestId + "/SignedArtifact";
     }
 
     // ---- Pipeline builders ----
 
-    private WorkflowJob createWorkflowJobWithOptionalParameters(String trustedBuildSystemTokenCredentialId,
-                                                                String apiTokenCredentialId,
+    private void configureGlobalConfig() {
+        SignPathPluginGlobalConfiguration globalConfig = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
+        globalConfig.setConnectorURL(getMockUrl());
+        globalConfig.setConnectorEndpointSlug(ENDPOINT_SLUG);
+    }
+
+    private WorkflowJob createWorkflowJobWithOptionalParameters(String apiTokenCredentialId,
                                                                 String organizationId,
                                                                 String projectSlug,
                                                                 String signingPolicySlug,
@@ -609,7 +450,6 @@ public class SubmitSigningRequestStepEndToEndTest {
                 "writeFile text: '" + unsignedArtifactString + "', file: '" + UNSIGNED_ARTIFACT_PATH + "'; " +
                         "echo '<returnValue>:\"'+ submitSigningRequest(" +
                         "inputArtifactPath: '" + UNSIGNED_ARTIFACT_PATH + "', " +
-                        "trustedBuildSystemTokenCredentialId: '" + trustedBuildSystemTokenCredentialId + "'," +
                         "apiTokenCredentialId: '" + apiTokenCredentialId + "'," +
                         "organizationId: '" + organizationId + "'," +
                         "projectSlug: '" + projectSlug + "'," +
@@ -623,8 +463,7 @@ public class SubmitSigningRequestStepEndToEndTest {
                         "waitForCompletionTimeoutInSeconds: 10) + '\"';");
     }
 
-    private WorkflowJob createWorkflowJob(String trustedBuildSystemTokenCredentialId,
-                                          String apiTokenCredentialId,
+    private WorkflowJob createWorkflowJob(String apiTokenCredentialId,
                                           String organizationId,
                                           String projectSlug,
                                           String signingPolicySlug,
@@ -634,7 +473,6 @@ public class SubmitSigningRequestStepEndToEndTest {
                 "writeFile text: '" + unsignedArtifactString + "', file: '" + UNSIGNED_ARTIFACT_PATH + "'; " +
                         "echo '<returnValue>:\"'+ submitSigningRequest(" +
                         "inputArtifactPath: '" + UNSIGNED_ARTIFACT_PATH + "', " +
-                        "trustedBuildSystemTokenCredentialId: '" + trustedBuildSystemTokenCredentialId + "'," +
                         "apiTokenCredentialId: '" + apiTokenCredentialId + "'," +
                         "organizationId: '" + organizationId + "'," +
                         "projectSlug: '" + projectSlug + "'," +
@@ -645,8 +483,7 @@ public class SubmitSigningRequestStepEndToEndTest {
                         "waitForCompletionTimeoutInSeconds: 10) + '\"';");
     }
 
-    private WorkflowJob createWorkflowJobWithArtifactRetrievalUrl(String trustedBuildSystemTokenCredentialId,
-                                                                   String apiTokenCredentialId,
+    private WorkflowJob createWorkflowJobWithArtifactRetrievalUrl(String apiTokenCredentialId,
                                                                    String organizationId,
                                                                    String projectSlug,
                                                                    String signingPolicySlug,
@@ -659,7 +496,6 @@ public class SubmitSigningRequestStepEndToEndTest {
                 "writeFile text: '" + unsignedArtifactString + "', file: '" + UNSIGNED_ARTIFACT_PATH + "'; " +
                         "echo '<returnValue>:\"'+ submitSigningRequest(" +
                         "inputArtifactPath: '" + UNSIGNED_ARTIFACT_PATH + "', " +
-                        "trustedBuildSystemTokenCredentialId: '" + trustedBuildSystemTokenCredentialId + "'," +
                         "apiTokenCredentialId: '" + apiTokenCredentialId + "'," +
                         "organizationId: '" + organizationId + "'," +
                         "projectSlug: '" + projectSlug + "'," +
@@ -674,6 +510,23 @@ public class SubmitSigningRequestStepEndToEndTest {
 
     // ---- Assertions ----
 
+    private void assertSuccess(WorkflowRun run) throws IOException {
+        if (run.getResult() != Result.SUCCESS) {
+            assertEquals("", run.getLog() + run.getResult());
+            fail();
+        }
+    }
+
+    private void assertConnectorSubmitRequest(String apiToken, String organizationId, String projectSlug, String signingPolicySlug) {
+        wireMockRule.verify(postRequestedFor(urlEqualTo(submitRoute(organizationId)))
+                .withHeader("Authorization", equalTo("Bearer " + apiToken))
+                .withRequestBody(containing("\"JobFullName\":\"" + JOB_FULL_NAME + "\""))
+                .withRequestBody(containing("\"BuildNumber\":1"))
+                .withRequestBody(containing("\"Sha256ArtifactPath\":\"" + SHA256_ARTIFACT_PATH + "\""))
+                .withRequestBody(containing("\"SignPathProjectSlug\":\"" + projectSlug + "\""))
+                .withRequestBody(containing("\"SignPathSigningPolicySlug\":\"" + signingPolicySlug + "\"")));
+    }
+
     private byte[] getSignedArtifactBytes(WorkflowJob workflowJob) throws IOException, InterruptedException {
         FilePath workspace = j.jenkins.getWorkspaceFor(workflowJob);
         assert workspace != null;
@@ -682,116 +535,31 @@ public class SubmitSigningRequestStepEndToEndTest {
         }
     }
 
-    private void assertSignedArtifactNotArchived(WorkflowRun run) throws IOException {
+    private void assertArtifactArchived(WorkflowRun run, String artifactPath) throws IOException {
+        DefaultArtifactFileManager artifactFileManager = newArtifactFileManager(run);
+        try {
+            TemporaryFile file = artifactFileManager.retrieveArtifact(artifactPath);
+            TemporaryFileUtil.getContentAndDispose(file);
+        } catch (ArtifactNotFoundException ex) {
+            fail("Expected artifact '" + artifactPath + "' to be archived on Jenkins, but it was not found.");
+        }
+    }
+
+    private void assertArtifactNotArchived(WorkflowRun run, String artifactPath) throws IOException {
+        DefaultArtifactFileManager artifactFileManager = newArtifactFileManager(run);
+        try {
+            artifactFileManager.retrieveArtifact(artifactPath);
+            fail("Expected artifact '" + artifactPath + "' NOT to be archived on Jenkins, but it was found.");
+        } catch (ArtifactNotFoundException expected) {
+            // correct behavior
+        }
+    }
+
+    private DefaultArtifactFileManager newArtifactFileManager(WorkflowRun run) throws IOException {
         Launcher launcher = j.createLocalLauncher();
         TaskListener listener = j.createTaskListener();
         FingerprintMap fingerprintMap = j.jenkins.getFingerprintMap();
-        DefaultArtifactFileManager artifactFileManager = new DefaultArtifactFileManager(fingerprintMap, run, launcher, listener);
-        try {
-            artifactFileManager.retrieveArtifact(SIGNED_ARTIFACT_PATH);
-            fail("Expected ArtifactNotFoundException: signed artifact should not be stored automatically by submitSigningRequest");
-        } catch (ArtifactNotFoundException expected) {
-            // correct behavior - customer must use getSignedArtifact step explicitly
-        }
-    }
-
-    private void assertSubmitWithoutArtifactRequest(
-            String apiToken,
-            String trustedBuildSystemToken,
-            String unsignedArtifactString,
-            String remoteUrl,
-            String organizationId,
-            String projectSlug,
-            String signingPolicySlug) {
-
-        String sha256Hex = DigestUtils.sha256Hex(unsignedArtifactString.getBytes(StandardCharsets.UTF_8));
-
-        wireMockRule.verify(postRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests/SubmitWithoutArtifact"))
-                .withHeader("Authorization", equalTo("Bearer " + apiToken + ":" + trustedBuildSystemToken))
-                .withRequestBodyPart(aMultipart().withName("unsignedArtifactMetadata.sha256Hash").withBody(equalTo(sha256Hex)).build())
-                .withRequestBodyPart(aMultipart().withName("unsignedArtifactMetadata.fileName").withBody(equalTo(UNSIGNED_ARTIFACT_PATH)).build())
-                .withRequestBodyPart(aMultipart().withBody(equalTo(projectSlug)).build())
-                .withRequestBodyPart(aMultipart().withBody(equalTo(signingPolicySlug)).build())
-                .withRequestBodyPart(aMultipart().withBody(equalTo(remoteUrl)).build()));
-
-        assertBuildSettingsFile(organizationId);
-    }
-
-    private void assertSubmitWithoutArtifactRequest(
-            String apiToken,
-            String trustedBuildSystemToken,
-            String unsignedArtifactString,
-            String remoteUrl,
-            String organizationId,
-            String projectSlug,
-            String signingPolicySlug,
-            String artifactConfigurationSlug,
-            String userDefinedParamName,
-            String userDefinedParamValue,
-            String description) {
-
-        String sha256Hex = DigestUtils.sha256Hex(unsignedArtifactString.getBytes(StandardCharsets.UTF_8));
-
-        wireMockRule.verify(postRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests/SubmitWithoutArtifact"))
-                .withHeader("Authorization", equalTo("Bearer " + apiToken + ":" + trustedBuildSystemToken))
-                .withRequestBodyPart(aMultipart().withName("unsignedArtifactMetadata.sha256Hash").withBody(equalTo(sha256Hex)).build())
-                .withRequestBodyPart(aMultipart().withName("unsignedArtifactMetadata.fileName").withBody(equalTo(UNSIGNED_ARTIFACT_PATH)).build())
-                .withRequestBodyPart(aMultipart().withBody(equalTo(projectSlug)).build())
-                .withRequestBodyPart(aMultipart().withBody(equalTo(signingPolicySlug)).build())
-                .withRequestBodyPart(aMultipart().withBody(equalTo(remoteUrl)).build())
-                .withRequestBodyPart(aMultipart().withBody(equalTo(description)).build())
-                .withRequestBodyPart(aMultipart().withBody(equalTo(artifactConfigurationSlug)).build())
-                .withRequestBodyPart(aMultipart().withBody(equalTo(userDefinedParamValue)).build())
-                .withRequestBodyPart(aMultipart().withName("Parameters." + userDefinedParamName).build()));
-
-        assertBuildSettingsFile(organizationId);
-    }
-
-    private void assertSubmitWithArtifactRetrievalLinkRequest(
-            String apiToken,
-            String trustedBuildSystemToken,
-            String organizationId,
-            String projectSlug,
-            String signingPolicySlug,
-            String sha256Hex,
-            String retrievalUrl,
-            String retrievalHeaderName) {
-
-        wireMockRule.verify(postRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests/SubmitWithArtifactRetrievalLink"))
-                .withHeader("Authorization", equalTo("Bearer " + apiToken + ":" + trustedBuildSystemToken))
-                .withRequestBodyPart(aMultipart().withName("ArtifactRetrievalLink.FileName").withBody(equalTo(UNSIGNED_ARTIFACT_PATH)).build())
-                .withRequestBodyPart(aMultipart().withName("ArtifactRetrievalLink.Sha256Hash").withBody(equalTo(sha256Hex)).build())
-                .withRequestBodyPart(aMultipart().withName("ArtifactRetrievalLink.Url").withBody(equalTo(retrievalUrl)).build())
-                .withRequestBodyPart(aMultipart().withName("ArtifactRetrievalLink.HttpHeaders[0].Key").withBody(equalTo(retrievalHeaderName)).build())
-                .withRequestBodyPart(aMultipart().withBody(equalTo(projectSlug)).build())
-                .withRequestBodyPart(aMultipart().withBody(equalTo(signingPolicySlug)).build()));
-
-        Request r = wireMockRule.findAll(postRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests/SubmitWithArtifactRetrievalLink"))).get(0);
-        String buildSettingsFile = getMultipartFormDataFileContents(r, "Origin.BuildData.BuildSettingsFile");
-        assertTrue(buildSettingsFile.contains("submitSigningRequest"));
-        assertTrue(buildSettingsFile.contains(organizationId));
-    }
-
-    private void assertUploadRequest(String uploadPath, String unsignedArtifactString) {
-        wireMockRule.verify(postRequestedFor(urlEqualTo(uploadPath))
-                .withRequestBody(equalTo(unsignedArtifactString)));
-    }
-
-    private void assertBuildSettingsFile(String organizationId) {
-        Request r = wireMockRule.findAll(postRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests/SubmitWithoutArtifact"))).get(0);
-        String buildSettingsFile = getMultipartFormDataFileContents(r, "Origin.BuildData.BuildSettingsFile");
-        assertTrue(buildSettingsFile.contains("node {writeFile text:"));
-        assertTrue(buildSettingsFile.contains(organizationId));
-    }
-
-    private String getMultipartFormDataFileContents(Request r, String name) {
-        for (Request.Part part : r.getParts()) {
-            if (name.equals(part.getName())) {
-                return part.getBody().asString();
-            }
-        }
-        fail("multipart-form-data with name " + name + " not found in " + r.getBodyAsString());
-        return null;
+        return new DefaultArtifactFileManager(fingerprintMap, run, launcher, listener);
     }
 
     private String getMockUrl() {

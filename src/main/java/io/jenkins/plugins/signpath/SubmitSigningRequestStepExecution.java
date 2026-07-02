@@ -1,22 +1,20 @@
 package io.jenkins.plugins.signpath;
 
 import com.cloudbees.plugins.credentials.CredentialsScope;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.FilePath;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.util.Secret;
-import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestWithArtifactRetrievalLinkModel;
-import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestWithoutArtifactModel;
-import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestOriginModel;
-import io.jenkins.plugins.signpath.ApiIntegration.Model.SubmitSigningRequestWithArtifactRetrievalLinkResult;
-import io.jenkins.plugins.signpath.ApiIntegration.Model.SubmitSigningRequestWithoutArtifactResult;
+import io.jenkins.plugins.signpath.ApiIntegration.Model.ConnectorSigningRequestModel;
+import io.jenkins.plugins.signpath.ApiIntegration.Model.SubmitSigningRequestResult;
+import io.jenkins.plugins.signpath.ApiIntegration.PipelineConnectorFacade;
+import io.jenkins.plugins.signpath.ApiIntegration.PipelineConnectorFacadeFactory;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathCredentials;
-import io.jenkins.plugins.signpath.ApiIntegration.SignPathFacade;
-import io.jenkins.plugins.signpath.ApiIntegration.SignPathFacadeFactory;
 import io.jenkins.plugins.signpath.Artifacts.ArtifactFileManager;
 import io.jenkins.plugins.signpath.Artifacts.ComputeArtifactHashCallable;
 import io.jenkins.plugins.signpath.Common.TemporaryFile;
 import io.jenkins.plugins.signpath.Exceptions.*;
-import io.jenkins.plugins.signpath.OriginRetrieval.OriginRetriever;
 import io.jenkins.plugins.signpath.SecretRetrieval.SecretRetriever;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -39,29 +37,28 @@ import java.util.UUID;
  * The step-execution for the
  * @see SubmitSigningRequestStep
  */
+@SuppressFBWarnings(value = {"SE_NO_SERIALVERSIONID", "SE_TRANSIENT_FIELD_NOT_RESTORED"},
+        justification = "Resume is not supported; the execution is never serialized, so all fields are deliberately transient.")
 public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingStepExecution<String> {
     // We do not support resuming execution and therefore can mark our fields as transient (=> not serialized)
     // If we want to support resuming, we need to remove 'transient' and make sure everything is serializable
     private transient final SubmitSigningRequestStepInput input;
     private transient final SecretRetriever secretRetriever;
-    private transient final OriginRetriever originRetriever;
     private transient final ArtifactFileManager artifactFileManager;
-    private transient final SignPathFacadeFactory signPathFacadeFactory;
+    private transient final PipelineConnectorFacadeFactory pipelineConnectorFacadeFactory;
     private transient final TaskListener taskListener;
 
     protected SubmitSigningRequestStepExecution(SubmitSigningRequestStepInput input,
                                                 SecretRetriever secretRetriever,
-                                                OriginRetriever originRetriever,
                                                 ArtifactFileManager artifactFileManager,
-                                                SignPathFacadeFactory signPathFacadeFactory,
+                                                PipelineConnectorFacadeFactory pipelineConnectorFacadeFactory,
                                                 TaskListener taskListener,
                                                 StepContext stepContext) {
         super(stepContext);
         this.input = input;
         this.secretRetriever = secretRetriever;
-        this.originRetriever = originRetriever;
         this.artifactFileManager = artifactFileManager;
-        this.signPathFacadeFactory = signPathFacadeFactory;
+        this.pipelineConnectorFacadeFactory = pipelineConnectorFacadeFactory;
         this.taskListener = taskListener;
     }
 
@@ -87,10 +84,19 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
         }
 
         try {
-            Secret trustedBuildSystemToken = secretRetriever.retrieveSecret(input.getTrustedBuildSystemTokenCredentialId());
             Secret apiToken = secretRetriever.retrieveSecret(input.getApiTokenCredentialId(), new CredentialsScope[]{CredentialsScope.SYSTEM, CredentialsScope.GLOBAL});
-            SignPathCredentials credentials = new SignPathCredentials(apiToken, trustedBuildSystemToken);
-            SignPathFacade signPathFacade = signPathFacadeFactory.create(credentials);
+            SignPathCredentials credentials = new SignPathCredentials(apiToken);
+            PipelineConnectorFacade pipelineConnectorFacade = pipelineConnectorFacadeFactory.create(credentials);
+
+            // Resolve the build identity so the connector can locate the build and its archived artifacts.
+            Run<?, ?> run = getContext().get(Run.class);
+            if (run == null) {
+                throw new ArtifactNotFoundException("Could not obtain the build from the step context.");
+            }
+            String jobFullName = run.getParent().getFullName();
+            int buildNumber = run.getNumber();
+            logger.printf("[PARAM] jobFullName: %s%n", jobFullName);
+            logger.printf("[PARAM] buildNumber: %d%n", buildNumber);
 
             // Resolve the artifact in the agent workspace
             FilePath workspace = getContext().get(FilePath.class);
@@ -107,7 +113,7 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
             logger.println("Computing SHA-256 hash of artifact on agent...");
             String sha256Hex = artifactFilePath.act(new ComputeArtifactHashCallable());
 
-            // Archive the .sha256 file (base64-encoded hash) to the Jenkins server
+            // Archive the .sha256 sidecar (base64-encoded hash) so the connector can read the expected hash.
             byte[] sha256Bytes = Hex.decodeHex(sha256Hex);
             String sha256Base64 = Base64.getEncoder().encodeToString(sha256Bytes);
             String sha256ArtifactPath = input.getInputArtifactPath() + ".sha256";
@@ -117,85 +123,67 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
             }
             logger.println("SHA-256 hash file archived: " + sha256ArtifactPath);
 
-            // Submit signing request and optionally wait for completion
-            try (SigningRequestOriginModel originModel = originRetriever.retrieveOrigin()) {
-                String fileName = FilenameUtils.getName(input.getInputArtifactPath());
-                UUID signingRequestId;
-                String webLink;
-
-                if (input.hasArtifactRetrievalUrl()) {
-                    // Retrieval link path: SignPath downloads the artifact from the provided URL
-                    logger.printf("Submitting signing request with artifact retrieval URL '%s'...%n", input.getInputArtifactRetrievalUrl());
-                    SigningRequestWithArtifactRetrievalLinkModel model = new SigningRequestWithArtifactRetrievalLinkModel(
-                            input.getOrganizationId(),
-                            fileName,
-                            sha256Hex,
-                            input.getProjectSlug(),
-                            input.getArtifactConfigurationSlug(),
-                            input.getSigningPolicySlug(),
-                            input.getDescription(),
-                            originModel,
-                            input.getParameters(),
-                            input.getInputArtifactRetrievalUrl(),
-                            input.getInputArtifactRetrievalHttpHeaders());
-
-                    SubmitSigningRequestWithArtifactRetrievalLinkResult submitResult = signPathFacade.submitSigningRequestWithArtifactRetrievalLink(model);
-                    signingRequestId = submitResult.getSigningRequestId();
-                    webLink = submitResult.getWebLink();
-                } else {
-                    // Direct upload path: artifact is uploaded from the agent to SignPath
-                    SigningRequestWithoutArtifactModel model = new SigningRequestWithoutArtifactModel(
-                            input.getOrganizationId(),
-                            fileName,
-                            sha256Hex,
-                            input.getProjectSlug(),
-                            input.getArtifactConfigurationSlug(),
-                            input.getSigningPolicySlug(),
-                            input.getDescription(),
-                            originModel,
-                            input.getParameters());
-
-                    SubmitSigningRequestWithoutArtifactResult submitResult = signPathFacade.submitSigningRequestWithoutArtifact(model);
-                    signingRequestId = submitResult.getSigningRequestId();
-                    webLink = submitResult.getWebLink();
-
-                    // Upload the artifact to SignPath
-                    logger.printf("Uploading artifact '%s' to SignPath...%n", input.getInputArtifactPath());
-                    try (InputStream artifactStream = artifactFilePath.read()) {
-                        signPathFacade.uploadUnsignedArtifact(submitResult.getUploadLink(), artifactStream);
-                    }
-                }
-
-                if (webLink != null && !webLink.isEmpty()) {
-                    logger.printf("Signing request URL: %s%n", webLink);
-                } else {
-                    logger.println("WARNING: Signing request URL was not provided by the server.");
-                }
-
-                // waitForFinalSigningRequestStatus is skipped when outputArtifactPath is set because
-                // getSignedArtifact below already waits for the final status internally.
-                if (input.getWaitForCompletion() && !input.hasOutputArtifactPath()) {
-                    signPathFacade.waitForFinalSigningRequestStatus(input.getOrganizationId(), signingRequestId);
-                }
-
-                if (input.hasOutputArtifactPath()) {
-                    // signedArtifact is a temporary download buffer on the controller, the try block ensures it is
-                    // cleaned up after its contents are copied to the persistent workspace file at outputArtifactPath.
-                    try (TemporaryFile signedArtifact = signPathFacade.getSignedArtifact(input.getOrganizationId(), signingRequestId)) {
-                        FilePath outputPath = workspace.child(input.getOutputArtifactPath());
-                        try (InputStream signedArtifactStream = new FileInputStream(signedArtifact.getFile())) {
-                            outputPath.copyFrom(signedArtifactStream);
-                        }
-                    }
-                }
-
-                if (input.getWaitForCompletion()) {
-                    logger.println("Signing step succeeded");
-                }
-
-                return signingRequestId.toString();
+            // For the streaming (direct upload) path the connector pulls the artifact itself from the
+            // build's archived artifacts, so we must archive it. For the retrieval-link path SignPath
+            // downloads the artifact from the provided URL and only the sidecar is needed.
+            if (!input.hasArtifactRetrievalUrl()) {
+                logger.printf("Archiving artifact '%s' so the connector can retrieve it...%n", input.getInputArtifactPath());
+                artifactFileManager.archiveWorkspaceArtifact(workspace, input.getInputArtifactPath());
             }
-        } catch (SecretNotFoundException | OriginNotRetrievableException | SignPathFacadeCallException |
+
+            ConnectorSigningRequestModel model = ConnectorSigningRequestModel.builder()
+                    .organizationId(input.getOrganizationId())
+                    .jobFullName(jobFullName)
+                    .buildNumber(buildNumber)
+                    .sha256ArtifactPath(sha256ArtifactPath)
+                    .projectSlug(input.getProjectSlug())
+                    .artifactConfigurationSlug(input.getArtifactConfigurationSlug())
+                    .signingPolicySlug(input.getSigningPolicySlug())
+                    .description(input.getDescription())
+                    .parameters(input.getParameters())
+                    .inputArtifactRetrievalUrl(input.getInputArtifactRetrievalUrl())
+                    .inputArtifactRetrievalHttpHeaders(input.getInputArtifactRetrievalHttpHeaders())
+                    .build();
+
+            if (input.hasArtifactRetrievalUrl()) {
+                logger.printf("Submitting signing request with artifact retrieval URL '%s'...%n", input.getInputArtifactRetrievalUrl());
+            } else {
+                logger.println("Submitting signing request...");
+            }
+
+            SubmitSigningRequestResult submitResult = pipelineConnectorFacade.submitSigningRequest(model);
+            UUID signingRequestId = submitResult.getSigningRequestId();
+            String webLink = submitResult.getWebLink();
+
+            if (webLink != null && !webLink.isEmpty()) {
+                logger.printf("Signing request URL: %s%n", webLink);
+            } else {
+                logger.println("WARNING: Signing request URL was not provided by the server.");
+            }
+
+            // waitForFinalSigningRequestStatus is skipped when outputArtifactPath is set because
+            // getSignedArtifact below already waits for the final status internally.
+            if (input.getWaitForCompletion() && !input.hasOutputArtifactPath()) {
+                pipelineConnectorFacade.waitForFinalSigningRequestStatus(input.getOrganizationId(), signingRequestId);
+            }
+
+            if (input.hasOutputArtifactPath()) {
+                // signedArtifact is a temporary download buffer on the controller, the try block ensures it is
+                // cleaned up after its contents are copied to the persistent workspace file at outputArtifactPath.
+                try (TemporaryFile signedArtifact = pipelineConnectorFacade.getSignedArtifact(input.getOrganizationId(), signingRequestId)) {
+                    FilePath outputPath = workspace.child(input.getOutputArtifactPath());
+                    try (InputStream signedArtifactStream = new FileInputStream(signedArtifact.getFile())) {
+                        outputPath.copyFrom(signedArtifactStream);
+                    }
+                }
+            }
+
+            if (input.getWaitForCompletion()) {
+                logger.println("Signing step succeeded");
+            }
+
+            return signingRequestId.toString();
+        } catch (SecretNotFoundException | SignPathFacadeCallException |
                  ArtifactNotFoundException | IOException | InterruptedException | NoSuchAlgorithmException |
                  DecoderException ex) {
             logger.printf("%nSigning step failed: %s%n", ex.getMessage());

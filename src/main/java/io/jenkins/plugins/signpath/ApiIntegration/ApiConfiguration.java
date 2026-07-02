@@ -1,46 +1,20 @@
 package io.jenkins.plugins.signpath.ApiIntegration;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
 import java.net.URL;
 
 /**
- * Holds all general configuration values that are necessary for talking to the SignPath API
+ * Holds all general configuration values that are necessary for talking to the SignPath Pipeline Connector
  */
+@Getter
+@AllArgsConstructor
 public class ApiConfiguration {
-    private final URL apiUrl;
+    private final URL connectorUrl;
+    private final String endpointSlug;
     private final int serviceUnavailableTimeoutInSeconds;
     private final int uploadAndDownloadRequestTimeoutInSeconds;
     private final int waitForCompletionTimeoutInSeconds;
     private final int waitBetweenReadinessChecksInSeconds;
-
-    public ApiConfiguration(URL apiUrl,
-                            int serviceUnavailableTimeoutInSeconds,
-                            int uploadAndDownloadRequestTimeoutInSeconds,
-                            int waitForCompletionTimeoutInSeconds,
-                            int waitBetweenReadinessChecksInSeconds) {
-        this.apiUrl = apiUrl;
-        this.serviceUnavailableTimeoutInSeconds = serviceUnavailableTimeoutInSeconds;
-        this.uploadAndDownloadRequestTimeoutInSeconds = uploadAndDownloadRequestTimeoutInSeconds;
-        this.waitForCompletionTimeoutInSeconds = waitForCompletionTimeoutInSeconds;
-        this.waitBetweenReadinessChecksInSeconds = waitBetweenReadinessChecksInSeconds;
-    }
-
-    public URL getApiUrl() {
-        return apiUrl;
-    }
-
-    public int getServiceUnavailableTimeoutInSeconds() {
-        return serviceUnavailableTimeoutInSeconds;
-    }
-
-    public int getUploadAndDownloadRequestTimeoutInSeconds() {
-        return uploadAndDownloadRequestTimeoutInSeconds;
-    }
-
-    public int getWaitForCompletionTimeoutInSeconds() {
-        return waitForCompletionTimeoutInSeconds;
-    }
-
-    public int getWaitBetweenReadinessChecksInSeconds() {
-        return this.waitBetweenReadinessChecksInSeconds;
-    }
 }

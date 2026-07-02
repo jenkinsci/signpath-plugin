@@ -13,7 +13,6 @@ public class SubmitSigningRequestStepInput implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final UUID organizationId;
-    private final String trustedBuildSystemTokenCredentialId;
     private final String apiTokenCredentialId;
     private final String projectSlug;
     private final String artifactConfigurationSlug;
@@ -27,7 +26,6 @@ public class SubmitSigningRequestStepInput implements Serializable {
     private final Map<String, String> inputArtifactRetrievalHttpHeaders;
 
     public SubmitSigningRequestStepInput(UUID organizationId,
-                                         String trustedBuildSystemTokenCredentialId,
                                          String apiTokenCredentialId,
                                          String projectSlug,
                                          String artifactConfigurationSlug,
@@ -40,7 +38,6 @@ public class SubmitSigningRequestStepInput implements Serializable {
                                          String inputArtifactRetrievalUrl,
                                          Map<String, String> inputArtifactRetrievalHttpHeaders) {
         this.organizationId = organizationId;
-        this.trustedBuildSystemTokenCredentialId = trustedBuildSystemTokenCredentialId;
         this.apiTokenCredentialId = apiTokenCredentialId;
         this.projectSlug = projectSlug;
         this.artifactConfigurationSlug = artifactConfigurationSlug;
@@ -60,10 +57,6 @@ public class SubmitSigningRequestStepInput implements Serializable {
 
     public boolean getWaitForCompletion() {
         return waitForCompletion;
-    }
-
-    public String getTrustedBuildSystemTokenCredentialId() {
-        return trustedBuildSystemTokenCredentialId;
     }
 
     public String getApiTokenCredentialId() {

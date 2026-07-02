@@ -1,20 +1,11 @@
 package io.jenkins.plugins.signpath;
 
-import com.cloudbees.plugins.credentials.CredentialsScope;
-import com.cloudbees.plugins.credentials.CredentialsStore;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import hudson.util.FormValidation;
 import hudson.util.FormValidation.Kind;
-import io.jenkins.plugins.signpath.Exceptions.SecretNotFoundException;
-import io.jenkins.plugins.signpath.SecretRetrieval.CredentialBasedSecretRetriever;
-import io.jenkins.plugins.signpath.TestUtils.CredentialStoreUtils;
 import io.jenkins.plugins.signpath.TestUtils.SignPathJenkinsRule;
 import org.junit.Rule;
 
@@ -24,9 +15,6 @@ public class SignPathPluginGlobalConfigurationTest {
     @Rule
     public final SignPathJenkinsRule j = new SignPathJenkinsRule();
 
-    @Mock
-    private CredentialBasedSecretRetriever secretRetrieverMock;
-
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
@@ -34,69 +22,54 @@ public class SignPathPluginGlobalConfigurationTest {
     }
 
     @Test
-    public void testGetAndSetApiURL() {
-        String url = "https://api.example.com";
-        config.setApiURL(url);
-        assertEquals("The API URL should match the set value.", url, config.getApiURL());
+    public void testGetAndSetConnectorURL() {
+        String url = "https://connector.example.com";
+        config.setConnectorURL(url);
+        assertEquals("The Connector URL should match the set value.", url, config.getConnectorURL());
     }
-    
+
     @Test
-    public void testDoCheckApiURL_Valid() {
-        String validUrl = "https://api.example.com";
-        FormValidation result = config.doCheckApiURL(validUrl);
+    public void testDoCheckConnectorURL_Valid() {
+        String validUrl = "https://connector.example.com";
+        FormValidation result = config.doCheckConnectorURL(validUrl);
         assertEquals("Validation should pass with a valid url.", Kind.OK, result.kind);
     }
 
     @Test
-    public void testDoCheckApiURL_Invalid() {
+    public void testDoCheckConnectorURL_Invalid() {
         String invalidUrl = "invalid-url";
-        FormValidation result = config.doCheckApiURL(invalidUrl);
+        FormValidation result = config.doCheckConnectorURL(invalidUrl);
         assertEquals("Validation should fail.", FormValidation.Kind.ERROR, result.kind);
     }
 
     @Test
-    public void testDoCheckApiURL_EmptyValue() {
-        FormValidation result = config.doCheckApiURL("");
-        assertEquals("Validation should not pass for an empty value.", FormValidation.error("Api URL is required.").toString(), result.toString());
+    public void testDoCheckConnectorURL_EmptyValue() {
+        FormValidation result = config.doCheckConnectorURL("");
+        assertEquals("Validation should not pass for an empty value.", FormValidation.error("Connector URL is required.").toString(), result.toString());
     }
 
     @Test
-    public void testGetAndSetDefaultTrustedBuildSystemCredentialId() {
-        String credentialId = "test-credential-id";
-        config.setTrustedBuildSystemCredentialId(credentialId);
-        assertEquals("The TBS Credential ID should match the set value.", credentialId, config.getTrustedBuildSystemCredentialId());
-    }
-    
-    @Test
-    public void testDoCheckDefaultTrustedBuildSystemCredentialId_Valid() throws Exception {
-        String validCredentialId = "valid-id";
-        CredentialsStore credentialStore = CredentialStoreUtils.getCredentialStore(j.jenkins);
-        assert credentialStore != null;
-        CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, validCredentialId, "dummySecret");
-        FormValidation result = config.doCheckTrustedBuildSystemCredentialId(validCredentialId);
-        assertEquals("Validation should pass with a valid credential ID.", FormValidation.Kind.OK, result.kind);
+    public void testGetAndSetConnectorEndpointSlug() {
+        String slug = "JenkinsOnPrem";
+        config.setConnectorEndpointSlug(slug);
+        assertEquals("The connector endpoint slug should match the set value.", slug, config.getConnectorEndpointSlug());
     }
 
     @Test
-    public void testDoCheckDefaultTrustedBuildSystemCredentialId_Invalid() throws Exception {
-        String invalidCredentialId = "invalid-id";
-        doThrow(new SecretNotFoundException("Secret not found"))
-                .when(secretRetrieverMock)
-                .retrieveSecret(eq(invalidCredentialId), any());
-
-        FormValidation result = config.doCheckTrustedBuildSystemCredentialId(invalidCredentialId);
-        assertEquals("Validation should fail.", FormValidation.Kind.ERROR, result.kind);
+    public void testDoCheckConnectorEndpointSlug_Valid() {
+        FormValidation result = config.doCheckConnectorEndpointSlug("JenkinsOnPrem");
+        assertEquals("Validation should pass for a non-empty slug.", FormValidation.Kind.OK, result.kind);
     }
 
     @Test
-    public void testDoCheckDefaultTrustedBuildSystemCredentialId_EmptyValue() {
-        FormValidation result = config.doCheckTrustedBuildSystemCredentialId("");
-        assertEquals("Validation should pass for an empty value.", FormValidation.Kind.OK, result.kind);
+    public void testDoCheckConnectorEndpointSlug_EmptyValue() {
+        FormValidation result = config.doCheckConnectorEndpointSlug("");
+        assertEquals("Validation should pass for an empty value (resolved at the step level).", FormValidation.Kind.OK, result.kind);
     }
 
     @Test
     public void testGetAndSetDefaultOrganizationId() {
-        String organizationId = "123e4567-e89b-12d3-a456-426614174000"; 
+        String organizationId = "123e4567-e89b-12d3-a456-426614174000";
         config.setOrganizationId(organizationId);
         assertEquals("The organization ID should match the set value.", organizationId, config.getOrganizationId());
     }

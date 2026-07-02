@@ -60,7 +60,6 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
 
         SubmitSigningRequestStepInput input = new SubmitSigningRequestStepInput(
                 ensureValidUUID(getOrganizationIdWithGlobal(), "organizationId"),
-                ensureNotNull(getTrustedBuildSystemTokenCredentialIdWithGlobal(), "trustedBuildSystemTokenCredentialId"),
                 ensureNotNull(getApiTokenCredentialId(), "apiTokenCredentialId"),
                 ensureNotNull(getProjectSlug(), "projectSlug"),
                 getArtifactConfigurationSlug(),
@@ -78,9 +77,8 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
 
         return new SubmitSigningRequestStepExecution(input,
                 container.getSecretRetriever(),
-                container.getOriginRetriever(),
                 container.getArtifactFileManager(),
-                container.getSignPathFacadeFactory(),
+                container.getPipelineConnectorFacadeFactory(),
                 container.getTaskListener(),
                 container.getStepContext());
     }
