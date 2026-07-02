@@ -5,9 +5,9 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.FilePath;
 import hudson.model.TaskListener;
 import hudson.util.Secret;
+import io.jenkins.plugins.signpath.ApiIntegration.PipelineConnectorFacade;
+import io.jenkins.plugins.signpath.ApiIntegration.PipelineConnectorFacadeFactory;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathCredentials;
-import io.jenkins.plugins.signpath.ApiIntegration.SignPathFacade;
-import io.jenkins.plugins.signpath.ApiIntegration.SignPathFacadeFactory;
 import io.jenkins.plugins.signpath.Common.TemporaryFile;
 import io.jenkins.plugins.signpath.Exceptions.SecretNotFoundException;
 import io.jenkins.plugins.signpath.Exceptions.SignPathFacadeCallException;
@@ -33,18 +33,18 @@ public class GetSignedArtifactStepExecution extends SynchronousNonBlockingStepEx
     // If we want to support resuming, we need to remove 'transient' and make sure everything is serializable
     private transient final GetSignedArtifactStepInput input;
     private transient final SecretRetriever secretRetriever;
-    private transient final SignPathFacadeFactory signPathFacadeFactory;
+    private transient final PipelineConnectorFacadeFactory pipelineConnectorFacadeFactory;
     private transient final TaskListener taskListener;
 
     protected GetSignedArtifactStepExecution(GetSignedArtifactStepInput input,
                                              SecretRetriever secretRetriever,
-                                             SignPathFacadeFactory signPathFacadeFactory,
+                                             PipelineConnectorFacadeFactory pipelineConnectorFacadeFactory,
                                              TaskListener taskListener,
                                              StepContext stepContext) {
         super(stepContext);
         this.input = input;
         this.secretRetriever = secretRetriever;
-        this.signPathFacadeFactory = signPathFacadeFactory;
+        this.pipelineConnectorFacadeFactory = pipelineConnectorFacadeFactory;
         this.taskListener = taskListener;
     }
 
@@ -62,10 +62,10 @@ public class GetSignedArtifactStepExecution extends SynchronousNonBlockingStepEx
 
             Secret apiToken = secretRetriever.retrieveSecret(input.getApiTokenCredentialId(), new CredentialsScope[] { CredentialsScope.SYSTEM, CredentialsScope.GLOBAL });
             SignPathCredentials credentials = new SignPathCredentials(apiToken);
-            SignPathFacade signPathFacade = signPathFacadeFactory.create(credentials);
+            PipelineConnectorFacade pipelineConnectorFacade = pipelineConnectorFacadeFactory.create(credentials);
             // signedArtifact is a temporary download buffer on the controller, the try block ensures it is
             // cleaned up after its contents are copied to the persistent workspace file at outputArtifactPath.
-            try (TemporaryFile signedArtifact = signPathFacade.getSignedArtifact(input.getOrganizationId(), input.getSigningRequestId())) {
+            try (TemporaryFile signedArtifact = pipelineConnectorFacade.getSignedArtifact(input.getOrganizationId(), input.getSigningRequestId())) {
                 FilePath outputPath = workspace.child(input.getOutputArtifactPath());
                 try (InputStream in = new FileInputStream(signedArtifact.getFile())) {
                     outputPath.copyFrom(in);

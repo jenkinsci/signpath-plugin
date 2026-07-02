@@ -1,7 +1,7 @@
 package io.jenkins.plugins.signpath.ApiIntegration;
 
 import io.jenkins.plugins.signpath.ApiIntegration.Model.ConnectorSigningRequestModel;
-import io.jenkins.plugins.signpath.ApiIntegration.Model.SubmitResult;
+import io.jenkins.plugins.signpath.ApiIntegration.Model.SubmitSigningRequestResult;
 import io.jenkins.plugins.signpath.Common.TemporaryFile;
 import io.jenkins.plugins.signpath.Exceptions.SignPathFacadeCallException;
 
@@ -11,7 +11,7 @@ import java.util.UUID;
 /**
  * A facade for the SignPath Pipeline Connector
  */
-public interface SignPathFacade {
+public interface PipelineConnectorFacade {
 
     /**
      * Submits a signing request to the SignPath Pipeline Connector. The connector pulls the artifact and its
@@ -21,7 +21,7 @@ public interface SignPathFacade {
      * @return the signing request ID and web link
      * @throws SignPathFacadeCallException occurs if any user error has been made (i.e. misconfiguration)
      */
-    SubmitResult submitSigningRequest(ConnectorSigningRequestModel submitModel) throws SignPathFacadeCallException;
+    SubmitSigningRequestResult submitSigningRequest(ConnectorSigningRequestModel submitModel) throws SignPathFacadeCallException;
 
     /**
      * Waits for a signing request to reach a final status without downloading the artifact.

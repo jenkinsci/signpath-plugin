@@ -1,5 +1,8 @@
 package io.jenkins.plugins.signpath.ApiIntegration.Model;
 
+import lombok.Builder;
+import lombok.Getter;
+
 import java.util.Map;
 import java.util.UUID;
 
@@ -9,6 +12,8 @@ import java.util.UUID;
  * (identified by {@code jobFullName} + {@code buildNumber} + {@code sha256ArtifactPath}) and computes the
  * pipeline/origin data itself, so the plugin no longer uploads the artifact or gathers origin metadata.
  */
+@Getter
+@Builder
 public class ConnectorSigningRequestModel {
     private final UUID organizationId;
     private final String jobFullName;
@@ -21,72 +26,4 @@ public class ConnectorSigningRequestModel {
     private final Map<String, String> parameters;
     private final String inputArtifactRetrievalUrl;
     private final Map<String, String> inputArtifactRetrievalHttpHeaders;
-
-    public ConnectorSigningRequestModel(UUID organizationId,
-                                        String jobFullName,
-                                        int buildNumber,
-                                        String sha256ArtifactPath,
-                                        String projectSlug,
-                                        String artifactConfigurationSlug,
-                                        String signingPolicySlug,
-                                        String description,
-                                        Map<String, String> parameters,
-                                        String inputArtifactRetrievalUrl,
-                                        Map<String, String> inputArtifactRetrievalHttpHeaders) {
-        this.organizationId = organizationId;
-        this.jobFullName = jobFullName;
-        this.buildNumber = buildNumber;
-        this.sha256ArtifactPath = sha256ArtifactPath;
-        this.projectSlug = projectSlug;
-        this.artifactConfigurationSlug = artifactConfigurationSlug;
-        this.signingPolicySlug = signingPolicySlug;
-        this.description = description;
-        this.parameters = parameters;
-        this.inputArtifactRetrievalUrl = inputArtifactRetrievalUrl;
-        this.inputArtifactRetrievalHttpHeaders = inputArtifactRetrievalHttpHeaders;
-    }
-
-    public UUID getOrganizationId() {
-        return organizationId;
-    }
-
-    public String getJobFullName() {
-        return jobFullName;
-    }
-
-    public int getBuildNumber() {
-        return buildNumber;
-    }
-
-    public String getSha256ArtifactPath() {
-        return sha256ArtifactPath;
-    }
-
-    public String getProjectSlug() {
-        return projectSlug;
-    }
-
-    public String getArtifactConfigurationSlug() {
-        return artifactConfigurationSlug;
-    }
-
-    public String getSigningPolicySlug() {
-        return signingPolicySlug;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public Map<String, String> getParameters() {
-        return parameters;
-    }
-
-    public String getInputArtifactRetrievalUrl() {
-        return inputArtifactRetrievalUrl;
-    }
-
-    public Map<String, String> getInputArtifactRetrievalHttpHeaders() {
-        return inputArtifactRetrievalHttpHeaders;
-    }
 }

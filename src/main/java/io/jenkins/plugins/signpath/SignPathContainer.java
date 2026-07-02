@@ -3,8 +3,8 @@ package io.jenkins.plugins.signpath;
 import hudson.Launcher;
 import hudson.model.*;
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
+import io.jenkins.plugins.signpath.ApiIntegration.PipelineConnectorFacadeFactory;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathClient.SignPathClientFacadeFactory;
-import io.jenkins.plugins.signpath.ApiIntegration.SignPathFacadeFactory;
 import io.jenkins.plugins.signpath.Artifacts.ArtifactFileManager;
 import io.jenkins.plugins.signpath.Artifacts.DefaultArtifactFileManager;
 import io.jenkins.plugins.signpath.SecretRetrieval.CredentialBasedSecretRetriever;
@@ -27,20 +27,20 @@ public class SignPathContainer {
     private final TaskListener taskListener;
     private final SecretRetriever secretRetriever;
     private final ArtifactFileManager artifactFileManager;
-    private final SignPathFacadeFactory signPathFacadeFactory;
+    private final PipelineConnectorFacadeFactory pipelineConnectorFacadeFactory;
 
     private SignPathContainer(StepContext stepContext,
                               Run<?, ?> run,
                               TaskListener taskListener,
                               SecretRetriever secretRetriever,
                               ArtifactFileManager artifactFileManager,
-                              SignPathFacadeFactory signPathFacadeFactory) {
+                              PipelineConnectorFacadeFactory pipelineConnectorFacadeFactory) {
         this.stepContext = stepContext;
         this.run = run;
         this.taskListener = taskListener;
         this.secretRetriever = secretRetriever;
         this.artifactFileManager = artifactFileManager;
-        this.signPathFacadeFactory = signPathFacadeFactory;
+        this.pipelineConnectorFacadeFactory = pipelineConnectorFacadeFactory;
     }
 
     public StepContext getStepContext() {
@@ -63,8 +63,8 @@ public class SignPathContainer {
         return artifactFileManager;
     }
 
-    public SignPathFacadeFactory getSignPathFacadeFactory() {
-        return signPathFacadeFactory;
+    public PipelineConnectorFacadeFactory getPipelineConnectorFacadeFactory() {
+        return pipelineConnectorFacadeFactory;
     }
 
     public static SignPathContainer build(StepContext context, ApiConfiguration apiConfiguration)
@@ -80,8 +80,8 @@ public class SignPathContainer {
         SecretRetriever secretRetriever = new CredentialBasedSecretRetriever(jenkins);
         ArtifactFileManager artifactFileManager = new DefaultArtifactFileManager(fingerprintMap, run, launcher, listener);
 
-        SignPathFacadeFactory signPathFacadeFactory = new SignPathClientFacadeFactory(apiConfiguration, logger);
+        PipelineConnectorFacadeFactory pipelineConnectorFacadeFactory = new SignPathClientFacadeFactory(apiConfiguration, logger);
 
-        return new SignPathContainer(context, run, listener, secretRetriever, artifactFileManager, signPathFacadeFactory);
+        return new SignPathContainer(context, run, listener, secretRetriever, artifactFileManager, pipelineConnectorFacadeFactory);
     }
 }

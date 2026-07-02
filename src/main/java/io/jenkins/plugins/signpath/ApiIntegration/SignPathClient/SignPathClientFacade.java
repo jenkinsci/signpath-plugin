@@ -2,9 +2,9 @@ package io.jenkins.plugins.signpath.ApiIntegration.SignPathClient;
 //</editor-fold>
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.ConnectorSigningRequestModel;
-import io.jenkins.plugins.signpath.ApiIntegration.Model.SubmitResult;
+import io.jenkins.plugins.signpath.ApiIntegration.Model.SubmitSigningRequestResult;
+import io.jenkins.plugins.signpath.ApiIntegration.PipelineConnectorFacade;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathCredentials;
-import io.jenkins.plugins.signpath.ApiIntegration.SignPathFacade;
 import io.jenkins.plugins.signpath.Common.PluginConstants;
 import io.jenkins.plugins.signpath.Common.TemporaryFile;
 import io.jenkins.plugins.signpath.Exceptions.SignPathFacadeCallException;
@@ -27,7 +27,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 
-public class SignPathClientFacade implements SignPathFacade {
+public class SignPathClientFacade implements PipelineConnectorFacade {
 
     private final PipelineConnectorClient client;
     private final SignPathCredentials credentials;
@@ -55,7 +55,7 @@ public class SignPathClientFacade implements SignPathFacade {
     }
 
     @Override
-    public SubmitResult submitSigningRequest(ConnectorSigningRequestModel submitModel) throws SignPathFacadeCallException {
+    public SubmitSigningRequestResult submitSigningRequest(ConnectorSigningRequestModel submitModel) throws SignPathFacadeCallException {
         try {
             ConnectorSigningRequestSubmitRequest request = buildSubmitRequest(submitModel);
             ConnectorSubmitSigningRequestResponse response = this.client.submitSigningRequest(
@@ -74,7 +74,7 @@ public class SignPathClientFacade implements SignPathFacade {
                 throw new SignPathFacadeCallException(message);
             }
 
-            return new SubmitResult(
+            return new SubmitSigningRequestResult(
                     UUID.fromString(response.getSigningRequestId()),
                     response.getSigningRequestUrl());
         } catch (SignPathClientException ex) {

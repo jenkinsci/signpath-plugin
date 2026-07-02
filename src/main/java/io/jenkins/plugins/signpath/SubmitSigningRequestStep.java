@@ -78,7 +78,7 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
         return new SubmitSigningRequestStepExecution(input,
                 container.getSecretRetriever(),
                 container.getArtifactFileManager(),
-                container.getSignPathFacadeFactory(),
+                container.getPipelineConnectorFacadeFactory(),
                 container.getTaskListener(),
                 container.getStepContext());
     }
