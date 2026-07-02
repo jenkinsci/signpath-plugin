@@ -6,11 +6,9 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import hudson.FilePath;
 import hudson.model.Result;
 import hudson.model.queue.QueueTaskFuture;
-import hudson.plugins.git.util.BuildData;
 import io.jenkins.plugins.signpath.TestUtils.*;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.experimental.theories.Theories;
 import org.junit.experimental.theories.Theory;
@@ -27,6 +25,7 @@ import static org.junit.Assert.*;
 public class GetSignedArtifactStepEndToEndTest {
     private static final int MockServerPort = 51000;
     private static final String SIGNED_ARTIFACT_PATH = "signed.exe";
+    private static final String ENDPOINT_SLUG = "JenkinsOnPrem";
 
     @Rule
     public final SignPathJenkinsRule j = new SignPathJenkinsRule();
@@ -37,8 +36,6 @@ public class GetSignedArtifactStepEndToEndTest {
     @Theory
     public void getSignedArtifact() throws Exception {
         byte[] signedArtifactBytes = Some.bytes();
-        String trustedBuildSystemTokenCredentialId = Some.stringNonEmpty();
-        String trustedBuildSystemToken = Some.stringNonEmpty();
         String apiTokenCredentialId = Some.stringNonEmpty();
         String apiToken = Some.stringNonEmpty();
         String organizationId = Some.uuid().toString();
@@ -46,38 +43,33 @@ public class GetSignedArtifactStepEndToEndTest {
 
         CredentialsStore credentialStore = CredentialStoreUtils.getCredentialStore(j.jenkins);
         assert credentialStore != null;
-        CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, trustedBuildSystemTokenCredentialId, trustedBuildSystemToken);
         CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, apiTokenCredentialId, apiToken);
 
-        String apiUrl = getMockUrl();
         SignPathPluginGlobalConfiguration globalConfig = GlobalConfiguration.all().get(SignPathPluginGlobalConfiguration.class);
-        globalConfig.setApiURL(apiUrl);
-        globalConfig.setTrustedBuildSystemCredentialId(trustedBuildSystemTokenCredentialId);
+        globalConfig.setConnectorURL(getMockUrl());
+        globalConfig.setConnectorEndpointSlug(ENDPOINT_SLUG);
         globalConfig.setOrganizationId(organizationId);
-        
-        wireMockRule.stubFor(get(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "/Status"))
+
+        String statusRoute = "/Jenkins/" + ENDPOINT_SLUG + "/" + organizationId + "/SigningRequests/" + signingRequestId + "/Status";
+        String signedArtifactRoute = "/Jenkins/" + ENDPOINT_SLUG + "/" + organizationId + "/SigningRequests/" + signingRequestId + "/SignedArtifact";
+
+        wireMockRule.stubFor(get(urlEqualTo(statusRoute))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withBody("{status: 'Completed', workflowStatus: 'Completed', isFinalStatus: true}")));
+                        .withBody("{Status: 'Completed', IsFinalStatus: true, WebLink: 'https://app.signpath.io/sr'}")));
 
-        wireMockRule.stubFor(get(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "/SignedArtifact"))
+        wireMockRule.stubFor(get(urlEqualTo(signedArtifactRoute))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withBody(signedArtifactBytes)));
 
         WorkflowJob workflowJob = createWorkflowJob(
-            trustedBuildSystemTokenCredentialId,
             apiTokenCredentialId,
             organizationId,
             signingRequestId);
 
-        String remoteUrl = Some.url();
-        BuildData buildData = new BuildData(Some.stringNonEmpty());
-        buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(1));
-        buildData.addRemoteUrl(remoteUrl);
-
         // ACT
-        QueueTaskFuture<WorkflowRun> runFuture = workflowJob.scheduleBuild2(0, buildData);
+        QueueTaskFuture<WorkflowRun> runFuture = workflowJob.scheduleBuild2(0);
         assert runFuture != null;
         WorkflowRun run = runFuture.get();
 
@@ -90,7 +82,9 @@ public class GetSignedArtifactStepEndToEndTest {
         byte[] signedArtifactContent = getSignedArtifactBytes(workflowJob);
         assertArrayEquals(signedArtifactBytes, signedArtifactContent);
 
-        wireMockRule.verify(getRequestedFor(urlEqualTo("/v1/" + organizationId + "/SigningRequests/" + signingRequestId + "/Status"))
+        wireMockRule.verify(getRequestedFor(urlEqualTo(statusRoute))
+                .withHeader("Authorization", equalTo("Bearer " + apiToken)));
+        wireMockRule.verify(getRequestedFor(urlEqualTo(signedArtifactRoute))
                 .withHeader("Authorization", equalTo("Bearer " + apiToken)));
     }
 
@@ -98,12 +92,8 @@ public class GetSignedArtifactStepEndToEndTest {
     public void getSignedArtifact_withMissingField_fails() throws Exception {
         WorkflowJob workflowJob = j.createWorkflow("SignPath", "getSignedArtifact();");
 
-        BuildData buildData = new BuildData(Some.stringNonEmpty());
-        buildData.saveBuild(BuildDataDomainObjectMother.createRandomBuild(1));
-        buildData.addRemoteUrl(Some.url());
-
         // ACT
-        QueueTaskFuture<WorkflowRun> runFuture = workflowJob.scheduleBuild2(0, buildData);
+        QueueTaskFuture<WorkflowRun> runFuture = workflowJob.scheduleBuild2(0);
         assert runFuture != null;
         WorkflowRun run = runFuture.get();
 
@@ -112,14 +102,12 @@ public class GetSignedArtifactStepEndToEndTest {
         assertTrue(run.getLog().contains("SignPathStepInvalidArgumentException"));
     }
 
-    private WorkflowJob createWorkflowJob(String trustedBuildSystemTokenCredentialId,
-                                          String apiTokenCredentialId,
+    private WorkflowJob createWorkflowJob(String apiTokenCredentialId,
                                           String organizationId,
                                           String signingRequestId) throws IOException {
         return j.createWorkflow("SignPath",
                 "getSignedArtifact(" +
                         "outputArtifactPath: '" + SIGNED_ARTIFACT_PATH + "', " +
-                        "trustedBuildSystemTokenCredentialId: '" + trustedBuildSystemTokenCredentialId + "'," +
                         "apiTokenCredentialId: '" + apiTokenCredentialId + "'," +
                         "organizationId: '" + organizationId + "'," +
                         "signingRequestId: '" + signingRequestId + "'," +
@@ -129,11 +117,7 @@ public class GetSignedArtifactStepEndToEndTest {
     }
 
     private String getMockUrl() {
-        return getMockUrl("");
-    }
-
-    private String getMockUrl(String postfix) {
-        return String.format("http://localhost:%d/%s", MockServerPort, postfix);
+        return String.format("http://localhost:%d/", MockServerPort);
     }
 
     private byte[] getSignedArtifactBytes(WorkflowJob workflowJob) throws IOException, InterruptedException {

@@ -1,6 +1,7 @@
 package io.jenkins.plugins.signpath;
 
 import com.cloudbees.plugins.credentials.CredentialsScope;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.FilePath;
 import hudson.model.TaskListener;
 import hudson.util.Secret;
@@ -25,6 +26,8 @@ import java.io.PrintStream;
  *
  * @see GetSignedArtifactStep
  */
+@SuppressFBWarnings(value = {"SE_NO_SERIALVERSIONID", "SE_TRANSIENT_FIELD_NOT_RESTORED"},
+        justification = "Resume is not supported; the execution is never serialized, so all fields are deliberately transient.")
 public class GetSignedArtifactStepExecution extends SynchronousNonBlockingStepExecution<Void> {
     // We do not support resuming execution and therefore can mark our fields as transient (=> not serialized)
     // If we want to support resuming, we need to remove 'transient' and make sure everything is serializable
@@ -57,9 +60,8 @@ public class GetSignedArtifactStepExecution extends SynchronousNonBlockingStepEx
                 throw new IOException("Could not obtain workspace from step context.");
             }
 
-            Secret trustedBuildSystemToken = secretRetriever.retrieveSecret(input.getTrustedBuildSystemTokenCredentialId());
             Secret apiToken = secretRetriever.retrieveSecret(input.getApiTokenCredentialId(), new CredentialsScope[] { CredentialsScope.SYSTEM, CredentialsScope.GLOBAL });
-            SignPathCredentials credentials = new SignPathCredentials(apiToken, trustedBuildSystemToken);
+            SignPathCredentials credentials = new SignPathCredentials(apiToken);
             SignPathFacade signPathFacade = signPathFacadeFactory.create(credentials);
             // signedArtifact is a temporary download buffer on the controller, the try block ensures it is
             // cleaned up after its contents are copied to the persistent workspace file at outputArtifactPath.

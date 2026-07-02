@@ -1,26 +1,26 @@
 package io.jenkins.plugins.signpath.ApiIntegration.SignPathClient;
 //</editor-fold>
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
-import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestOriginModel;
-import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestWithArtifactRetrievalLinkModel;
-import io.jenkins.plugins.signpath.ApiIntegration.Model.SigningRequestWithoutArtifactModel;
-import io.jenkins.plugins.signpath.ApiIntegration.Model.SubmitSigningRequestWithArtifactRetrievalLinkResult;
-import io.jenkins.plugins.signpath.ApiIntegration.Model.SubmitSigningRequestWithoutArtifactResult;
+import io.jenkins.plugins.signpath.ApiIntegration.Model.ConnectorSigningRequestModel;
+import io.jenkins.plugins.signpath.ApiIntegration.Model.SubmitResult;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathCredentials;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathFacade;
+import io.jenkins.plugins.signpath.Common.PluginConstants;
 import io.jenkins.plugins.signpath.Common.TemporaryFile;
 import io.jenkins.plugins.signpath.Exceptions.SignPathFacadeCallException;
-import io.signpath.signpathclient.api.model.SigningRequestSubmitWithArtifactRetrievalLinkResponse;
-import io.signpath.signpathclient.api.model.SigningRequestSubmitWithoutArtifactResponse;
+import io.signpath.signpathclient.connector.PipelineConnectorClient;
+import io.signpath.signpathclient.connector.model.ConnectorLogEntry;
+import io.signpath.signpathclient.connector.model.ConnectorSigningRequestStatusResponse;
+import io.signpath.signpathclient.connector.model.ConnectorSigningRequestSubmitRequest;
+import io.signpath.signpathclient.connector.model.ConnectorSubmitSigningRequestResponse;
+import io.signpath.signpathclient.connector.model.ConnectorUserDefinedParameter;
 import io.signpath.signpathclient.SignPathClientSettings;
-import io.signpath.signpathclient.SignPathClient;
 import io.signpath.signpathclient.SignPathClientException;
 import io.signpath.signpathclient.SignPathClientSimpleLogger;
-import io.signpath.signpathclient.api.model.SigningRequestStatusResponse;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -29,20 +29,22 @@ import jenkins.model.Jenkins;
 
 public class SignPathClientFacade implements SignPathFacade {
 
-    private final SignPathClient client;
+    private final PipelineConnectorClient client;
     private final SignPathCredentials credentials;
     private final ApiConfiguration apiConfiguration;
     private final SignPathClientSimpleLogger logger;
+    private final String endpointSlug;
 
     public SignPathClientFacade(SignPathCredentials credentials, ApiConfiguration apiConfiguration, SignPathClientSimpleLogger logger) {
         this.credentials = credentials;
         this.apiConfiguration = apiConfiguration;
         this.logger = logger;
-        String baseUrl = apiConfiguration.getApiUrl().toString();
+        this.endpointSlug = apiConfiguration.getEndpointSlug();
+        String baseUrl = apiConfiguration.getConnectorUrl().toString();
         if(!baseUrl.endsWith("/")) {
             baseUrl = baseUrl + "/";
         }
-        this.client = new SignPathClient(baseUrl, logger,
+        this.client = new PipelineConnectorClient(baseUrl, logger,
             new SignPathClientSettings(
                 apiConfiguration.getServiceUnavailableTimeoutInSeconds(),
                 apiConfiguration.getUploadAndDownloadRequestTimeoutInSeconds(),
@@ -53,65 +55,28 @@ public class SignPathClientFacade implements SignPathFacade {
     }
 
     @Override
-    public SubmitSigningRequestWithoutArtifactResult submitSigningRequestWithoutArtifact(SigningRequestWithoutArtifactModel submitModel) throws SignPathFacadeCallException {
+    public SubmitResult submitSigningRequest(ConnectorSigningRequestModel submitModel) throws SignPathFacadeCallException {
         try {
-            SigningRequestSubmitWithoutArtifactResponse response = this.client.submitWithoutArtifact(
+            ConnectorSigningRequestSubmitRequest request = buildSubmitRequest(submitModel);
+            ConnectorSubmitSigningRequestResponse response = this.client.submitSigningRequest(
                     credentials.getApiToken().getPlainText(),
-                    credentials.getTrustedBuildSystemToken().getPlainText(),
+                    PluginConstants.BUILD_SYSTEM_TYPE,
+                    endpointSlug,
                     submitModel.getOrganizationId().toString(),
-                    submitModel.getFileName(),
-                    submitModel.getSha256HexHash(),
-                    submitModel.getProjectSlug(),
-                    submitModel.getSigningPolicySlug(),
-                    submitModel.getArtifactConfigurationSlug(),
-                    submitModel.getDescription(),
-                    true,
-                    buildOriginData(submitModel.getOrigin()),
-                    submitModel.getParameters());
+                    request);
 
-            return new SubmitSigningRequestWithoutArtifactResult(
+            logConnectorLogs(response.getLogs());
+
+            if (response.getSigningRequestId() == null || response.getSigningRequestId().isEmpty()) {
+                String message = (response.getError() != null && !response.getError().isEmpty())
+                        ? response.getError()
+                        : "The connector did not return a signing request id";
+                throw new SignPathFacadeCallException(message);
+            }
+
+            return new SubmitResult(
                     UUID.fromString(response.getSigningRequestId()),
-                    response.getUploadLink(),
-                    response.getWebLink());
-        } catch (SignPathClientException ex) {
-            Logger.getLogger(SignPathClientFacade.class.getName()).log(Level.SEVERE, null, ex);
-            throw new SignPathFacadeCallException(ex.getMessage());
-        }
-    }
-
-    @Override
-    public SubmitSigningRequestWithArtifactRetrievalLinkResult submitSigningRequestWithArtifactRetrievalLink(SigningRequestWithArtifactRetrievalLinkModel submitModel) throws SignPathFacadeCallException {
-        try {
-            SigningRequestSubmitWithArtifactRetrievalLinkResponse response = this.client.submitWithArtifactRetrievalLink(
-                    credentials.getApiToken().getPlainText(),
-                    credentials.getTrustedBuildSystemToken().getPlainText(),
-                    submitModel.getOrganizationId().toString(),
-                    submitModel.getFileName(),
-                    submitModel.getSha256HexHash(),
-                    submitModel.getProjectSlug(),
-                    submitModel.getSigningPolicySlug(),
-                    submitModel.getArtifactConfigurationSlug(),
-                    submitModel.getDescription(),
-                    true,
-                    buildOriginData(submitModel.getOrigin()),
-                    submitModel.getParameters(),
-                    submitModel.getRetrievalUrl(),
-                    submitModel.getRetrievalHttpHeaders());
-
-            return new SubmitSigningRequestWithArtifactRetrievalLinkResult(
-                    UUID.fromString(response.getSigningRequestId()),
-                    response.getWebLink());
-        } catch (SignPathClientException ex) {
-            Logger.getLogger(SignPathClientFacade.class.getName()).log(Level.SEVERE, null, ex);
-            throw new SignPathFacadeCallException(ex.getMessage());
-        }
-    }
-
-    @Override
-    public void uploadUnsignedArtifact(String uploadLink, InputStream artifactStream) throws IOException, SignPathFacadeCallException {
-        try (TemporaryFile tempFile = new TemporaryFile()) {
-            tempFile.copyFrom(artifactStream);
-            client.uploadUnsignedArtifact(credentials.getApiToken().getPlainText(), uploadLink, tempFile.getFile());
+                    response.getSigningRequestUrl());
         } catch (SignPathClientException ex) {
             Logger.getLogger(SignPathClientFacade.class.getName()).log(Level.SEVERE, null, ex);
             throw new SignPathFacadeCallException(ex.getMessage());
@@ -121,8 +86,10 @@ public class SignPathClientFacade implements SignPathFacade {
     @Override
     public void waitForFinalSigningRequestStatus(UUID organizationId, UUID signingRequestId) throws SignPathFacadeCallException {
         try {
-            SigningRequestStatusResponse statusResponse = client.waitForFinalSigningRequestStatus(
+            ConnectorSigningRequestStatusResponse statusResponse = client.waitForFinalSigningRequestStatus(
                     credentials.getApiToken().getPlainText(),
+                    PluginConstants.BUILD_SYSTEM_TYPE,
+                    endpointSlug,
                     organizationId.toString(),
                     signingRequestId.toString());
             if (!statusResponse.isFinalStatus()) {
@@ -143,6 +110,8 @@ public class SignPathClientFacade implements SignPathFacade {
 
             client.downloadSignedArtifact(
                     credentials.getApiToken().getPlainText(),
+                    PluginConstants.BUILD_SYSTEM_TYPE,
+                    endpointSlug,
                     organizationId.toString(),
                     signingRequestID.toString(),
                     outputArtifact.getFile());
@@ -153,17 +122,46 @@ public class SignPathClientFacade implements SignPathFacade {
         }
     }
 
-    private Map<String, String> buildOriginData(SigningRequestOriginModel origin) {
-        Map<String, String> originParameters = new HashMap<>();
+    private ConnectorSigningRequestSubmitRequest buildSubmitRequest(ConnectorSigningRequestModel submitModel) {
+        ConnectorSigningRequestSubmitRequest request = new ConnectorSigningRequestSubmitRequest();
+        request.jobFullName = submitModel.getJobFullName();
+        request.buildNumber = submitModel.getBuildNumber();
+        request.sha256ArtifactPath = submitModel.getSha256ArtifactPath();
+        request.signPathProjectSlug = submitModel.getProjectSlug();
+        request.signPathSigningPolicySlug = submitModel.getSigningPolicySlug();
+        request.signPathArtifactConfigurationSlug = emptyToNull(submitModel.getArtifactConfigurationSlug());
+        request.signingRequestDescription = emptyToNull(submitModel.getDescription());
+        request.inputArtifactRetrievalUrl = emptyToNull(submitModel.getInputArtifactRetrievalUrl());
+        Map<String, String> httpHeaders = submitModel.getInputArtifactRetrievalHttpHeaders();
+        request.inputArtifactRetrievalHttpHeaders = (httpHeaders != null && !httpHeaders.isEmpty()) ? httpHeaders : null;
+        request.parameters = toParameterList(submitModel.getParameters());
+        return request;
+    }
 
-        originParameters.put("BuildData.Url", origin.getBuildUrl());
-        originParameters.put("BuildData.BuildSettingsFile", String.format("@%s", origin.getBuildSettingsFile().getAbsolutePath()));
-        originParameters.put("RepositoryData.BranchName", origin.getRepositoryMetadata().getBranchName());
-        originParameters.put("RepositoryData.CommitId", origin.getRepositoryMetadata().getCommitId());
-        originParameters.put("RepositoryData.Url", origin.getRepositoryMetadata().getRepositoryUrl());
-        originParameters.put("RepositoryData.SourceControlManagementType", origin.getRepositoryMetadata().getSourceControlManagementType());
+    private static List<ConnectorUserDefinedParameter> toParameterList(Map<String, String> parameters) {
+        if (parameters == null || parameters.isEmpty()) {
+            return null;
+        }
+        List<ConnectorUserDefinedParameter> result = new ArrayList<>();
+        for (Map.Entry<String, String> entry : parameters.entrySet()) {
+            result.add(new ConnectorUserDefinedParameter(entry.getKey(), entry.getValue()));
+        }
+        return result;
+    }
 
-        return originParameters;
+    private static String emptyToNull(String value) {
+        return (value == null || value.isEmpty()) ? null : value;
+    }
+
+    private void logConnectorLogs(List<ConnectorLogEntry> logs) {
+        if (logs == null) {
+            return;
+        }
+        for (ConnectorLogEntry entry : logs) {
+            if (entry != null && entry.getMessage() != null && !entry.getMessage().isEmpty()) {
+                logger.log(String.format("[CONNECTOR] %s", entry.getMessage()));
+            }
+        }
     }
 
     private String buildUserAgent(){

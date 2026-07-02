@@ -28,18 +28,18 @@ public abstract class SignPathStepBase extends Step {
     private int waitForCompletionTimeoutInSeconds = (int) TimeUnit.MINUTES.toSeconds(10);
     private int waitBetweenReadinessChecksInSeconds = (int) TimeUnit.SECONDS.toSeconds(5);
 
-    private String trustedBuildSystemTokenCredentialId;
+    private String connectorEndpointSlug;
     private String apiTokenCredentialId = PluginConstants.DEFAULT_API_TOKEN_CREDENTIAL_ID;
 
-    public String getTrustedBuildSystemTokenCredentialId() {
-        return trustedBuildSystemTokenCredentialId;
+    public String getConnectorEndpointSlug() {
+        return connectorEndpointSlug;
     }
 
-    public String getTrustedBuildSystemTokenCredentialIdWithGlobal() throws SignPathStepInvalidArgumentException {
+    public String getConnectorEndpointSlugWithGlobal() throws SignPathStepInvalidArgumentException {
         return getWithGlobalConfig(
-            trustedBuildSystemTokenCredentialId,
-            SignPathPluginGlobalConfiguration::getTrustedBuildSystemCredentialId,
-            "trustedBuildSystemTokenCredentialId", true);
+            connectorEndpointSlug,
+            SignPathPluginGlobalConfiguration::getConnectorEndpointSlug,
+            "connectorEndpointSlug", true);
     }
 
     public String getApiTokenCredentialId() {
@@ -63,8 +63,8 @@ public abstract class SignPathStepBase extends Step {
     }
 
     @DataBoundSetter
-    public void setTrustedBuildSystemTokenCredentialId(String trustedBuildSystemTokenCredentialId) {
-        this.trustedBuildSystemTokenCredentialId = trustedBuildSystemTokenCredentialId;
+    public void setConnectorEndpointSlug(String connectorEndpointSlug) {
+        this.connectorEndpointSlug = connectorEndpointSlug;
     }
 
     @DataBoundSetter
@@ -88,12 +88,17 @@ public abstract class SignPathStepBase extends Step {
     }
 
     public ApiConfiguration getAndValidateApiConfiguration() throws SignPathStepInvalidArgumentException {
-        String apiUrl = getSignPathConfig().getApiURL();
-        if (apiUrl == null || apiUrl.isEmpty()) {
-            throw new SignPathStepInvalidArgumentException("apiUrl must be configured in Jenkins system configuration under 'Code Signing with SignPath'");
+        String connectorUrl = getSignPathConfig().getConnectorURL();
+        if (connectorUrl == null || connectorUrl.isEmpty()) {
+            throw new SignPathStepInvalidArgumentException("connectorUrl must be configured in Jenkins system configuration under 'Code Signing with SignPath'");
+        }
+        String endpointSlug = getConnectorEndpointSlugWithGlobal();
+        if (endpointSlug == null || endpointSlug.isEmpty()) {
+            throw new SignPathStepInvalidArgumentException("connectorEndpointSlug must be configured in Jenkins system configuration under 'Code Signing with SignPath' or set at the step level");
         }
         return new ApiConfiguration(
-                ensureValidURL(apiUrl),
+                ensureValidURL(connectorUrl),
+                endpointSlug,
                 getServiceUnavailableTimeoutInSeconds(),
                 getUploadAndDownloadRequestTimeoutInSeconds(),
                 getWaitForCompletionTimeoutInSeconds(),

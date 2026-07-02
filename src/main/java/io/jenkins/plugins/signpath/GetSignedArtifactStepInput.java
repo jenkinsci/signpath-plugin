@@ -13,14 +13,12 @@ public class GetSignedArtifactStepInput implements Serializable {
 
     private final UUID organizationId;
     private final UUID signingRequestId;
-    private final String trustedBuildSystemTokenCredentialId;
     private final String apiTokenCredentialId;
     private final String outputArtifactPath;
 
-    public GetSignedArtifactStepInput(UUID organizationId, UUID signingRequestId, String trustedBuildSystemTokenCredentialId, String apiTokenCredentialId, String outputArtifactPath) {
+    public GetSignedArtifactStepInput(UUID organizationId, UUID signingRequestId, String apiTokenCredentialId, String outputArtifactPath) {
         this.organizationId = organizationId;
         this.signingRequestId = signingRequestId;
-        this.trustedBuildSystemTokenCredentialId = trustedBuildSystemTokenCredentialId;
         this.apiTokenCredentialId = apiTokenCredentialId;
         this.outputArtifactPath = outputArtifactPath;
     }
@@ -31,10 +29,6 @@ public class GetSignedArtifactStepInput implements Serializable {
 
     public UUID getSigningRequestId() {
         return signingRequestId;
-    }
-
-    public String getTrustedBuildSystemTokenCredentialId() {
-        return trustedBuildSystemTokenCredentialId;
     }
 
     public String getApiTokenCredentialId() {

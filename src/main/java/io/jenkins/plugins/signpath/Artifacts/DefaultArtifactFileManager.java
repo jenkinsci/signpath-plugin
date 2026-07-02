@@ -74,6 +74,21 @@ public class DefaultArtifactFileManager implements ArtifactFileManager {
         createFingerprint(artifact, targetArtifactPath);
     }
 
+    @Override
+    public void archiveWorkspaceArtifact(FilePath workspace, String relativePath) throws IOException, InterruptedException {
+        if (relativePath.contains(".."))
+            throw new IllegalAccessError("relativePath cannot be in parent directory.");
+
+        ArtifactManager artifactManager = run.pickArtifactManager();
+
+        String normalizedArtifactPath = getNormalizedPath(relativePath);
+        artifactManager.archive(
+                workspace,
+                launcher,
+                BuildListenerAdapter.wrap(listener),
+                Collections.singletonMap(normalizedArtifactPath, normalizedArtifactPath));
+    }
+
     private String getFileName(String artifactPath) {
         String normalizedArtifactPath = getNormalizedPath(artifactPath);
         if (normalizedArtifactPath.contains("/")) {

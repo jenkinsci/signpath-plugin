@@ -43,7 +43,6 @@ public class GetSignedArtifactStep extends SignPathStepBase {
         GetSignedArtifactStepInput input =  new GetSignedArtifactStepInput(
                 ensureValidUUID(getOrganizationIdWithGlobal(), "organizationId"),
                 ensureValidUUID(getSigningRequestId(), "signingRequestId"),
-                ensureNotNull(getTrustedBuildSystemTokenCredentialId(), "trustedBuildSystemTokenCredentialId"),
                 ensureNotNull(getApiTokenCredentialId(), "apiTokenCredentialId"),
                 ensureNotNull(getOutputArtifactPath(), "outputArtifactPath"));
 
