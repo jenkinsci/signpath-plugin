@@ -1,5 +1,7 @@
 package io.jenkins.plugins.signpath;
 
+import lombok.Getter;
+
 import java.io.Serializable;
 import java.util.Map;
 import java.util.UUID;
@@ -12,17 +14,28 @@ import java.util.UUID;
 public class SubmitSigningRequestStepInput implements Serializable {
     private static final long serialVersionUID = 1L;
 
+    @Getter
     private final UUID organizationId;
+    @Getter
     private final String apiTokenCredentialId;
+    @Getter
     private final String projectSlug;
+    @Getter
     private final String artifactConfigurationSlug;
+    @Getter
     private final String signingPolicySlug;
+    @Getter
     private final String inputArtifactPath;
+    @Getter
     private final String description;
+    @Getter
     private final String outputArtifactPath;
     private final boolean waitForCompletion;
+    @Getter
     private final Map<String, String> parameters;
+    @Getter
     private final String inputArtifactRetrievalUrl;
+    @Getter
     private final Map<String, String> inputArtifactRetrievalHttpHeaders;
 
     public SubmitSigningRequestStepInput(UUID organizationId,
@@ -51,56 +64,12 @@ public class SubmitSigningRequestStepInput implements Serializable {
         this.inputArtifactRetrievalHttpHeaders = inputArtifactRetrievalHttpHeaders;
     }
 
-    public UUID getOrganizationId() {
-        return organizationId;
-    }
-
     public boolean getWaitForCompletion() {
         return waitForCompletion;
     }
 
-    public String getApiTokenCredentialId() {
-        return apiTokenCredentialId;
-    }
-
-    public String getInputArtifactPath() {
-        return inputArtifactPath;
-    }
-
-    public String getProjectSlug() {
-        return projectSlug;
-    }
-
-    public String getArtifactConfigurationSlug() {
-        return artifactConfigurationSlug;
-    }
-
-    public String getSigningPolicySlug() {
-        return signingPolicySlug;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public String getOutputArtifactPath() {
-        return outputArtifactPath;
-    }
-
     public boolean hasOutputArtifactPath() {
         return outputArtifactPath != null && !outputArtifactPath.isEmpty();
-    }
-
-    public Map<String, String> getParameters() {
-        return parameters;
-    }
-
-    public String getInputArtifactRetrievalUrl() {
-        return inputArtifactRetrievalUrl;
-    }
-
-    public Map<String, String> getInputArtifactRetrievalHttpHeaders() {
-        return inputArtifactRetrievalHttpHeaders;
     }
 
     public boolean hasArtifactRetrievalUrl() {

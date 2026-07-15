@@ -2,6 +2,7 @@ package io.jenkins.plugins.signpath.ApiIntegration.Model;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Map;
 import java.util.UUID;
@@ -13,6 +14,7 @@ import java.util.UUID;
  * pipeline/origin data itself, so the plugin no longer uploads the artifact or gathers origin metadata.
  */
 @Getter
+@Setter
 @Builder
 public class ConnectorSigningRequestModel {
     private final UUID organizationId;

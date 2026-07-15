@@ -26,7 +26,7 @@ public abstract class SignPathStepBase extends Step {
     private int serviceUnavailableTimeoutInSeconds = (int) TimeUnit.MINUTES.toSeconds(10);
     private int uploadAndDownloadRequestTimeoutInSeconds = (int) TimeUnit.MINUTES.toSeconds(5);
     private int waitForCompletionTimeoutInSeconds = (int) TimeUnit.MINUTES.toSeconds(10);
-    private int waitBetweenReadinessChecksInSeconds = (int) TimeUnit.SECONDS.toSeconds(5);
+    private final int waitBetweenReadinessChecksInSeconds = (int) TimeUnit.SECONDS.toSeconds(5);
 
     private String connectorEndpointSlug;
     private String apiTokenCredentialId = PluginConstants.DEFAULT_API_TOKEN_CREDENTIAL_ID;

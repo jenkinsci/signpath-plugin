@@ -8,8 +8,8 @@ import hudson.model.TaskListener;
 import hudson.util.Secret;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.ConnectorSigningRequestModel;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SubmitSigningRequestResult;
-import io.jenkins.plugins.signpath.ApiIntegration.PipelineConnectorFacade;
-import io.jenkins.plugins.signpath.ApiIntegration.PipelineConnectorFacadeFactory;
+import io.jenkins.plugins.signpath.ApiIntegration.IPipelineConnectorFacade;
+import io.jenkins.plugins.signpath.ApiIntegration.IPipelineConnectorFacadeFactory;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathCredentials;
 import io.jenkins.plugins.signpath.Artifacts.ArtifactFileManager;
 import io.jenkins.plugins.signpath.Artifacts.ComputeArtifactHashCallable;
@@ -45,13 +45,13 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
     private transient final SubmitSigningRequestStepInput input;
     private transient final SecretRetriever secretRetriever;
     private transient final ArtifactFileManager artifactFileManager;
-    private transient final PipelineConnectorFacadeFactory pipelineConnectorFacadeFactory;
+    private transient final IPipelineConnectorFacadeFactory pipelineConnectorFacadeFactory;
     private transient final TaskListener taskListener;
 
     protected SubmitSigningRequestStepExecution(SubmitSigningRequestStepInput input,
                                                 SecretRetriever secretRetriever,
                                                 ArtifactFileManager artifactFileManager,
-                                                PipelineConnectorFacadeFactory pipelineConnectorFacadeFactory,
+                                                IPipelineConnectorFacadeFactory pipelineConnectorFacadeFactory,
                                                 TaskListener taskListener,
                                                 StepContext stepContext) {
         super(stepContext);
@@ -86,7 +86,7 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
         try {
             Secret apiToken = secretRetriever.retrieveSecret(input.getApiTokenCredentialId(), new CredentialsScope[]{CredentialsScope.SYSTEM, CredentialsScope.GLOBAL});
             SignPathCredentials credentials = new SignPathCredentials(apiToken);
-            PipelineConnectorFacade pipelineConnectorFacade = pipelineConnectorFacadeFactory.create(credentials);
+            IPipelineConnectorFacade pipelineConnectorFacade = pipelineConnectorFacadeFactory.create(credentials);
 
             // Resolve the build identity so the connector can locate the build and its archived artifacts.
             Run<?, ?> run = getContext().get(Run.class);
@@ -152,7 +152,7 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
             }
 
             SubmitSigningRequestResult submitResult = pipelineConnectorFacade.submitSigningRequest(model);
-            UUID signingRequestId = submitResult.getSigningRequestId();
+            String signingRequestId = submitResult.getSigningRequestId();
             String webLink = submitResult.getWebLink();
 
             if (webLink != null && !webLink.isEmpty()) {
@@ -164,13 +164,13 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
             // waitForFinalSigningRequestStatus is skipped when outputArtifactPath is set because
             // getSignedArtifact below already waits for the final status internally.
             if (input.getWaitForCompletion() && !input.hasOutputArtifactPath()) {
-                pipelineConnectorFacade.waitForFinalSigningRequestStatus(input.getOrganizationId(), signingRequestId);
+                pipelineConnectorFacade.waitForFinalSigningRequestStatus(input.getOrganizationId(), UUID.fromString(signingRequestId));
             }
 
             if (input.hasOutputArtifactPath()) {
                 // signedArtifact is a temporary download buffer on the controller, the try block ensures it is
                 // cleaned up after its contents are copied to the persistent workspace file at outputArtifactPath.
-                try (TemporaryFile signedArtifact = pipelineConnectorFacade.getSignedArtifact(input.getOrganizationId(), signingRequestId)) {
+                try (TemporaryFile signedArtifact = pipelineConnectorFacade.getSignedArtifact(input.getOrganizationId(), UUID.fromString(signingRequestId))) {
                     FilePath outputPath = workspace.child(input.getOutputArtifactPath());
                     try (InputStream signedArtifactStream = new FileInputStream(signedArtifact.getFile())) {
                         outputPath.copyFrom(signedArtifactStream);
@@ -182,8 +182,8 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
                 logger.println("Signing step succeeded");
             }
 
-            return signingRequestId.toString();
-        } catch (SecretNotFoundException | SignPathFacadeCallException |
+            return signingRequestId;
+        } catch (SecretNotFoundException | PipelineConnectorFacadeCallException |
                  ArtifactNotFoundException | IOException | InterruptedException | NoSuchAlgorithmException |
                  DecoderException ex) {
             logger.printf("%nSigning step failed: %s%n", ex.getMessage());

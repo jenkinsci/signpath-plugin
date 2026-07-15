@@ -1,13 +1,13 @@
-package io.jenkins.plugins.signpath.ApiIntegration.SignPathClient;
+package io.jenkins.plugins.signpath.ApiIntegration.PipelineConnectorFacade;
 //</editor-fold>
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.ConnectorSigningRequestModel;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SubmitSigningRequestResult;
-import io.jenkins.plugins.signpath.ApiIntegration.PipelineConnectorFacade;
+import io.jenkins.plugins.signpath.ApiIntegration.IPipelineConnectorFacade;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathCredentials;
 import io.jenkins.plugins.signpath.Common.PluginConstants;
 import io.jenkins.plugins.signpath.Common.TemporaryFile;
-import io.jenkins.plugins.signpath.Exceptions.SignPathFacadeCallException;
+import io.jenkins.plugins.signpath.Exceptions.PipelineConnectorFacadeCallException;
 import io.signpath.signpathclient.connector.PipelineConnectorClient;
 import io.signpath.signpathclient.connector.model.ConnectorLogEntry;
 import io.signpath.signpathclient.connector.model.ConnectorSigningRequestStatusResponse;
@@ -27,17 +27,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 
-public class SignPathClientFacade implements PipelineConnectorFacade {
+public class PipelineConnectorFacade implements IPipelineConnectorFacade {
 
     private final PipelineConnectorClient client;
     private final SignPathCredentials credentials;
-    private final ApiConfiguration apiConfiguration;
     private final SignPathClientSimpleLogger logger;
     private final String endpointSlug;
 
-    public SignPathClientFacade(SignPathCredentials credentials, ApiConfiguration apiConfiguration, SignPathClientSimpleLogger logger) {
+    public PipelineConnectorFacade(SignPathCredentials credentials, ApiConfiguration apiConfiguration, SignPathClientSimpleLogger logger) {
         this.credentials = credentials;
-        this.apiConfiguration = apiConfiguration;
         this.logger = logger;
         this.endpointSlug = apiConfiguration.getEndpointSlug();
         String baseUrl = apiConfiguration.getConnectorUrl().toString();
@@ -55,7 +53,7 @@ public class SignPathClientFacade implements PipelineConnectorFacade {
     }
 
     @Override
-    public SubmitSigningRequestResult submitSigningRequest(ConnectorSigningRequestModel submitModel) throws SignPathFacadeCallException {
+    public SubmitSigningRequestResult submitSigningRequest(ConnectorSigningRequestModel submitModel) throws PipelineConnectorFacadeCallException {
         try {
             ConnectorSigningRequestSubmitRequest request = buildSubmitRequest(submitModel);
             ConnectorSubmitSigningRequestResponse response = this.client.submitSigningRequest(
@@ -71,20 +69,20 @@ public class SignPathClientFacade implements PipelineConnectorFacade {
                 String message = (response.getError() != null && !response.getError().isEmpty())
                         ? response.getError()
                         : "The connector did not return a signing request id";
-                throw new SignPathFacadeCallException(message);
+                throw new PipelineConnectorFacadeCallException(message);
             }
 
             return new SubmitSigningRequestResult(
-                    UUID.fromString(response.getSigningRequestId()),
+                    response.getSigningRequestId(),
                     response.getSigningRequestUrl());
         } catch (SignPathClientException ex) {
-            Logger.getLogger(SignPathClientFacade.class.getName()).log(Level.SEVERE, null, ex);
-            throw new SignPathFacadeCallException(ex.getMessage());
+            Logger.getLogger(PipelineConnectorFacade.class.getName()).log(Level.SEVERE, null, ex);
+            throw new PipelineConnectorFacadeCallException(ex.getMessage());
         }
     }
 
     @Override
-    public void waitForFinalSigningRequestStatus(UUID organizationId, UUID signingRequestId) throws SignPathFacadeCallException {
+    public void waitForFinalSigningRequestStatus(UUID organizationId, UUID signingRequestId) throws PipelineConnectorFacadeCallException {
         try {
             ConnectorSigningRequestStatusResponse statusResponse = client.waitForFinalSigningRequestStatus(
                     credentials.getApiToken().getPlainText(),
@@ -93,16 +91,16 @@ public class SignPathClientFacade implements PipelineConnectorFacade {
                     organizationId.toString(),
                     signingRequestId.toString());
             if (!statusResponse.isFinalStatus()) {
-                throw new SignPathFacadeCallException("Timeout expired while waiting for signing request to complete");
+                throw new PipelineConnectorFacadeCallException("Timeout expired while waiting for signing request to complete");
             }
         } catch (SignPathClientException ex) {
-            Logger.getLogger(SignPathClientFacade.class.getName()).log(Level.SEVERE, null, ex);
-            throw new SignPathFacadeCallException(ex.getMessage());
+            Logger.getLogger(PipelineConnectorFacade.class.getName()).log(Level.SEVERE, null, ex);
+            throw new PipelineConnectorFacadeCallException(ex.getMessage());
         }
     }
 
     @Override
-    public TemporaryFile getSignedArtifact(UUID organizationId, UUID signingRequestID) throws IOException, SignPathFacadeCallException {
+    public TemporaryFile getSignedArtifact(UUID organizationId, UUID signingRequestID) throws IOException, PipelineConnectorFacadeCallException {
         TemporaryFile outputArtifact = new TemporaryFile();
 
         try {
@@ -118,7 +116,7 @@ public class SignPathClientFacade implements PipelineConnectorFacade {
             return outputArtifact;
         }
         catch (SignPathClientException ex) {
-            throw new SignPathFacadeCallException(ex.getMessage());
+            throw new PipelineConnectorFacadeCallException(ex.getMessage());
         }
     }
 
@@ -166,7 +164,7 @@ public class SignPathClientFacade implements PipelineConnectorFacade {
 
     private String buildUserAgent(){
         return String.format("SignPath.Plugins.Jenkins/%1$s (OpenJDK %2$s; Jenkins %3$s)",
-                SignPathClientFacade.class.getPackage().getImplementationVersion(),
+                PipelineConnectorFacade.class.getPackage().getImplementationVersion(),
                 System.getProperty("java.version"),
                 Jenkins.getVersion());
     }
