@@ -396,15 +396,15 @@ public class SubmitSigningRequestStepEndToEndTest {
                 .willReturn(aResponse()
                         .withStatus(201)
                         .withHeader("Content-Type", "application/json")
-                        .withBody("{\"SigningRequestId\": \"" + signingRequestId + "\", \"SigningRequestUrl\": \""
-                                + getMockUrl("web/" + signingRequestId) + "\", \"Logs\": []}")));
+                        .withBody("{\"signingRequestId\": \"" + signingRequestId + "\", \"signingRequestUrl\": \""
+                                + getMockUrl("web/" + signingRequestId) + "\", \"logs\": []}")));
     }
 
     private void stubConnectorStatus(String organizationId, String signingRequestId) {
         wireMockRule.stubFor(get(urlEqualTo(statusRoute(organizationId, signingRequestId)))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withBody("{Status: 'Completed', IsFinalStatus: true, WebLink: 'https://app.signpath.io/sr'}")));
+                        .withBody("{\"status\": \"Completed\", \"isFinalStatus\": true, \"webLink\": \"https://app.signpath.io/sr\"}")));
     }
 
     private void stubConnectorSignedArtifact(String organizationId, String signingRequestId, byte[] signedArtifactBytes) {
