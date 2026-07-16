@@ -56,7 +56,7 @@ public class GetSignedArtifactStepEndToEndTest {
         wireMockRule.stubFor(get(urlEqualTo(statusRoute))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withBody("{Status: 'Completed', IsFinalStatus: true, WebLink: 'https://app.signpath.io/sr'}")));
+                        .withBody("{status: 'Completed', isFinalStatus: true, webLink: 'https://app.signpath.io/sr'}")));
 
         wireMockRule.stubFor(get(urlEqualTo(signedArtifactRoute))
                 .willReturn(aResponse()
