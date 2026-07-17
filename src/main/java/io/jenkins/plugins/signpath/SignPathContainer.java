@@ -11,6 +11,7 @@ import io.jenkins.plugins.signpath.SecretRetrieval.CredentialBasedSecretRetrieve
 import io.jenkins.plugins.signpath.SecretRetrieval.SecretRetriever;
 import io.signpath.signpathclient.SignPathClientSimpleLogger;
 import jenkins.model.Jenkins;
+import lombok.Getter;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 
 import java.io.IOException;
@@ -21,6 +22,7 @@ import java.io.IOException;
  * @see io.jenkins.plugins.signpath.SignPathStepBase
  * implementations
  */
+@Getter
 public class SignPathContainer {
     private final StepContext stepContext;
     private final Run<?, ?> run;
@@ -41,30 +43,6 @@ public class SignPathContainer {
         this.secretRetriever = secretRetriever;
         this.artifactFileManager = artifactFileManager;
         this.pipelineConnectorFacadeFactory = pipelineConnectorFacadeFactory;
-    }
-
-    public StepContext getStepContext() {
-        return stepContext;
-    }
-
-    public Run<?, ?> getRun() {
-        return run;
-    }
-
-    public TaskListener getTaskListener() {
-        return taskListener;
-    }
-
-    public SecretRetriever getSecretRetriever() {
-        return secretRetriever;
-    }
-
-    public ArtifactFileManager getArtifactFileManager() {
-        return artifactFileManager;
-    }
-
-    public IPipelineConnectorFacadeFactory getPipelineConnectorFacadeFactory() {
-        return pipelineConnectorFacadeFactory;
     }
 
     public static SignPathContainer build(StepContext context, ApiConfiguration apiConfiguration)

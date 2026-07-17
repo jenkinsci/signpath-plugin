@@ -11,6 +11,7 @@ import hudson.model.TaskListener;
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.signpath.Exceptions.SignPathStepInvalidArgumentException;
 
+import lombok.Getter;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
@@ -30,7 +31,9 @@ public class GetSignedArtifactStep extends SignPathStepBase {
 
     @Deprecated
     private String organizationId;
+    @Getter
     private String signingRequestId;
+    @Getter
     private String outputArtifactPath;
 
     @DataBoundConstructor
@@ -81,7 +84,7 @@ public class GetSignedArtifactStep extends SignPathStepBase {
     }
 
     @Deprecated
-    public String getOrganizationId() throws SignPathStepInvalidArgumentException {
+    public String getOrganizationId() {
         return organizationId;
     }
 
@@ -90,14 +93,6 @@ public class GetSignedArtifactStep extends SignPathStepBase {
             organizationId,
             SignPathPluginGlobalConfiguration::getOrganizationId,
             "organizationId", true);
-    }
-
-    public String getSigningRequestId() {
-        return signingRequestId;
-    }
-
-    public String getOutputArtifactPath() {
-        return outputArtifactPath;
     }
 
     @Deprecated
