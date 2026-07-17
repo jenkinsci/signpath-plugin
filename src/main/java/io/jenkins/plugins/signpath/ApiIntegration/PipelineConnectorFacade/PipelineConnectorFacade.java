@@ -73,7 +73,7 @@ public class PipelineConnectorFacade implements IPipelineConnectorFacade {
             }
 
             return new SubmitSigningRequestResult(
-                    response.getSigningRequestId(),
+                    UUID.fromString(response.getSigningRequestId()),
                     response.getSigningRequestUrl());
         } catch (SignPathClientException ex) {
             Logger.getLogger(PipelineConnectorFacade.class.getName()).log(Level.SEVERE, null, ex);

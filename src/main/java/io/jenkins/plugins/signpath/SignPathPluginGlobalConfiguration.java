@@ -2,6 +2,7 @@ package io.jenkins.plugins.signpath;
 
 import hudson.Extension;
 import jenkins.model.GlobalConfiguration;
+import lombok.Getter;
 import org.kohsuke.stapler.DataBoundSetter;
 import hudson.util.FormValidation;
 import java.net.MalformedURLException;
@@ -9,6 +10,7 @@ import java.net.URL;
 import java.util.UUID;
 import org.kohsuke.stapler.QueryParameter;
 
+@Getter
 @Extension
 public class SignPathPluginGlobalConfiguration extends GlobalConfiguration {
 
@@ -24,10 +26,6 @@ public class SignPathPluginGlobalConfiguration extends GlobalConfiguration {
     }
 
     // ConnectorURL
-
-    public String getConnectorURL() {
-        return connectorURL;
-    }
 
     @DataBoundSetter
     public void setConnectorURL(String url) {
@@ -50,10 +48,6 @@ public class SignPathPluginGlobalConfiguration extends GlobalConfiguration {
 
     // ConnectorEndpointSlug
 
-    public String getConnectorEndpointSlug() {
-        return connectorEndpointSlug;
-    }
-
     @DataBoundSetter
     public void setConnectorEndpointSlug(String connectorEndpointSlug) {
         this.connectorEndpointSlug = connectorEndpointSlug;
@@ -69,10 +63,6 @@ public class SignPathPluginGlobalConfiguration extends GlobalConfiguration {
     }
 
     // OrganizationId
-
-    public String getOrganizationId() {
-        return organizationId;
-    }
 
     @DataBoundSetter
     public void setOrganizationId(String organizationId) {

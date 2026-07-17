@@ -152,7 +152,7 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
             }
 
             SubmitSigningRequestResult submitResult = pipelineConnectorFacade.submitSigningRequest(model);
-            String signingRequestId = submitResult.getSigningRequestId();
+            UUID signingRequestId = submitResult.getSigningRequestId();
             String webLink = submitResult.getWebLink();
 
             if (webLink != null && !webLink.isEmpty()) {
@@ -164,13 +164,13 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
             // waitForFinalSigningRequestStatus is skipped when outputArtifactPath is set because
             // getSignedArtifact below already waits for the final status internally.
             if (input.getWaitForCompletion() && !input.hasOutputArtifactPath()) {
-                pipelineConnectorFacade.waitForFinalSigningRequestStatus(input.getOrganizationId(), UUID.fromString(signingRequestId));
+                pipelineConnectorFacade.waitForFinalSigningRequestStatus(input.getOrganizationId(), signingRequestId);
             }
 
             if (input.hasOutputArtifactPath()) {
                 // signedArtifact is a temporary download buffer on the controller, the try block ensures it is
                 // cleaned up after its contents are copied to the persistent workspace file at outputArtifactPath.
-                try (TemporaryFile signedArtifact = pipelineConnectorFacade.getSignedArtifact(input.getOrganizationId(), UUID.fromString(signingRequestId))) {
+                try (TemporaryFile signedArtifact = pipelineConnectorFacade.getSignedArtifact(input.getOrganizationId(), signingRequestId)) {
                     FilePath outputPath = workspace.child(input.getOutputArtifactPath());
                     try (InputStream signedArtifactStream = new FileInputStream(signedArtifact.getFile())) {
                         outputPath.copyFrom(signedArtifactStream);
@@ -182,7 +182,7 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
                 logger.println("Signing step succeeded");
             }
 
-            return signingRequestId;
+            return signingRequestId.toString();
         } catch (SecretNotFoundException | PipelineConnectorFacadeCallException |
                  ArtifactNotFoundException | IOException | InterruptedException | NoSuchAlgorithmException |
                  DecoderException ex) {
