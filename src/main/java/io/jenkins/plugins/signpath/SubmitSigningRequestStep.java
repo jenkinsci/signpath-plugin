@@ -10,6 +10,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
 import io.jenkins.plugins.signpath.Exceptions.SignPathStepInvalidArgumentException;
+import lombok.Getter;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
@@ -30,16 +31,26 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
     private final static String FunctionName = "submitSigningRequest";
     private final static String DisplayName = "Submit SignPath Signing Request";
 
+    @Getter
     private String organizationId;
+    @Getter
     private String projectSlug;
+    @Getter
     private String artifactConfigurationSlug;
+    @Getter
     private String signingPolicySlug;
+    @Getter
     private String inputArtifactPath;
+    @Getter
     private String description;
+    @Getter
     private String outputArtifactPath;
     private boolean waitForCompletion = false;
+    @Getter
     private Map<String, String> parameters;
+    @Getter
     private String inputArtifactRetrievalUrl;
+    @Getter
     private Map<String, String> inputArtifactRetrievalHttpHeaders;
 
     @DataBoundConstructor
@@ -108,10 +119,6 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
         }
     }
 
-    public String getOrganizationId() {
-        return organizationId;
-    }
-
     public String getOrganizationIdWithGlobal() throws SignPathStepInvalidArgumentException {
         return getWithGlobalConfig(
             organizationId,
@@ -119,44 +126,8 @@ public class SubmitSigningRequestStep extends SignPathStepBase {
             "organizationId", true);
     }
 
-    public String getProjectSlug() {
-        return projectSlug;
-    }
-
-    public String getArtifactConfigurationSlug() {
-        return artifactConfigurationSlug;
-    }
-
-    public String getSigningPolicySlug() {
-        return signingPolicySlug;
-    }
-
-    public String getInputArtifactPath() {
-        return inputArtifactPath;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public String getOutputArtifactPath() {
-        return outputArtifactPath;
-    }
-
     public boolean getWaitForCompletion() {
         return waitForCompletion;
-    }
-
-    public Map<String, String> getParameters () {
-        return parameters;
-    }
-
-    public String getInputArtifactRetrievalUrl() {
-        return inputArtifactRetrievalUrl;
-    }
-
-    public Map<String, String> getInputArtifactRetrievalHttpHeaders() {
-        return inputArtifactRetrievalHttpHeaders;
     }
 
     @DataBoundSetter

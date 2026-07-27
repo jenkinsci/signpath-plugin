@@ -8,8 +8,8 @@ import hudson.model.TaskListener;
 import hudson.util.Secret;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.ConnectorSigningRequestModel;
 import io.jenkins.plugins.signpath.ApiIntegration.Model.SubmitSigningRequestResult;
-import io.jenkins.plugins.signpath.ApiIntegration.PipelineConnectorFacade;
-import io.jenkins.plugins.signpath.ApiIntegration.PipelineConnectorFacadeFactory;
+import io.jenkins.plugins.signpath.ApiIntegration.IPipelineConnectorFacade;
+import io.jenkins.plugins.signpath.ApiIntegration.IPipelineConnectorFacadeFactory;
 import io.jenkins.plugins.signpath.ApiIntegration.SignPathCredentials;
 import io.jenkins.plugins.signpath.Artifacts.ArtifactFileManager;
 import io.jenkins.plugins.signpath.Artifacts.ComputeArtifactHashCallable;
@@ -45,13 +45,13 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
     private transient final SubmitSigningRequestStepInput input;
     private transient final SecretRetriever secretRetriever;
     private transient final ArtifactFileManager artifactFileManager;
-    private transient final PipelineConnectorFacadeFactory pipelineConnectorFacadeFactory;
+    private transient final IPipelineConnectorFacadeFactory pipelineConnectorFacadeFactory;
     private transient final TaskListener taskListener;
 
     protected SubmitSigningRequestStepExecution(SubmitSigningRequestStepInput input,
                                                 SecretRetriever secretRetriever,
                                                 ArtifactFileManager artifactFileManager,
-                                                PipelineConnectorFacadeFactory pipelineConnectorFacadeFactory,
+                                                IPipelineConnectorFacadeFactory pipelineConnectorFacadeFactory,
                                                 TaskListener taskListener,
                                                 StepContext stepContext) {
         super(stepContext);
@@ -86,7 +86,7 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
         try {
             Secret apiToken = secretRetriever.retrieveSecret(input.getApiTokenCredentialId(), new CredentialsScope[]{CredentialsScope.SYSTEM, CredentialsScope.GLOBAL});
             SignPathCredentials credentials = new SignPathCredentials(apiToken);
-            PipelineConnectorFacade pipelineConnectorFacade = pipelineConnectorFacadeFactory.create(credentials);
+            IPipelineConnectorFacade pipelineConnectorFacade = pipelineConnectorFacadeFactory.create(credentials);
 
             // Resolve the build identity so the connector can locate the build and its archived artifacts.
             Run<?, ?> run = getContext().get(Run.class);
@@ -183,7 +183,7 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
             }
 
             return signingRequestId.toString();
-        } catch (SecretNotFoundException | SignPathFacadeCallException |
+        } catch (SecretNotFoundException | PipelineConnectorFacadeCallException |
                  ArtifactNotFoundException | IOException | InterruptedException | NoSuchAlgorithmException |
                  DecoderException ex) {
             logger.printf("%nSigning step failed: %s%n", ex.getMessage());

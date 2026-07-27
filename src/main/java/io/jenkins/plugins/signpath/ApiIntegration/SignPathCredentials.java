@@ -7,7 +7,7 @@ import lombok.Getter;
 /**
  * Holds all necessary credentials to authenticate against the SignPath Pipeline Connector endpoints, exposed by the
  *
- * @see PipelineConnectorFacade
+ * @see IPipelineConnectorFacade
  */
 @Getter
 @AllArgsConstructor

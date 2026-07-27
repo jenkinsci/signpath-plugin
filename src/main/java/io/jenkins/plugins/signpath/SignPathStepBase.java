@@ -5,6 +5,7 @@ import io.jenkins.plugins.signpath.Common.PluginConstants;
 import io.jenkins.plugins.signpath.Exceptions.SignPathStepInvalidArgumentException;
 import jenkins.model.GlobalConfiguration;
 
+import lombok.Getter;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -20,46 +21,23 @@ import java.util.function.Function;
  * and helps share and re-use them across multiple steps
  * @see io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration
  */
+@Getter
 public abstract class SignPathStepBase extends Step {
     // we set some sensible defaults for various timeouts, note that the
     // serviceUnavailableTimeoutInSeconds is used for upload, download and wait operations
     private int serviceUnavailableTimeoutInSeconds = (int) TimeUnit.MINUTES.toSeconds(10);
     private int uploadAndDownloadRequestTimeoutInSeconds = (int) TimeUnit.MINUTES.toSeconds(5);
     private int waitForCompletionTimeoutInSeconds = (int) TimeUnit.MINUTES.toSeconds(10);
-    private int waitBetweenReadinessChecksInSeconds = (int) TimeUnit.SECONDS.toSeconds(5);
+    private final int waitBetweenReadinessChecksInSeconds = (int) TimeUnit.SECONDS.toSeconds(5);
 
     private String connectorEndpointSlug;
     private String apiTokenCredentialId = PluginConstants.DEFAULT_API_TOKEN_CREDENTIAL_ID;
-
-    public String getConnectorEndpointSlug() {
-        return connectorEndpointSlug;
-    }
 
     public String getConnectorEndpointSlugWithGlobal() throws SignPathStepInvalidArgumentException {
         return getWithGlobalConfig(
             connectorEndpointSlug,
             SignPathPluginGlobalConfiguration::getConnectorEndpointSlug,
             "connectorEndpointSlug", true);
-    }
-
-    public String getApiTokenCredentialId() {
-        return apiTokenCredentialId;
-    }
-
-    public int getServiceUnavailableTimeoutInSeconds() {
-        return serviceUnavailableTimeoutInSeconds;
-    }
-
-    public int getUploadAndDownloadRequestTimeoutInSeconds() {
-        return uploadAndDownloadRequestTimeoutInSeconds;
-    }
-
-    public int getWaitForCompletionTimeoutInSeconds() {
-        return waitForCompletionTimeoutInSeconds;
-    }
-
-    public int getWaitBetweenReadinessChecksInSeconds() {
-        return waitBetweenReadinessChecksInSeconds;
     }
 
     @DataBoundSetter
