@@ -3,6 +3,7 @@ package io.jenkins.plugins.signpath;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.FilePath;
+import hudson.Util;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.util.Secret;
@@ -19,7 +20,6 @@ import io.jenkins.plugins.signpath.SecretRetrieval.SecretRetriever;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
 
@@ -72,7 +72,7 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
         logger.printf("[PARAM] organizationId: %s%n", input.getOrganizationId());
         logger.printf("[PARAM] projectSlug: %s%n", input.getProjectSlug());
         logger.printf("[PARAM] signingPolicySlug: %s%n", input.getSigningPolicySlug());
-        if (!StringUtils.isEmpty(input.getArtifactConfigurationSlug())) {
+        if (Util.fixEmpty(input.getArtifactConfigurationSlug()) != null) {
             logger.printf("[PARAM] artifactConfigurationSlug: %s%n", input.getArtifactConfigurationSlug());
         }
         if (input.hasArtifactRetrievalUrl()) {
