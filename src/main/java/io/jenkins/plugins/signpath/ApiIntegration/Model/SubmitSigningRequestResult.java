@@ -15,10 +15,4 @@ import java.util.UUID;
 public class SubmitSigningRequestResult {
     private final UUID signingRequestId;
     private final String webLink;
-
-    /**
-     * The link that must be passed back to the connector when uploading the unsigned artifact.
-     * It is only returned when the artifact is uploaded by the plugin (i.e. no input artifact retrieval URL was used).
-     */
-    private final String artifactUploadLink;
 }

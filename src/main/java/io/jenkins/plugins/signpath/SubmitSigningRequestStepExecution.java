@@ -166,7 +166,6 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
                     pipelineConnectorFacade.uploadUnsignedArtifact(
                             input.getOrganizationId(),
                             signingRequestId,
-                            submitResult.getArtifactUploadLink(),
                             unsignedArtifact.getFile());
                 }
             }

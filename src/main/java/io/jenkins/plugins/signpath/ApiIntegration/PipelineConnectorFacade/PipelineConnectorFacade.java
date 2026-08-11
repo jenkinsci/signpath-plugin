@@ -73,21 +73,9 @@ public class PipelineConnectorFacade implements IPipelineConnectorFacade {
                 throw new PipelineConnectorFacadeCallException(message);
             }
 
-            String artifactUploadLink = response.getArtifactUploadLink();
-            // When an input artifact retrieval URL is used, SignPath downloads the artifact itself
-            // and the connector does not return an upload link.
-            boolean uploadLinkExpected = emptyToNull(submitModel.getInputArtifactRetrievalUrl()) == null;
-            if (uploadLinkExpected && (artifactUploadLink == null || artifactUploadLink.isEmpty())) {
-                String message = (response.getError() != null && !response.getError().isEmpty())
-                        ? response.getError()
-                        : "The connector did not return an artifact upload link";
-                throw new PipelineConnectorFacadeCallException(message);
-            }
-
             return new SubmitSigningRequestResult(
                     UUID.fromString(response.getSigningRequestId()),
-                    response.getSigningRequestUrl(),
-                    artifactUploadLink);
+                    response.getSigningRequestUrl());
         } catch (SignPathClientException ex) {
             Logger.getLogger(PipelineConnectorFacade.class.getName()).log(Level.SEVERE, null, ex);
             throw new PipelineConnectorFacadeCallException(ex.getMessage());
@@ -95,11 +83,7 @@ public class PipelineConnectorFacade implements IPipelineConnectorFacade {
     }
 
     @Override
-    public void uploadUnsignedArtifact(UUID organizationId, UUID signingRequestId, String artifactUploadLink, File unsignedArtifact) throws PipelineConnectorFacadeCallException {
-        if (artifactUploadLink == null || artifactUploadLink.isEmpty()) {
-            throw new PipelineConnectorFacadeCallException("The connector did not return an artifact upload link");
-        }
-
+    public void uploadUnsignedArtifact(UUID organizationId, UUID signingRequestId, File unsignedArtifact) throws PipelineConnectorFacadeCallException {
         try {
             client.uploadUnsignedArtifact(
                     credentials.getApiToken().getPlainText(),
@@ -107,7 +91,6 @@ public class PipelineConnectorFacade implements IPipelineConnectorFacade {
                     endpointSlug,
                     organizationId.toString(),
                     signingRequestId.toString(),
-                    artifactUploadLink,
                     unsignedArtifact);
         } catch (SignPathClientException ex) {
             Logger.getLogger(PipelineConnectorFacade.class.getName()).log(Level.SEVERE, null, ex);

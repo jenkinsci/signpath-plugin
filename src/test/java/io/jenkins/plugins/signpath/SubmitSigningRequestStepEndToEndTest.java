@@ -311,37 +311,6 @@ public class SubmitSigningRequestStepEndToEndTest {
     }
 
     @Theory
-    public void submitSigningRequest_withoutArtifactUploadLink_fails() throws Exception {
-        String unsignedArtifactString = Some.stringNonEmpty();
-        String apiTokenCredentialId = Some.stringNonEmpty();
-        String apiToken = Some.stringNonEmpty();
-        String organizationId = Some.uuid().toString();
-        String signingRequestId = Some.uuid().toString();
-
-        CredentialsStore credentialStore = CredentialStoreUtils.getCredentialStore(j.jenkins);
-        assert credentialStore != null;
-        CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, apiTokenCredentialId, apiToken);
-
-        // The connector does not return an upload link although the plugin has to upload the artifact
-        stubConnectorSubmit(organizationId, signingRequestId, null);
-
-        configureGlobalConfig();
-
-        WorkflowJob workflowJob = createWorkflowJob(apiTokenCredentialId, organizationId,
-                Some.stringNonEmpty(), Some.stringNonEmpty(), unsignedArtifactString, false);
-
-        // ACT
-        QueueTaskFuture<WorkflowRun> runFuture = workflowJob.scheduleBuild2(0);
-        assert runFuture != null;
-        WorkflowRun run = runFuture.get();
-
-        // ASSERT
-        assertEquals(Result.FAILURE, run.getResult());
-        assertTrue(run.getLog().contains("The connector did not return an artifact upload link"));
-        wireMockRule.verify(exactly(0), postRequestedFor(urlPathEqualTo(unsignedArtifactRoute(organizationId, signingRequestId))));
-    }
-
-    @Theory
     public void submitSigningRequest_withOutputArtifactPathButNoWaitForCompletion_fails() throws Exception {
         configureGlobalConfig();
 
@@ -588,7 +557,6 @@ public class SubmitSigningRequestStepEndToEndTest {
     private void assertUnsignedArtifactUploaded(String apiToken, String organizationId, String signingRequestId, String expectedContent) {
         wireMockRule.verify(postRequestedFor(urlPathEqualTo(unsignedArtifactRoute(organizationId, signingRequestId)))
                 .withHeader("Authorization", equalTo("Bearer " + apiToken))
-                .withQueryParam("uploadLink", equalTo(ARTIFACT_UPLOAD_LINK))
                 .withRequestBody(equalTo(expectedContent)));
     }
 

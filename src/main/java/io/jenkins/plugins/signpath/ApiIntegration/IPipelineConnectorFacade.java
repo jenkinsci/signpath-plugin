@@ -29,11 +29,10 @@ public interface IPipelineConnectorFacade {
      *
      * @param organizationId     the organization ID where the signing request resides
      * @param signingRequestId   the signing request ID as returned by submitSigningRequest
-     * @param artifactUploadLink the upload link as returned by submitSigningRequest
      * @param unsignedArtifact   the unsigned artifact to upload
      * @throws PipelineConnectorFacadeCallException occurs if the upload fails
      */
-    void uploadUnsignedArtifact(UUID organizationId, UUID signingRequestId, String artifactUploadLink, File unsignedArtifact) throws PipelineConnectorFacadeCallException;
+    void uploadUnsignedArtifact(UUID organizationId, UUID signingRequestId, File unsignedArtifact) throws PipelineConnectorFacadeCallException;
 
     /**
      * Waits for a signing request to reach a final status without downloading the artifact.
