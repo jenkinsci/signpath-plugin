@@ -18,6 +18,7 @@ import io.signpath.signpathclient.SignPathClientSettings;
 import io.signpath.signpathclient.SignPathClientException;
 import io.signpath.signpathclient.SignPathClientSimpleLogger;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -75,6 +76,22 @@ public class PipelineConnectorFacade implements IPipelineConnectorFacade {
             return new SubmitSigningRequestResult(
                     UUID.fromString(response.getSigningRequestId()),
                     response.getSigningRequestUrl());
+        } catch (SignPathClientException ex) {
+            Logger.getLogger(PipelineConnectorFacade.class.getName()).log(Level.SEVERE, null, ex);
+            throw new PipelineConnectorFacadeCallException(ex.getMessage());
+        }
+    }
+
+    @Override
+    public void uploadUnsignedArtifact(UUID organizationId, UUID signingRequestId, File unsignedArtifact) throws PipelineConnectorFacadeCallException {
+        try {
+            client.uploadUnsignedArtifact(
+                    credentials.getApiToken().getPlainText(),
+                    PluginConstants.BUILD_SYSTEM_TYPE,
+                    endpointSlug,
+                    organizationId.toString(),
+                    signingRequestId.toString(),
+                    unsignedArtifact);
         } catch (SignPathClientException ex) {
             Logger.getLogger(PipelineConnectorFacade.class.getName()).log(Level.SEVERE, null, ex);
             throw new PipelineConnectorFacadeCallException(ex.getMessage());

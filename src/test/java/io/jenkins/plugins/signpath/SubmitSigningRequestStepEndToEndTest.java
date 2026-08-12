@@ -40,6 +40,7 @@ public class SubmitSigningRequestStepEndToEndTest {
     private static final String SIGNED_ARTIFACT_PATH = "signed.exe";
     private static final String SHA256_ARTIFACT_PATH = UNSIGNED_ARTIFACT_PATH + ".sha256";
     private static final String ENDPOINT_SLUG = "JenkinsOnPrem";
+    private static final String ARTIFACT_UPLOAD_LINK = "upload-link-abc123";
     // The workflow job is always created with this name, so run.getParent().getFullName() is deterministic.
     private static final String JOB_FULL_NAME = "SignPath";
 
@@ -68,6 +69,7 @@ public class SubmitSigningRequestStepEndToEndTest {
         CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, apiTokenCredentialId, apiToken);
 
         stubConnectorSubmit(organizationId, signingRequestId);
+        stubConnectorUnsignedArtifactUpload(organizationId, signingRequestId);
         stubConnectorStatus(organizationId, signingRequestId);
 
         configureGlobalConfig();
@@ -85,8 +87,8 @@ public class SubmitSigningRequestStepEndToEndTest {
         assertSuccess(run);
         assertTrue(run.getLog().contains("<returnValue>:\"" + signingRequestId + "\""));
 
-        // Both the unsigned artifact and its .sha256 sidecar must be archived so the connector can pull them.
-        assertArtifactArchived(run, UNSIGNED_ARTIFACT_PATH);
+        // Only the .sha256 sidecar is archived; the unsigned artifact is uploaded directly to the connector.
+        assertArtifactNotArchived(run, UNSIGNED_ARTIFACT_PATH);
         assertArtifactArchived(run, SHA256_ARTIFACT_PATH);
         // Signed artifact must NOT be archived automatically
         assertArtifactNotArchived(run, SIGNED_ARTIFACT_PATH);
@@ -95,6 +97,8 @@ public class SubmitSigningRequestStepEndToEndTest {
         wireMockRule.verify(getRequestedFor(urlEqualTo(statusRoute(organizationId, signingRequestId))));
 
         assertConnectorSubmitRequest(apiToken, organizationId, projectSlug, signingPolicySlug);
+        // The unsigned artifact must be uploaded in a follow-up request using the returned upload link
+        assertUnsignedArtifactUploaded(apiToken, organizationId, signingRequestId, unsignedArtifactString);
         if (withOptionalFields) {
             wireMockRule.verify(postRequestedFor(urlEqualTo(submitRoute(organizationId)))
                     .withRequestBody(containing("\"SignPathArtifactConfigurationSlug\":\"" + artifactConfigurationSlug + "\""))
@@ -120,6 +124,7 @@ public class SubmitSigningRequestStepEndToEndTest {
         CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, apiTokenCredentialId, apiToken);
 
         stubConnectorSubmit(organizationId, signingRequestId);
+        stubConnectorUnsignedArtifactUpload(organizationId, signingRequestId);
         stubConnectorStatus(organizationId, signingRequestId);
         stubConnectorSignedArtifact(organizationId, signingRequestId, signedArtifactBytes);
 
@@ -155,6 +160,7 @@ public class SubmitSigningRequestStepEndToEndTest {
         // Status and download endpoints must both have been called
         wireMockRule.verify(getRequestedFor(urlEqualTo(statusRoute(organizationId, signingRequestId))));
         wireMockRule.verify(getRequestedFor(urlEqualTo(signedArtifactRoute(organizationId, signingRequestId))));
+        assertUnsignedArtifactUploaded(apiToken, organizationId, signingRequestId, unsignedArtifactString);
     }
 
     @Theory
@@ -176,6 +182,7 @@ public class SubmitSigningRequestStepEndToEndTest {
         CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, apiTokenCredentialId, apiToken);
 
         stubConnectorSubmit(organizationId, signingRequestId);
+        stubConnectorUnsignedArtifactUpload(organizationId, signingRequestId);
 
         configureGlobalConfig();
 
@@ -193,12 +200,13 @@ public class SubmitSigningRequestStepEndToEndTest {
         assertTrue(run.getLog().contains("<returnValue>:\"" + signingRequestId + "\""));
 
         assertConnectorSubmitRequest(apiToken, organizationId, projectSlug, signingPolicySlug);
+        assertUnsignedArtifactUploaded(apiToken, organizationId, signingRequestId, unsignedArtifactString);
         // Status endpoint must NOT have been polled (waitForCompletion was false)
         wireMockRule.verify(exactly(0), getRequestedFor(urlEqualTo(statusRoute(organizationId, signingRequestId))));
     }
 
     @Theory
-    public void submitSigningRequest_artifactAndSidecarAreArchived() throws Exception {
+    public void submitSigningRequest_onlySidecarIsArchived() throws Exception {
         String unsignedArtifactString = Some.stringNonEmpty();
         String apiTokenCredentialId = Some.stringNonEmpty();
         String apiToken = Some.stringNonEmpty();
@@ -210,6 +218,7 @@ public class SubmitSigningRequestStepEndToEndTest {
         CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, apiTokenCredentialId, apiToken);
 
         stubConnectorSubmit(organizationId, signingRequestId);
+        stubConnectorUnsignedArtifactUpload(organizationId, signingRequestId);
 
         configureGlobalConfig();
 
@@ -238,10 +247,8 @@ public class SubmitSigningRequestStepEndToEndTest {
         byte[] expectedSha256Bytes = DigestUtils.sha256(unsignedArtifactString.getBytes(StandardCharsets.UTF_8));
         assertArrayEquals(expectedSha256Bytes, decodedHash);
 
-        // The unsigned artifact itself MUST also be archived (the connector pulls it from Jenkins).
-        TemporaryFile artifactFile = artifactFileManager.retrieveArtifact(UNSIGNED_ARTIFACT_PATH);
-        byte[] artifactContent = TemporaryFileUtil.getContentAndDispose(artifactFile);
-        assertArrayEquals(unsignedArtifactString.getBytes(StandardCharsets.UTF_8), artifactContent);
+        // The unsigned artifact itself MUST NOT be archived (it is uploaded to the connector directly).
+        assertArtifactNotArchived(run, UNSIGNED_ARTIFACT_PATH);
     }
 
     @Theory
@@ -261,7 +268,8 @@ public class SubmitSigningRequestStepEndToEndTest {
         assert credentialStore != null;
         CredentialStoreUtils.addCredentials(credentialStore, CredentialsScope.SYSTEM, apiTokenCredentialId, apiToken);
 
-        stubConnectorSubmit(organizationId, signingRequestId);
+        // No upload link is returned when SignPath retrieves the artifact itself
+        stubConnectorSubmit(organizationId, signingRequestId, null);
         if (waitForCompletion) {
             stubConnectorStatus(organizationId, signingRequestId);
         }
@@ -294,6 +302,9 @@ public class SubmitSigningRequestStepEndToEndTest {
                 .withHeader("Authorization", equalTo("Bearer " + apiToken))
                 .withRequestBody(containing("\"InputArtifactRetrievalUrl\":\"" + retrievalUrl + "\""))
                 .withRequestBody(containing("\"InputArtifactRetrievalHttpHeaders\"")));
+
+        // The artifact is retrieved by SignPath, so it must not be uploaded by the plugin
+        wireMockRule.verify(exactly(0), postRequestedFor(urlPathEqualTo(unsignedArtifactRoute(organizationId, signingRequestId))));
 
         // The header value must NOT appear in the build log (sensitive data)
         assertFalse("Header value must not be logged", run.getLog().contains(retrievalHeaderValue));
@@ -392,12 +403,24 @@ public class SubmitSigningRequestStepEndToEndTest {
     // ---- WireMock stubs ----
 
     private void stubConnectorSubmit(String organizationId, String signingRequestId) {
+        stubConnectorSubmit(organizationId, signingRequestId, ARTIFACT_UPLOAD_LINK);
+    }
+
+    private void stubConnectorSubmit(String organizationId, String signingRequestId, String artifactUploadLink) {
+        String artifactUploadLinkJson = artifactUploadLink == null
+                ? ""
+                : ", \"artifactUploadLink\": \"" + artifactUploadLink + "\"";
         wireMockRule.stubFor(post(urlEqualTo(submitRoute(organizationId)))
                 .willReturn(aResponse()
                         .withStatus(201)
                         .withHeader("Content-Type", "application/json")
                         .withBody("{\"signingRequestId\": \"" + signingRequestId + "\", \"signingRequestUrl\": \""
-                                + getMockUrl("web/" + signingRequestId) + "\", \"logs\": []}")));
+                                + getMockUrl("web/" + signingRequestId) + "\"" + artifactUploadLinkJson + ", \"logs\": []}")));
+    }
+
+    private void stubConnectorUnsignedArtifactUpload(String organizationId, String signingRequestId) {
+        wireMockRule.stubFor(post(urlPathEqualTo(unsignedArtifactRoute(organizationId, signingRequestId)))
+                .willReturn(aResponse().withStatus(200)));
     }
 
     private void stubConnectorStatus(String organizationId, String signingRequestId) {
@@ -426,6 +449,10 @@ public class SubmitSigningRequestStepEndToEndTest {
 
     private static String signedArtifactRoute(String organizationId, String signingRequestId) {
         return submitRoute(organizationId) + "/" + signingRequestId + "/SignedArtifact";
+    }
+
+    private static String unsignedArtifactRoute(String organizationId, String signingRequestId) {
+        return submitRoute(organizationId) + "/" + signingRequestId + "/UnsignedArtifact";
     }
 
     // ---- Pipeline builders ----
@@ -525,6 +552,12 @@ public class SubmitSigningRequestStepEndToEndTest {
                 .withRequestBody(containing("\"Sha256ArtifactPath\":\"" + SHA256_ARTIFACT_PATH + "\""))
                 .withRequestBody(containing("\"SignPathProjectSlug\":\"" + projectSlug + "\""))
                 .withRequestBody(containing("\"SignPathSigningPolicySlug\":\"" + signingPolicySlug + "\"")));
+    }
+
+    private void assertUnsignedArtifactUploaded(String apiToken, String organizationId, String signingRequestId, String expectedContent) {
+        wireMockRule.verify(postRequestedFor(urlPathEqualTo(unsignedArtifactRoute(organizationId, signingRequestId)))
+                .withHeader("Authorization", equalTo("Bearer " + apiToken))
+                .withRequestBody(equalTo(expectedContent)));
     }
 
     private byte[] getSignedArtifactBytes(WorkflowJob workflowJob) throws IOException, InterruptedException {

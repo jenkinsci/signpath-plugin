@@ -123,14 +123,6 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
             }
             logger.println("SHA-256 hash file archived: " + sha256ArtifactPath);
 
-            // For the streaming (direct upload) path the connector pulls the artifact itself from the
-            // build's archived artifacts, so we must archive it. For the retrieval-link path SignPath
-            // downloads the artifact from the provided URL and only the sidecar is needed.
-            if (!input.hasArtifactRetrievalUrl()) {
-                logger.printf("Archiving artifact '%s' so the connector can retrieve it...%n", input.getInputArtifactPath());
-                artifactFileManager.archiveWorkspaceArtifact(workspace, input.getInputArtifactPath());
-            }
-
             ConnectorSigningRequestModel model = ConnectorSigningRequestModel.builder()
                     .organizationId(input.getOrganizationId())
                     .jobFullName(jobFullName)
@@ -159,6 +151,23 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
                 logger.printf("Signing request URL: %s%n", webLink);
             } else {
                 logger.println("WARNING: Signing request URL was not provided by the server.");
+            }
+
+            // In retrieval-link mode SignPath downloads the artifact itself,
+            // otherwise the plugin uploads it to the connector.
+            if (!input.hasArtifactRetrievalUrl()) {
+                logger.printf("Uploading unsigned artifact '%s'...%n", input.getInputArtifactPath());
+                // The artifact may live on a remote agent, so it is copied to a temporary file on the
+                // controller from where it can be uploaded.
+                try (TemporaryFile unsignedArtifact = new TemporaryFile(FilenameUtils.getName(input.getInputArtifactPath()))) {
+                    try (InputStream unsignedArtifactStream = artifactFilePath.read()) {
+                        unsignedArtifact.copyFrom(unsignedArtifactStream);
+                    }
+                    pipelineConnectorFacade.uploadUnsignedArtifact(
+                            input.getOrganizationId(),
+                            signingRequestId,
+                            unsignedArtifact.getFile());
+                }
             }
 
             // waitForFinalSigningRequestStatus is skipped when outputArtifactPath is set because
