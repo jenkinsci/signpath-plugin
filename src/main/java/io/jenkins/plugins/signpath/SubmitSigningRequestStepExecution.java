@@ -153,8 +153,8 @@ public class SubmitSigningRequestStepExecution extends SynchronousNonBlockingSte
                 logger.println("WARNING: Signing request URL was not provided by the server.");
             }
 
-            // In retrieval-link mode SignPath downloads the artifact itself, otherwise the plugin uploads it
-            // to the connector using the upload link returned by the submit call.
+            // In retrieval-link mode SignPath downloads the artifact itself,
+            // otherwise the plugin uploads it to the connector.
             if (!input.hasArtifactRetrievalUrl()) {
                 logger.printf("Uploading unsigned artifact '%s'...%n", input.getInputArtifactPath());
                 // The artifact may live on a remote agent, so it is copied to a temporary file on the

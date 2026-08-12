@@ -19,7 +19,7 @@ public interface IPipelineConnectorFacade {
      * SHA-256 sidecar from the Jenkins build's archived artifacts and forwards the request to the SignPath Application.
      *
      * @param submitModel all the (non-authentication) parameters including job/build identity and slugs
-     * @return the signing request ID, web link and (unless an input artifact retrieval URL is used) the artifact upload link
+     * @return the signing request ID and web link to the signing request
      * @throws PipelineConnectorFacadeCallException occurs if any user error has been made (i.e. misconfiguration)
      */
     SubmitSigningRequestResult submitSigningRequest(ConnectorSigningRequestModel submitModel) throws PipelineConnectorFacadeCallException;
