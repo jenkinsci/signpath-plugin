@@ -11,7 +11,6 @@ import io.jenkins.plugins.signpath.Exceptions.ArtifactNotFoundException;
 import jenkins.model.ArtifactManager;
 import jenkins.util.BuildListenerAdapter;
 import jenkins.util.VirtualFile;
-import org.apache.commons.lang.StringUtils;
 
 import java.io.*;
 import java.security.DigestInputStream;
@@ -84,7 +83,7 @@ public class DefaultArtifactFileManager implements ArtifactFileManager {
     }
 
     private String getNormalizedPath(String artifactPath){
-        return StringUtils.strip(artifactPath.replace("\\", "/"), "/");
+        return artifactPath.replace("\\", "/").replaceAll("^/+|/+$", "");
     }
 
     private void createFingerprint(TemporaryFile artifact, String targetArtifactPath) throws NoSuchAlgorithmException, IOException {
