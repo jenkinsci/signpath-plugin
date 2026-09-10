@@ -1,7 +1,6 @@
 package io.jenkins.plugins.signpath.TestUtils;
 
 import io.jenkins.plugins.signpath.ApiIntegration.ApiConfiguration;
-import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Assert;
 
 import java.math.BigInteger;
@@ -15,13 +14,20 @@ import java.util.UUID;
 
 public class Some {
     private static final Random RANDOM = new Random();
+    private static final String ALPHANUMERIC =
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
     public static boolean bool() {
         return RANDOM.nextBoolean();
     }
 
     public static String stringNonEmpty() {
-        return RandomStringUtils.random(1 + RANDOM.nextInt(100), true, true);
+        int length = 1 + RANDOM.nextInt(100);
+        StringBuilder builder = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            builder.append(ALPHANUMERIC.charAt(RANDOM.nextInt(ALPHANUMERIC.length())));
+        }
+        return builder.toString();
     }
 
     public static String sha1Hash() {
